@@ -24,9 +24,9 @@ Build a local-first Claude Code language-tutor plugin with a synchronous Python 
 
 **Project Type**: Agentic-CLI plugin plus local Python package and CLI. No web service, MCP server, daemon, or terminal UI framework in v1.
 
-**Performance Goals**: Fresh health check plus setup plus first usable vocabulary prompt in under 60 seconds; session-start context readable in under 20 seconds and capped by an enforced token/character budget; progress view under 5 seconds with one year of daily history; deterministic render output for identical validated inputs.
+**Performance Goals**: Fresh setup plus first-session context in under 60 seconds; session-start context readable in under 20 seconds and capped at 6,000 rendered characters; progress view under 5 seconds with one year of daily history; deterministic render output for identical validated inputs.
 
-**Constraints**: Local-only data; no telemetry, auth, cloud sync, remote storage, ORM, async core, FSRS, bundled curriculum, games, dashboards, or speculative host adapters. Every state mutation persists immediately through a repository transaction. Shell verification in this repository uses `rtk`.
+**Constraints**: Local-only data; no telemetry, auth, cloud sync, remote storage, ORM, async core, FSRS, bundled curriculum, games, dashboards, or speculative host adapters. Every state mutation persists immediately through a repository transaction. Evaluator confidence is a closed enum (`high`, `medium`, `low`), and definitive high-severity corrections require `high` confidence. Shell verification in this repository uses `rtk`.
 
 **Scale/Scope**: Single learner, daily local use, one Claude Code host adapter, four user-facing skills (`tutor-setup`, `tutor-vocab`, `tutor-writing`, `tutor-progress`), one judge subagent for writing evaluation, one install/health command, and one local SQLite database.
 
@@ -97,12 +97,16 @@ src/
     ├── __init__.py
     ├── cli.py
     ├── schemas.py
+    ├── setup.py
     ├── lifecycle.py
     ├── boot_context.py
+    ├── vocab.py
     ├── srs.py
     ├── feedback.py
     ├── evaluators.py
-    ├── session.py
+    ├── writing.py
+    ├── progress.py
+    ├── health.py
     ├── errors.py
     ├── adapters/
     │   ├── __init__.py

@@ -85,13 +85,14 @@ Returns streak, due counts, weak patterns, item maturity, latest recap, and mont
 
 ### `tutor session-end --json`
 
-Handles SessionEnd analysis input and persists validated summary/cost/metrics. It is safe to run asynchronously and must not block host shutdown on non-critical analyzer failure.
+Handles SessionEnd analysis input and persists validated summary/cost/metrics. It is safe to run asynchronously and must not block host shutdown on non-critical analyzer failure. If analysis is interrupted or rejected, persisted lifecycle events remain intact and the result status is `pending`.
 
 **Output**: `SessionEndResult`.
 
 ## Contract Tests
 
 - Invalid YAML returns repair-oriented error and does not mutate SQLite.
+- Vocabulary answer comparison applies transliteration tolerance only when enabled in preferences.
 - Duplicate `vocab answer` calls with same idempotency key do not double-apply SRS.
 - Same DB/profile state produces byte-identical `boot-context` JSON and rendered markdown.
 - Unsupported evaluator tags are rejected or downgraded before persistence.

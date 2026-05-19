@@ -12,11 +12,11 @@
 
 ### User Story 1 - Start a First Learning Session (Priority: P1)
 
-A learner installs the tutor, runs setup, records their native language, target language, level, interests, and session preferences, then starts a usable first vocabulary session without creating an account or using remote storage.
+A learner installs the tutor, runs setup, records their native language, target language, level, interests, and session preferences, then receives a usable first-session context without creating an account or using remote storage.
 
 **Why this priority**: Every other learning workflow depends on a valid learner profile, preferences, and local state. First-session friction must be low enough for daily dogfood.
 
-**Independent Test**: Can be tested on a fresh machine by running the install check, completing setup with only native and target language as required inputs, then starting a vocabulary session with a valid starter prompt.
+**Independent Test**: Can be tested on a fresh local data path by completing setup with only native and target language as required inputs, then starting a session and receiving valid first-session context.
 
 **Acceptance Scenarios**:
 
@@ -115,20 +115,20 @@ A learner or contributor can verify installation health, inspect local data owne
 - **FR-003**: System MUST keep learner profile and preferences as human-editable local data and keep transactional learning history as separate local state.
 - **FR-004**: System MUST avoid cloud sync, telemetry, authentication, multi-user accounts, and remote storage in v1.
 - **FR-005**: System MUST build a concise session-start learning context from profile, due reviews, weak patterns, recent summary, and cost/status data.
-- **FR-006**: System MUST keep session-start context deterministic and bounded so repeated reads of the same learner state produce the same concise result.
-- **FR-007**: System MUST provide a vocabulary practice flow that prioritizes due reviews, presents recall prompts, captures answers, and shows immediate feedback.
-- **FR-008**: System MUST evaluate vocabulary answers against accepted reference answers and distinguish correct, minor, important, blocking, and unanswered outcomes.
+- **FR-006**: System MUST keep session-start context deterministic and bounded to 6,000 rendered characters so repeated reads of the same learner state produce the same concise result.
+- **FR-007**: System MUST provide a vocabulary practice flow that prioritizes due reviews, presents recall prompts, captures answers, shows immediate feedback, and uses session length plus review intensity to size the practice queue.
+- **FR-008**: System MUST evaluate vocabulary answers against accepted reference answers, apply transliteration tolerance only when the learner preference enables it, and distinguish correct, minor, important, blocking, and unanswered outcomes.
 - **FR-009**: System MUST update future vocabulary review timing from a documented spaced-repetition rule after each graded vocabulary answer.
 - **FR-010**: System MUST record every vocabulary answer and review result exactly once, even when a session is interrupted.
 - **FR-011**: System MUST generate or select target-language practice content appropriate to the learner profile without requiring bundled curricula.
 - **FR-012**: System MUST provide a free-writing flow that offers level-appropriate prompts and accepts learner-provided passages.
-- **FR-013**: System MUST return writing feedback with a corrected version, exact error spans where possible, severity level, controlled error tags, explanation in the learner's native language, and a next-drill hint.
+- **FR-013**: System MUST return writing feedback with a corrected version, exact error spans where possible, severity level, confidence level (`high`, `medium`, or `low`), controlled error tags, explanation in the learner's native language, a next-drill hint, and explanation detail shaped by feedback verbosity.
 - **FR-014**: System MUST leave corrected target-language forms and error tags in the target/controlled form while rendering explanations in the learner's native language.
 - **FR-015**: System MUST record writing mistakes as mistake history and weak-pattern inputs without changing vocabulary review schedules by default.
 - **FR-016**: System MUST use a frozen controlled error-tag vocabulary for v1, including Slavic morphology categories for case, aspect, agreement, animacy, verbs of motion, punctuation, and Russian/Ukrainian interference.
-- **FR-017**: System MUST reject or safely downgrade malformed, unsupported-tag, contradictory, or low-confidence evaluator output before it is persisted or rendered as definitive correction.
+- **FR-017**: System MUST reject or safely downgrade malformed, unsupported-tag, contradictory, or low-confidence evaluator output before it is persisted or rendered as definitive correction; `low` or missing confidence MUST render as tentative and MUST NOT create a definitive high-severity correction.
 - **FR-018**: System MUST render feedback in stable markdown-style text with severity markers and an ASCII fallback when symbols are unavailable.
-- **FR-019**: System MUST create a short end-of-session summary that can be shown immediately and reused as the next session's recap.
+- **FR-019**: System MUST create a short end-of-session summary that can be shown immediately and reused as the next session's recap; if session analysis is interrupted, recorded events MUST remain persisted and the summary status MUST be marked pending rather than blocking shutdown.
 - **FR-020**: System MUST provide progress that includes streak with grace handling, due review counts, weak patterns, item maturity, last-session recap, and month-to-date model cost.
 - **FR-021**: System MUST provide an install or health check that verifies local runtime readiness, plugin registration, data paths, schema health, and common setup problems.
 - **FR-022**: System MUST install and run on macOS and Linux for v1.
@@ -162,10 +162,10 @@ A learner or contributor can verify installation health, inspect local data owne
 
 ### Measurable Outcomes
 
-- **SC-001**: A fresh learner can complete health check, setup, and reach the first usable vocabulary prompt in under 60 seconds using only native language and target language as required setup inputs.
-- **SC-002**: 100% of normal session starts show a concise learner context that can be read in under 20 seconds and includes current review status or clear first-session guidance.
+- **SC-001**: A fresh learner can complete setup and reach first-session context in under 60 seconds using only native language and target language as required setup inputs.
+- **SC-002**: 100% of normal session starts show a concise learner context that can be read in under 20 seconds, stays within 6,000 rendered characters, and includes current review status or clear first-session guidance.
 - **SC-003**: In acceptance tests, 100% of graded vocabulary answers produce one visible feedback result, one recorded review event, and one future review decision with no duplicate state changes.
-- **SC-004**: At least 95% of accepted writing submissions produce feedback containing corrected text, span or location guidance, severity, controlled tag, and native-language explanation.
+- **SC-004**: In a curated fixture set of at least 20 non-empty writing submissions that pass input validation, at least 95% produce feedback containing corrected text, span or location guidance, severity, controlled tag, and native-language explanation.
 - **SC-005**: In curated Slavic evaluator fixtures, expected verdicts and core morphology tags are produced for at least 90% of cases, with no definitive high-severity correction shown for known-correct sentences.
 - **SC-006**: Progress view answers streak, due count, weak patterns, item maturity, last-session recap, and month-to-date cost in under 5 seconds for a learner with one year of daily history.
 - **SC-007**: Re-rendering the same validated feedback or session-start context produces identical displayed text in 100% of deterministic fixtures.

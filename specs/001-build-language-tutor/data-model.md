@@ -24,7 +24,7 @@ Human-editable session and feedback choices.
 
 **Validation**: Numeric values are bounded; enum values are closed; transliteration tolerance defaults to false for Cyrillic target languages unless edited.
 
-**Relationships**: Read by session planning, vocab queue sizing, feedback rendering, progress, and boot context.
+**Relationships**: Read by session planning, vocab queue sizing, vocab answer comparison, feedback rendering, progress, and boot context.
 
 ## SQLite Entities
 
@@ -42,11 +42,11 @@ Append-only record of canonical tutor lifecycle events.
 
 Target-language recall unit.
 
-**Fields**: `id`, `target_language`, `prompt`, `lemma`, `accepted_answers_json`, `hint`, `tags_json`, `state`, `ease_factor`, `repetition_count`, `interval_days`, `due_at`, `created_at`, `updated_at`, `retired_at`.
+**Fields**: `id`, `target_language`, `prompt`, `lemma`, `accepted_answers_json`, `hint`, `tags_json`, `state`, `ease_factor`, `repetition_count`, `interval_days`, `due_at`, `created_at`, `updated_at`.
 
 **Validation**: Accepted answers are non-empty; `ease_factor >= 1.3`; interval and repetition count are non-negative; dedupe key uses target language plus normalized lemma/prompt where available.
 
-**State transitions**: `new -> learning -> review -> mature`; `review|mature -> relearning` on lapse; any active state may move to `retired` through an explicit user flow.
+**State transitions**: `new -> learning -> review -> mature`; `review|mature -> relearning` on lapse.
 
 ### VocabularyReview
 
@@ -74,7 +74,7 @@ Structured record of a writing or vocabulary issue.
 
 **Fields**: `id`, `session_id`, `answer_event_id`, `skill`, `span_start`, `span_end`, `span_text`, `severity`, `tag`, `explanation`, `confidence`, `created_at`.
 
-**Validation**: Span bounds must be valid when exact spans are available; `tag` must be in the frozen `ErrorTag` vocabulary; low confidence cannot render as a definitive high-severity correction.
+**Validation**: Span bounds must be valid when exact spans are available; `tag` must be in the frozen `ErrorTag` vocabulary; `confidence` is a closed enum (`high`, `medium`, `low`); low confidence cannot render as a definitive high-severity correction.
 
 **Relationships**: Aggregated into weak-pattern summaries and progress; writing mistake events do not mutate vocabulary schedules by default.
 
@@ -84,7 +84,7 @@ End-of-session recap and next-session handoff.
 
 **Fields**: `id`, `session_id`, `summary_for_user`, `summary_for_next_boot`, `weak_tags_json`, `next_focus`, `cost_snapshot_json`, `created_at`.
 
-**Validation**: Summary text is bounded; `summary_for_next_boot` fits the boot-context budget; weak tags are controlled vocabulary values.
+**Validation**: Summary text is bounded; `summary_for_next_boot` fits the 6,000-character boot-context budget; weak tags are controlled vocabulary values.
 
 **Relationships**: Read by boot context and progress.
 
@@ -132,13 +132,13 @@ Applied SQLite migration marker.
 
 Concise session-start state derived from profile, preferences, due reviews, weak patterns, latest recap, and status metrics.
 
-**Validation**: Deterministic ordering, bounded size, no raw event dump, stable output for identical state.
+**Validation**: Deterministic ordering, 6,000 rendered-character maximum, no raw event dump, stable output for identical state.
 
 ### FeedbackEnvelope
 
 Structured correction package for vocab and writing.
 
-**Fields**: verdict, corrected answer, error spans, severity, controlled tags, confidence, native-language explanation, optional next-drill hint, optional SRS update.
+**Fields**: verdict, corrected answer, error spans, severity, controlled tags, confidence (`high`, `medium`, `low`), native-language explanation, optional next-drill hint, optional SRS update.
 
 **Validation**: Tags are controlled; explanations use learner native language; target-language forms remain in target language; unsupported or contradictory output is retried or downgraded before rendering/persistence.
 
