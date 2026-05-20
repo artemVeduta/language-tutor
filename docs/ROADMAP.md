@@ -45,6 +45,23 @@ reaches depth; fuzzy checkpoints; violates focus).
 
 ## Phases
 
+### Phase 1 — Foundation + Core Loop ✅ *(complete)*
+Spec `001-build-language-tutor` — full v1. Shipped, treated as the baseline this
+roadmap builds on.
+
+- Installable Claude Code plugin: manifest, SessionStart/SessionEnd hooks, one
+  `bin/tutor` Click CLI, thin Claude adapter Protocol.
+- Layered Python package (adapter → core → DAL → renderer); Pydantic contracts +
+  JSON-Schema mirrors; append-only SQLite lifecycle ledger + YAML profile/prefs.
+- In-tree SM-2; deterministic feedback renderer; frozen Slavic `ErrorTag` enum.
+- Four skills live: `tutor-setup`, `tutor-vocab`, `tutor-writing`,
+  `tutor-progress`; `tutor-judge` subagent; session analyzer.
+- Token-budgeted boot context; golden/contract/integration/semantic test tiers.
+
+**Status:** 98/98 spec-001 tasks done; 28 tests passing. Covers all v1
+requirements (PLAT, DATA, CTRC, ONBD, VOCB-01..06, WRIT, FDBK, ANLZ, PROG, QUAL,
+DIST) — see `REQUIREMENTS.md` traceability.
+
 ### Phase 2 — Vocab Depth
 Deepen the existing SRS loop. No host dependency.
 
