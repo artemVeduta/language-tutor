@@ -6,4 +6,12 @@ and design decisions, read the current implementation plan at
 testing, and review gates.
 <!-- SPECKIT END -->
 
-Documentation about the project in a path – "docs/"
+**Documentation**
+[ARCHITECTURE.md](docs/ARCHITECTURE.md)
+[FEATURES.md](docs/FEATURES.md)
+[PITFALLS.md](docs/PITFALLS.md)
+[PROJECT.md](docs/PROJECT.md)
+[REQUIREMENTS.md](docs/REQUIREMENTS.md)
+[ROADMAP.md](docs/ROADMAP.md)
+[STACK.md](docs/STACK.md)
+[SUMMARY.md](docs/SUMMARY.md)

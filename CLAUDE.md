@@ -12,5 +12,6 @@ testing, and review gates.
 [PITFALLS.md](docs/PITFALLS.md)
 [PROJECT.md](docs/PROJECT.md)
 [REQUIREMENTS.md](docs/REQUIREMENTS.md)
+[ROADMAP.md](docs/ROADMAP.md)
 [STACK.md](docs/STACK.md)
 [SUMMARY.md](docs/SUMMARY.md)

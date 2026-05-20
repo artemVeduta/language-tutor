@@ -127,7 +127,7 @@ Explicitly excluded. Documented to prevent scope creep.
 ## Traceability
 
 Which phases cover which requirements. See
-`docs/superpowers/specs/2026-05-21-roadmap-design.md` for phase detail.
+[ROADMAP.md](ROADMAP.md) for phase detail.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
