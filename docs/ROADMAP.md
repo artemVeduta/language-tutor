@@ -11,6 +11,19 @@ modalities, make the scheduling/analysis engine smarter, enrich feedback and
 progress, and prove the host-adapter abstraction across multiple hosts —
 unlocking audio modalities last.
 
+## Phase Tracker
+
+Check a phase when its exit gate is met. (Granular item boxes live in each phase below.)
+
+- [x] **Phase 1** — Foundation + Core Loop
+- [ ] **Phase 2** — Vocab Depth
+- [ ] **Phase 3** — Smarter Engine
+- [ ] **Phase 4** — Richer Feedback & Progress
+- [ ] **Phase 5** — Text Modalities
+- [ ] **Phase 6** — Host-Capability Layer + Adapter Framework
+- [ ] **Phase 6.x** — Adapter Rollout (openclaw / hermess / codex / antigravity)
+- [ ] **Phase 7** — Audio Modalities
+
 ## Sequencing Decision
 
 **Approach: Core-first, host-last.** Ship all host-independent value before
@@ -45,14 +58,31 @@ reaches depth; fuzzy checkpoints; violates focus).
 
 ## Phases
 
+### Phase 1 — Foundation + Core Loop ✅ *(complete)*
+Spec `001-build-language-tutor` — full v1. Shipped, treated as the baseline this
+roadmap builds on.
+
+- [x] Installable Claude Code plugin: manifest, SessionStart/SessionEnd hooks,
+  one `bin/tutor` Click CLI, thin Claude adapter Protocol.
+- [x] Layered Python package (adapter → core → DAL → renderer); Pydantic
+  contracts + JSON-Schema mirrors; append-only SQLite lifecycle ledger + YAML.
+- [x] In-tree SM-2; deterministic feedback renderer; frozen Slavic `ErrorTag` enum.
+- [x] Four skills live: `tutor-setup`, `tutor-vocab`, `tutor-writing`,
+  `tutor-progress`; `tutor-judge` subagent; session analyzer.
+- [x] Token-budgeted boot context; golden/contract/integration/semantic tiers.
+
+**Status:** 98/98 spec-001 tasks done; 28 tests passing. Covers all v1
+requirements (PLAT, DATA, CTRC, ONBD, VOCB-01..06, WRIT, FDBK, ANLZ, PROG, QUAL,
+DIST) — see `REQUIREMENTS.md` traceability.
+
 ### Phase 2 — Vocab Depth
 Deepen the existing SRS loop. No host dependency.
 
-- Manual card add (CLI command + `tutor-vocab` path).
-- User seed-word lists (YAML in, idempotent import).
-- Per-card review history view.
-- Tag-filtered drills.
-- Cloze card type (new `VocabularyItem` kind + renderer branch).
+- [ ] Manual card add (CLI command + `tutor-vocab` path).
+- [ ] User seed-word lists (YAML in, idempotent import).
+- [ ] Per-card review history view.
+- [ ] Tag-filtered drills.
+- [ ] Cloze card type (new `VocabularyItem` kind + renderer branch).
 
 **Exit gate:** new card kinds golden-tested; seed-list import idempotent;
 `tutor-vocab` drills filterable by tag; you can build and drill your own Slavic
@@ -63,12 +93,12 @@ Core analysis depth. No host dependency. **SM-2 stays the only algorithm** —
 FSRS remains explicitly out of scope (per `REQUIREMENTS.md`); this phase makes
 the *existing* SM-2 loop smarter, not pluggable.
 
-- Richer `SessionAnalysis`: cross-session weak-tag targeting feeds the next
+- [ ] Richer `SessionAnalysis`: cross-session weak-tag targeting feeds the next
   due-queue.
-- Adaptive item selection: weak-pattern signal biases which due items and which
-  new items surface (selection logic, not a new scheduling algorithm).
-- SM-2 parameter tuning surfaced through preferences (intensity already exists),
-  golden-tested.
+- [ ] Adaptive item selection: weak-pattern signal biases which due items and
+  which new items surface (selection logic, not a new scheduling algorithm).
+- [ ] SM-2 parameter tuning surfaced through preferences (intensity already
+  exists), golden-tested.
 
 **Exit gate:** weak-tag targeting demonstrably changes which cards surface;
 selection logic golden-tested deterministic; SM-2 math unchanged and still
@@ -79,9 +109,9 @@ Renderer / analysis surface. No host dependency. **Text/markdown only** — stay
 clear of the banned "rich analytics dashboard" (`REQUIREMENTS.md` Out of Scope):
 no charts, no GUI, no web view.
 
-- Per-tag mastery view.
-- Text trend / ASCII sparkline; last-N-session recap.
-- Exportable report (markdown / JSON, terminal-printable).
+- [ ] Per-tag mastery view.
+- [ ] Text trend / ASCII sparkline; last-N-session recap.
+- [ ] Exportable report (markdown / JSON, terminal-printable).
 
 **Exit gate:** progress views golden-tested deterministic; export round-trips;
 output is text/markdown only (no graphical surface); progress view <5s on one
@@ -90,10 +120,10 @@ year of daily history (spec-001 perf bar preserved).
 ### Phase 5 — Text Modalities
 First new exercise types. Text-only, runs on any host.
 
-- `tutor-reading` — LLM-generated passage + comprehension questions, feedback
-  via the existing `FeedbackEnvelope`.
-- `tutor-lesson` — guided micro-lesson.
-- Dictation / transcript drill as a text-based "listening" proxy.
+- [ ] `tutor-reading` — LLM-generated passage + comprehension questions,
+  feedback via the existing `FeedbackEnvelope`.
+- [ ] `tutor-lesson` — guided micro-lesson.
+- [ ] Dictation / transcript drill as a text-based "listening" proxy.
 
 **Exit gate:** each new skill reuses `FeedbackEnvelope` + judge contract; emits
 `mistake_events`; introduces no new persistence path; **skill-suite coherence
@@ -105,16 +135,16 @@ Architecture only — no new host lands in this phase.
 
 Two axes of capability, not one:
 
-- **I/O modality:** capability descriptor on the adapter Protocol
+- [ ] **I/O modality:** capability descriptor on the adapter Protocol
   (`supports: text | audio | image`, plus per-host I/O quirks).
-- **Lifecycle availability:** the existing `supports_lifecycle(event_name)` seam
-  formalized — not every host has Claude's SessionStart/SessionEnd hooks. Hosts
-  lacking hook-driven boot must declare it; core must build/persist boot context
-  through an alternate trigger (e.g. first-message, explicit command) without
-  assuming a hook fired. This is the real risk in Phase 6, above I/O.
-- Skills gate behavior on declared capabilities; pedagogy stays host-blind.
-- Generalize the adapter-contract test suite into a reusable **conformance kit**
-  every adapter must pass (covers both axes).
+- [ ] **Lifecycle availability:** the existing `supports_lifecycle(event_name)`
+  seam formalized — not every host has Claude's SessionStart/SessionEnd hooks.
+  Hosts lacking hook-driven boot must declare it; core must build/persist boot
+  context through an alternate trigger (e.g. first-message, explicit command)
+  without assuming a hook fired. This is the real risk in Phase 6, above I/O.
+- [ ] Skills gate behavior on declared capabilities; pedagogy stays host-blind.
+- [ ] Generalize the adapter-contract test suite into a reusable **conformance
+  kit** every adapter must pass (covers both axes).
 
 **Exit gate:** the existing Claude adapter is re-expressed through the
 capability layer (both axes) with zero pedagogy change; conformance kit green;
@@ -125,12 +155,12 @@ Four new adapters (Claude already shipped in Phase 1). Each is an independent
 slice that passes the conformance kit; ship/dogfood per adapter — no big-bang.
 **Order decided at phase entry** (not fixed here).
 
-- **openclaw**
-- **hermess** — Nous Research Hermes agent. Profile-distributions doc feeds how
-  the learner profile maps to host:
+- [ ] **openclaw**
+- [ ] **hermess** — Nous Research Hermes agent. Profile-distributions doc feeds
+  how the learner profile maps to host:
   https://hermes-agent.nousresearch.com/docs/user-guide/profile-distributions
-- **codex** — via Codex CLI / desktop app.
-- **antigravity** — via Antigravity CLI.
+- [ ] **codex** — via Codex CLI / desktop app.
+- [ ] **antigravity** — via Antigravity CLI.
 
 **Exit gate (per adapter):** passes the full lifecycle conformance kit; declares
 its real capabilities (both axes); the same pedagogy runs unchanged; **ships a
@@ -146,8 +176,8 @@ Rides the Phase 6 capability layer and whichever adapters declared audio support
 (e.g. desktop apps, or Telegram-fronted openclaw/hermess — confirmed per adapter
 in Phase 6.x, not assumed here).
 
-- `tutor-listening`, `tutor-speaking`.
-- Audio / image cards.
+- [ ] `tutor-listening`, `tutor-speaking`.
+- [ ] Audio / image cards.
 
 **Exit gate:** audio skills are capability-gated and degrade gracefully (hidden)
 on text-only hosts; **skill-suite coherence audit passes** (full suite re-checked
