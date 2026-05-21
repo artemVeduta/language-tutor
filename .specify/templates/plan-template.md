@@ -52,6 +52,10 @@ Tracking with the simpler alternative rejected.
   across layers.
 - **Deterministic tests**: Plan lists required unit, golden, contract,
   integration, migration, and semantic-eval coverage for changed behavior.
+- **Skill creation gate**: If any `SKILL.md` changes, plan inventories affected
+  skills and requires subagent-per-skill or subagent-per-skill-family work using
+  the local `writing-skills` helper, the active spec's external references,
+  RED/GREEN/REFACTOR pressure evidence, and main-agent review of changed files.
 - **Local-first data ownership**: YAML remains human-editable config only;
   SQLite remains transactional/derived state only. Paths are platform/XDG based.
 - **Scope discipline**: Work is limited to current v1 requirements unless this

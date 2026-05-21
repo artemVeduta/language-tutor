@@ -55,6 +55,10 @@ reaches depth; fuzzy checkpoints; violates focus).
   `FeedbackEnvelope`/boot-context usage, no duplicated pedagogy, and the combined
   skill-listing stays within Claude Code's description budget. New skills must
   slot into the suite, not fork it.
+- **Skill creation is subagent-tested:** every new or edited `SKILL.md` uses the
+  local writing-skills helper, external best-practice references required by the
+  active spec, and RED/GREEN/REFACTOR pressure evidence from an assigned
+  subagent before it ships.
 
 ## Phases
 

@@ -1,7 +1,8 @@
 <!-- SPECKIT START -->
 For additional context about technologies, project structure, shell commands,
-and design decisions, read the current implementation plan at
-`specs/003-smarter-engine/plan.md` and enforce
+and design decisions, read `specs/004-richer-feedback-progress/spec.md` for
+current Phase 4 scope and `specs/003-smarter-engine/plan.md` for the prior
+engine baseline. Enforce
 `.specify/memory/constitution.md` for architecture, scope, data ownership,
 testing, and review gates.
 <!-- SPECKIT END -->
@@ -18,3 +19,5 @@ testing, and review gates.
 
 **Skills**:
 Never auto-invoke Superpowers skills. Invoke only when explicitly requested.
+Skill creation/update work must use a subagent and the local writing-skills
+helper at `/Users/artem.veduta/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/writing-skills`.

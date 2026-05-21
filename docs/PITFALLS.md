@@ -197,6 +197,10 @@ A 2026 audit of 214 Claude Code skills found 73% silently broken — mostly desc
 - **Directive descriptions only.** Pattern: "Use when the learner [does X, asks for Y, mentions Z]. Triggers on: [keywords]. Do not trigger for: [overlap clarifier]."
 - **Non-overlapping descriptions**: each skill's "Do not trigger for" lists the sibling skills' domains.
 - **Activation eval harness**: a fixture of 30-50 user phrases mapped to expected skill. Run periodically against a real session (or sandboxed eval). Track activation rate as a metric.
+- **Subagent-tested skill edits**: before changing any `SKILL.md`, run a
+  baseline pressure scenario through an assigned subagent using the local
+  writing-skills helper; after editing, rerun the scenario and record changed
+  files plus rationalizations closed.
 - **Lint manifests in CI**: validate plugin.json against the published schema, cross-check that every skill in `skills/*/SKILL.md` is listed in plugin.json, verify hook event names case-sensitively, check description ≤ 1,536 chars.
 - **Single source of truth for skill list**: a script generates plugin.json's components list from filesystem.
 - **MCP scope creep guard**: this project does not need an MCP server. If MCP appears in the plan, ask "why not a skill?"
