@@ -69,3 +69,5 @@ dmypy.json
 *.tmp
 
 .agents
+.claude
+claude.manifest.json
