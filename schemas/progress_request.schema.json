@@ -1,0 +1,36 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "default": "json",
+      "enum": [
+        "json",
+        "markdown"
+      ],
+      "title": "Format",
+      "type": "string"
+    },
+    "generated_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Generated At"
+    },
+    "window_size": {
+      "default": 10,
+      "maximum": 30,
+      "minimum": 1,
+      "title": "Window Size",
+      "type": "integer"
+    }
+  },
+  "title": "ProgressReportRequest",
+  "type": "object"
+}

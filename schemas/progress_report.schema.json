@@ -1,0 +1,628 @@
+{
+  "$defs": {
+    "DueReviewCompletion": {
+      "additionalProperties": false,
+      "properties": {
+        "completed": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Completed",
+          "type": "integer"
+        },
+        "current_due_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Current Due Count",
+          "type": "integer"
+        }
+      },
+      "title": "DueReviewCompletion",
+      "type": "object"
+    },
+    "DueReviewSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "completed_in_window": {
+          "minimum": 0,
+          "title": "Completed In Window",
+          "type": "integer"
+        },
+        "due_count": {
+          "minimum": 0,
+          "title": "Due Count",
+          "type": "integer"
+        },
+        "low_quality_in_window": {
+          "minimum": 0,
+          "title": "Low Quality In Window",
+          "type": "integer"
+        },
+        "maturity": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Maturity",
+          "type": "object"
+        }
+      },
+      "required": [
+        "due_count",
+        "completed_in_window",
+        "low_quality_in_window"
+      ],
+      "title": "DueReviewSummary",
+      "type": "object"
+    },
+    "MistakeSeverityTotals": {
+      "additionalProperties": false,
+      "properties": {
+        "high": {
+          "default": 0,
+          "minimum": 0,
+          "title": "High",
+          "type": "integer"
+        },
+        "low": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Low",
+          "type": "integer"
+        },
+        "medium": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Medium",
+          "type": "integer"
+        }
+      },
+      "title": "MistakeSeverityTotals",
+      "type": "object"
+    },
+    "PracticeTotals": {
+      "additionalProperties": false,
+      "properties": {
+        "answers": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Answers",
+          "type": "integer"
+        },
+        "vocabulary_reviews": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Vocabulary Reviews",
+          "type": "integer"
+        },
+        "writing_answers": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Writing Answers",
+          "type": "integer"
+        }
+      },
+      "title": "PracticeTotals",
+      "type": "object"
+    },
+    "ProgressDateRange": {
+      "additionalProperties": false,
+      "properties": {
+        "end_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Date"
+        },
+        "start_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Date"
+        }
+      },
+      "title": "ProgressDateRange",
+      "type": "object"
+    },
+    "ProgressSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "cost_status": {
+          "enum": [
+            "available",
+            "partial",
+            "unavailable"
+          ],
+          "title": "Cost Status",
+          "type": "string"
+        },
+        "due_count": {
+          "minimum": 0,
+          "title": "Due Count",
+          "type": "integer"
+        },
+        "maturity": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Maturity",
+          "type": "object"
+        },
+        "month_to_date_estimated_usd": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Month To Date Estimated Usd"
+        },
+        "next_action": {
+          "title": "Next Action",
+          "type": "string"
+        },
+        "streak_days": {
+          "minimum": 0,
+          "title": "Streak Days",
+          "type": "integer"
+        },
+        "top_weak_patterns": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Top Weak Patterns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "streak_days",
+        "due_count",
+        "cost_status",
+        "next_action"
+      ],
+      "title": "ProgressSnapshot",
+      "type": "object"
+    },
+    "RecentSessionRecap": {
+      "additionalProperties": false,
+      "properties": {
+        "actual_session_count": {
+          "minimum": 0,
+          "title": "Actual Session Count",
+          "type": "integer"
+        },
+        "date_range": {
+          "$ref": "#/$defs/ProgressDateRange"
+        },
+        "due_review_completion": {
+          "$ref": "#/$defs/DueReviewCompletion"
+        },
+        "latest_session_summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latest Session Summary"
+        },
+        "mistake_severity_totals": {
+          "$ref": "#/$defs/MistakeSeverityTotals"
+        },
+        "practice_totals": {
+          "$ref": "#/$defs/PracticeTotals"
+        },
+        "skipped_data": {
+          "items": {
+            "$ref": "#/$defs/SkippedDataNotice"
+          },
+          "title": "Skipped Data",
+          "type": "array"
+        },
+        "trends": {
+          "items": {
+            "$ref": "#/$defs/TextTrend"
+          },
+          "title": "Trends",
+          "type": "array"
+        },
+        "weak_tag_changes": {
+          "$ref": "#/$defs/WeakTagChanges"
+        }
+      },
+      "required": [
+        "actual_session_count"
+      ],
+      "title": "RecentSessionRecap",
+      "type": "object"
+    },
+    "ReportWindow": {
+      "additionalProperties": false,
+      "properties": {
+        "active_mastery_window": {
+          "default": "last_30_completed_sessions",
+          "title": "Active Mastery Window",
+          "type": "string"
+        },
+        "actual_session_count": {
+          "minimum": 0,
+          "title": "Actual Session Count",
+          "type": "integer"
+        },
+        "end_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Date"
+        },
+        "mastery_session_count": {
+          "maximum": 30,
+          "minimum": 0,
+          "title": "Mastery Session Count",
+          "type": "integer"
+        },
+        "requested_session_count": {
+          "maximum": 30,
+          "minimum": 1,
+          "title": "Requested Session Count",
+          "type": "integer"
+        },
+        "start_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Date"
+        }
+      },
+      "required": [
+        "requested_session_count",
+        "actual_session_count",
+        "mastery_session_count"
+      ],
+      "title": "ReportWindow",
+      "type": "object"
+    },
+    "SkippedDataNotice": {
+      "additionalProperties": false,
+      "properties": {
+        "count": {
+          "minimum": 0,
+          "title": "Count",
+          "type": "integer"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "reason": {
+          "enum": [
+            "duplicate_session",
+            "invalid_session",
+            "interrupted_session",
+            "missing_analysis",
+            "stale_tag_evidence",
+            "unavailable_optional_field"
+          ],
+          "title": "Reason",
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "mastery",
+            "recap",
+            "export",
+            "snapshot"
+          ],
+          "title": "Scope",
+          "type": "string"
+        }
+      },
+      "required": [
+        "reason",
+        "count",
+        "scope",
+        "message"
+      ],
+      "title": "SkippedDataNotice",
+      "type": "object"
+    },
+    "TagMastery": {
+      "additionalProperties": false,
+      "properties": {
+        "band": {
+          "enum": [
+            "emerging",
+            "developing",
+            "steady",
+            "strong"
+          ],
+          "title": "Band",
+          "type": "string"
+        },
+        "evidence_count": {
+          "minimum": 0,
+          "title": "Evidence Count",
+          "type": "integer"
+        },
+        "last_seen_age_days": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Seen Age Days"
+        },
+        "last_seen_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Seen At"
+        },
+        "next_practice_hint": {
+          "title": "Next Practice Hint",
+          "type": "string"
+        },
+        "score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Score",
+          "type": "integer"
+        },
+        "score_breakdown": {
+          "$ref": "#/$defs/TagMasteryBreakdown"
+        },
+        "stale": {
+          "default": false,
+          "title": "Stale",
+          "type": "boolean"
+        },
+        "tag": {
+          "title": "Tag",
+          "type": "string"
+        },
+        "trend": {
+          "enum": [
+            "improving",
+            "steady",
+            "worsening",
+            "insufficient_data"
+          ],
+          "title": "Trend",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tag",
+        "score",
+        "band",
+        "evidence_count",
+        "trend",
+        "next_practice_hint",
+        "score_breakdown"
+      ],
+      "title": "TagMastery",
+      "type": "object"
+    },
+    "TagMasteryBreakdown": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "integer"
+        },
+        "correctness": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Correctness",
+          "type": "integer"
+        },
+        "recency": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Recency",
+          "type": "integer"
+        },
+        "severity": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Severity",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "correctness",
+        "severity",
+        "recency",
+        "confidence"
+      ],
+      "title": "TagMasteryBreakdown",
+      "type": "object"
+    },
+    "TextTrend": {
+      "additionalProperties": false,
+      "properties": {
+        "direction": {
+          "enum": [
+            "improving",
+            "steady",
+            "worsening",
+            "insufficient_data"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "max_label": {
+          "title": "Max Label",
+          "type": "string"
+        },
+        "metric": {
+          "title": "Metric",
+          "type": "string"
+        },
+        "min_label": {
+          "title": "Min Label",
+          "type": "string"
+        },
+        "polarity": {
+          "enum": [
+            "higher_is_better",
+            "lower_is_better"
+          ],
+          "title": "Polarity",
+          "type": "string"
+        },
+        "sparkline": {
+          "title": "Sparkline",
+          "type": "string"
+        },
+        "values_count": {
+          "minimum": 0,
+          "title": "Values Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "metric",
+        "label",
+        "polarity",
+        "direction",
+        "sparkline",
+        "min_label",
+        "max_label",
+        "values_count"
+      ],
+      "title": "TextTrend",
+      "type": "object"
+    },
+    "WeakTagChanges": {
+      "additionalProperties": false,
+      "properties": {
+        "new": {
+          "items": {
+            "type": "string"
+          },
+          "title": "New",
+          "type": "array"
+        },
+        "repeated": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Repeated",
+          "type": "array"
+        },
+        "resolved": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Resolved",
+          "type": "array"
+        }
+      },
+      "title": "WeakTagChanges",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "due_review_summary": {
+      "$ref": "#/$defs/DueReviewSummary"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "recent_recap": {
+      "$ref": "#/$defs/RecentSessionRecap"
+    },
+    "report_window": {
+      "$ref": "#/$defs/ReportWindow"
+    },
+    "schema_version": {
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "scope_guardrails": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Scope Guardrails",
+      "type": "array"
+    },
+    "skipped_data": {
+      "items": {
+        "$ref": "#/$defs/SkippedDataNotice"
+      },
+      "title": "Skipped Data",
+      "type": "array"
+    },
+    "snapshot": {
+      "$ref": "#/$defs/ProgressSnapshot"
+    },
+    "tag_mastery": {
+      "items": {
+        "$ref": "#/$defs/TagMastery"
+      },
+      "title": "Tag Mastery",
+      "type": "array"
+    }
+  },
+  "required": [
+    "generated_at",
+    "report_window",
+    "snapshot",
+    "recent_recap",
+    "due_review_summary"
+  ],
+  "title": "ProgressReport",
+  "type": "object"
+}

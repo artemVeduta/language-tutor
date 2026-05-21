@@ -16,11 +16,14 @@ from language_tutor.feedback import render_feedback
 from language_tutor.health import doctor
 from language_tutor.lifecycle import end_session
 from language_tutor.progress import progress_report
+from language_tutor.progress_rendering import render_progress_markdown
 from language_tutor.schemas import (
     BootContext,
     FeedbackEnvelope,
     LearnerPreferences,
     LearnerProfile,
+    ProgressReport,
+    ProgressReportRequest,
     SeedImportRequest,
     SessionEndInput,
     VocabularyAnswerInput,
@@ -187,6 +190,26 @@ def render_feedback_cmd(json_output: bool, payload: str) -> None:
                 "invalid_feedback",
                 "Feedback failed validation.",
                 "Pass a FeedbackEnvelope JSON object.",
+            )
+        )
+
+
+@render.command("progress-report")
+@click.option("--json-output", "--json", "json_output", is_flag=True)
+@click.argument("payload", required=True)
+def render_progress_report_cmd(json_output: bool, payload: str) -> None:
+    del json_output
+    try:
+        report = ProgressReport.model_validate(parse_payload(payload))
+        emit(render_progress_markdown(report))
+    except (TutorError, ValidationError) as exc:
+        if isinstance(exc, TutorError):
+            fail_json(exc)
+        fail_json(
+            TutorError(
+                "invalid_progress_report",
+                "Progress report failed validation.",
+                "Pass tutor progress --json output.",
             )
         )
 
@@ -372,17 +395,31 @@ def writing_record_cmd(json_output: bool, payload: str) -> None:
 
 @main.command("progress")
 @click.option("--json-output", "--json", "json_output", is_flag=True)
-def progress_cmd(json_output: bool) -> None:
+@click.argument("payload", required=False)
+def progress_cmd(json_output: bool, payload: str | None) -> None:
     del json_output
     try:
         state = read_setup(resolve_paths())
+        request = ProgressReportRequest.model_validate(parse_payload(payload))
         repo, conn = open_repo()
         try:
-            emit(progress_report(repo, state.preferences))
+            report = progress_report(repo, state.preferences, request)
+            if request.format == "markdown":
+                emit(render_progress_markdown(report))
+            else:
+                emit(report)
         finally:
             conn.close()
-    except TutorError as exc:
-        fail_json(exc)
+    except (TutorError, ValidationError) as exc:
+        if isinstance(exc, TutorError):
+            fail_json(exc)
+        fail_json(
+            TutorError(
+                "invalid_progress_request",
+                "Progress request failed validation.",
+                "Pass a JSON object with window_size 1-30 and optional generated_at.",
+            )
+        )
 
 
 @main.command("session-end")

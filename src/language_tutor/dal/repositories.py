@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Literal, cast
 
@@ -36,6 +37,50 @@ def new_id(prefix: str) -> str:
 
 def now_iso() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat()
+
+
+@dataclass(frozen=True)
+class ProgressSessionRow:
+    session_id: str
+    created_at: datetime
+    summary_for_next_boot: str | None
+    weak_tags: tuple[str, ...]
+    next_focus: str
+
+
+@dataclass(frozen=True)
+class ProgressMasteryEvidenceRow:
+    session_id: str
+    tag: str
+    observed_at: datetime
+    source: Literal["vocabulary_review", "mistake_event", "session_summary"]
+    review_quality: int | None = None
+    verdict: str | None = None
+    severity: str | None = None
+    confidence: str | None = None
+
+
+@dataclass(frozen=True)
+class ProgressAnswerTotalsRow:
+    session_id: str
+    answers: int
+    vocabulary_answers: int
+    writing_answers: int
+
+
+@dataclass(frozen=True)
+class ProgressReviewTotalsRow:
+    session_id: str
+    completed: int
+    low_quality: int
+
+
+@dataclass(frozen=True)
+class ProgressMistakeSeverityTotalsRow:
+    session_id: str
+    low: int
+    medium: int
+    high: int
 
 
 class TutorRepository:
@@ -527,6 +572,197 @@ class TutorRepository:
             "SELECT summary_for_next_boot FROM session_summaries ORDER BY created_at DESC LIMIT 1"
         ).fetchone()
         return None if row is None else str(row["summary_for_next_boot"])
+
+    def recent_progress_sessions(self, limit: int) -> list[ProgressSessionRow]:
+        rows = self.conn.execute(
+            """
+            SELECT session_id, summary_for_next_boot, weak_tags_json, next_focus, created_at
+            FROM session_summaries
+            ORDER BY created_at DESC, session_id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+        sessions: list[ProgressSessionRow] = []
+        for row in rows:
+            weak_tags = tuple(
+                tag
+                for tag in (normalize_tag(str(value)) for value in json.loads(str(row["weak_tags_json"])))
+                if tag
+            )
+            sessions.append(
+                ProgressSessionRow(
+                    session_id=str(row["session_id"]),
+                    created_at=datetime.fromisoformat(str(row["created_at"])),
+                    summary_for_next_boot=row["summary_for_next_boot"],
+                    weak_tags=weak_tags,
+                    next_focus=str(row["next_focus"]),
+                )
+            )
+        return sessions
+
+    def progress_mastery_evidence(
+        self, session_ids: list[str]
+    ) -> list[ProgressMasteryEvidenceRow]:
+        if not session_ids:
+            return []
+        placeholders = ",".join("?" for _ in session_ids)
+        evidence: list[ProgressMasteryEvidenceRow] = []
+        review_rows = self.conn.execute(
+            f"""
+            SELECT vr.session_id, vi.tags_json, vr.reviewed_at, vr.quality, vr.verdict
+            FROM vocabulary_reviews vr
+            JOIN vocabulary_items vi ON vi.id = vr.vocabulary_item_id
+            WHERE vr.session_id IN ({placeholders})
+            """,
+            session_ids,
+        ).fetchall()
+        for row in review_rows:
+            for raw_tag in json.loads(str(row["tags_json"])):
+                tag = normalize_tag(str(raw_tag))
+                if not tag:
+                    continue
+                evidence.append(
+                    ProgressMasteryEvidenceRow(
+                        session_id=str(row["session_id"]),
+                        tag=tag,
+                        observed_at=datetime.fromisoformat(str(row["reviewed_at"])),
+                        source="vocabulary_review",
+                        review_quality=int(row["quality"]),
+                        verdict=str(row["verdict"]),
+                        confidence="medium",
+                    )
+                )
+        mistake_rows = self.conn.execute(
+            f"""
+            SELECT session_id, tag, created_at, severity, confidence
+            FROM mistake_events
+            WHERE session_id IN ({placeholders})
+            """,
+            session_ids,
+        ).fetchall()
+        for row in mistake_rows:
+            tag = normalize_tag(str(row["tag"]))
+            if not tag:
+                continue
+            evidence.append(
+                ProgressMasteryEvidenceRow(
+                    session_id=str(row["session_id"]),
+                    tag=tag,
+                    observed_at=datetime.fromisoformat(str(row["created_at"])),
+                    source="mistake_event",
+                    severity=str(row["severity"]),
+                    confidence=str(row["confidence"]),
+                )
+            )
+        summary_rows = self.conn.execute(
+            f"""
+            SELECT session_id, weak_tags_json, created_at
+            FROM session_summaries
+            WHERE session_id IN ({placeholders})
+            """,
+            session_ids,
+        ).fetchall()
+        for row in summary_rows:
+            for raw_tag in json.loads(str(row["weak_tags_json"])):
+                tag = normalize_tag(str(raw_tag))
+                if not tag:
+                    continue
+                evidence.append(
+                    ProgressMasteryEvidenceRow(
+                        session_id=str(row["session_id"]),
+                        tag=tag,
+                        observed_at=datetime.fromisoformat(str(row["created_at"])),
+                        source="session_summary",
+                        confidence="medium",
+                    )
+                )
+        return evidence
+
+    def progress_answer_totals(
+        self, session_ids: list[str]
+    ) -> list[ProgressAnswerTotalsRow]:
+        if not session_ids:
+            return []
+        placeholders = ",".join("?" for _ in session_ids)
+        rows = self.conn.execute(
+            f"""
+            SELECT
+              session_id,
+              COUNT(*) AS answers,
+              SUM(CASE WHEN skill = 'vocab' THEN 1 ELSE 0 END) AS vocabulary_answers,
+              SUM(CASE WHEN skill = 'writing' THEN 1 ELSE 0 END) AS writing_answers
+            FROM answer_events
+            WHERE session_id IN ({placeholders})
+            GROUP BY session_id
+            """,
+            session_ids,
+        ).fetchall()
+        return [
+            ProgressAnswerTotalsRow(
+                session_id=str(row["session_id"]),
+                answers=int(row["answers"] or 0),
+                vocabulary_answers=int(row["vocabulary_answers"] or 0),
+                writing_answers=int(row["writing_answers"] or 0),
+            )
+            for row in rows
+        ]
+
+    def progress_review_totals(
+        self, session_ids: list[str]
+    ) -> list[ProgressReviewTotalsRow]:
+        if not session_ids:
+            return []
+        placeholders = ",".join("?" for _ in session_ids)
+        rows = self.conn.execute(
+            f"""
+            SELECT
+              session_id,
+              COUNT(*) AS completed,
+              SUM(CASE WHEN quality < 3 THEN 1 ELSE 0 END) AS low_quality
+            FROM vocabulary_reviews
+            WHERE session_id IN ({placeholders})
+            GROUP BY session_id
+            """,
+            session_ids,
+        ).fetchall()
+        return [
+            ProgressReviewTotalsRow(
+                session_id=str(row["session_id"]),
+                completed=int(row["completed"] or 0),
+                low_quality=int(row["low_quality"] or 0),
+            )
+            for row in rows
+        ]
+
+    def progress_mistake_severity_totals(
+        self, session_ids: list[str]
+    ) -> list[ProgressMistakeSeverityTotalsRow]:
+        if not session_ids:
+            return []
+        placeholders = ",".join("?" for _ in session_ids)
+        rows = self.conn.execute(
+            f"""
+            SELECT
+              session_id,
+              SUM(CASE WHEN severity = 'low' THEN 1 ELSE 0 END) AS low,
+              SUM(CASE WHEN severity = 'medium' THEN 1 ELSE 0 END) AS medium,
+              SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END) AS high
+            FROM mistake_events
+            WHERE session_id IN ({placeholders})
+            GROUP BY session_id
+            """,
+            session_ids,
+        ).fetchall()
+        return [
+            ProgressMistakeSeverityTotalsRow(
+                session_id=str(row["session_id"]),
+                low=int(row["low"] or 0),
+                medium=int(row["medium"] or 0),
+                high=int(row["high"] or 0),
+            )
+            for row in rows
+        ]
 
     def due_count(self, now: datetime) -> int:
         row = self.conn.execute(

@@ -18,7 +18,7 @@ Check a phase when its exit gate is met. (Granular item boxes live in each phase
 - [x] **Phase 1** — Foundation + Core Loop
 - [x] **Phase 2** — Vocab Depth
 - [x] **Phase 3** — Smarter Engine
-- [ ] **Phase 4** — Richer Feedback & Progress
+- [x] **Phase 4** — Richer Feedback & Progress
 - [ ] **Phase 5** — Text Modalities
 - [ ] **Phase 6** — Host-Capability Layer + Adapter Framework
 - [ ] **Phase 6.x** — Adapter Rollout (openclaw / hermess / codex / antigravity)
@@ -114,18 +114,26 @@ summaries, intensity queue sizing capped at 60, and schema/contract/golden/
 integration coverage. Verification: `rtk uv run pytest`, `rtk uv run pyright`,
 and `rtk uv run ruff check .`.
 
-### Phase 4 — Richer Feedback & Progress
+### Phase 4 — Richer Feedback & Progress ✅ *(implemented)*
 Renderer / analysis surface. No host dependency. **Text/markdown only** — stays
 clear of the banned "rich analytics dashboard" (`REQUIREMENTS.md` Out of Scope):
 no charts, no GUI, no web view.
 
-- [ ] Per-tag mastery view.
-- [ ] Text trend / ASCII sparkline; last-N-session recap.
-- [ ] Exportable report (markdown / JSON, terminal-printable).
+- [x] Per-tag mastery view.
+- [x] Text trend / ASCII sparkline; last-N-session recap.
+- [x] Exportable report (markdown / JSON, terminal-printable).
 
 **Exit gate:** progress views golden-tested deterministic; export round-trips;
 output is text/markdown only (no graphical surface); progress view <5s on one
 year of daily history (spec-001 perf bar preserved).
+
+**Status:** Implemented via spec `004-richer-feedback-progress`. Adds validated
+progress report/request/markdown contracts, schema mirrors, aggregate-safe DAL
+reads, read-performance indexes, deterministic markdown rendering, CLI JSON and
+markdown export paths, `tutor-progress` routing updates, skill pressure evidence,
+and unit/golden/contract/integration/migration/performance coverage.
+Verification: `rtk uv run pytest`, `rtk uv run pyright`, and
+`rtk uv run ruff check .`.
 
 ### Phase 5 — Text Modalities + Skill Authoring
 First new exercise types plus full project skill review/rewrite. Text-only,

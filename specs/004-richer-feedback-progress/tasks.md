@@ -26,9 +26,9 @@ subagent and the local writing-skills helper.
 
 **Purpose**: Create shared test/evidence scaffolding without implementing behavior.
 
-- [ ] T001 Create Phase 4 fixture builder helpers for no-data, one-session, tied-tag, stale-tag, skipped-session, long-text, and one-year histories in `tests/fixtures/progress/phase4_scenarios.py`
-- [ ] T002 [P] Create renderer module skeleton with public markdown export function placeholders in `src/language_tutor/progress_rendering.py`
-- [ ] T003 [P] Document the affected `skills/tutor-progress/SKILL.md` inventory, local writing-skills helper path, and required external skill-authoring references in `specs/004-richer-feedback-progress/skill-pressure-evidence.md`
+- [X] T001 Create Phase 4 fixture builder helpers for no-data, one-session, tied-tag, stale-tag, skipped-session, long-text, and one-year histories in `tests/fixtures/progress/phase4_scenarios.py`
+- [X] T002 [P] Create renderer module skeleton with public markdown export function placeholders in `src/language_tutor/progress_rendering.py`
+- [X] T003 [P] Document the affected `skills/tutor-progress/SKILL.md` inventory, local writing-skills helper path, and required external skill-authoring references in `specs/004-richer-feedback-progress/skill-pressure-evidence.md`
 
 ---
 
@@ -39,16 +39,16 @@ read-performance migration before user-story behavior.
 
 **Critical**: No user story implementation starts until this phase is complete.
 
-- [ ] T004 [P] Add failing schema tests for `ProgressReportRequest`, `ReportWindow`, `ProgressSnapshot`, `TagMastery`, `TextTrend`, `SkippedDataNotice`, `DueReviewSummary`, `ProgressReport`, and `ProgressMarkdownExport` in `tests/unit/test_schemas.py`
-- [ ] T005 [P] Add failing JSON schema export assertions for progress schema mirror filenames in `tests/adapter_contract/test_cli_json_contract.py`
-- [ ] T006 [P] Add failing migration order and progress-index assertions for `003_progress_indexes.sql` in `tests/migration/test_migrations.py`
-- [ ] T007 [P] Add failing repository boundary tests for progress session windows, due-review summary reads, cost fallback reads, optional summary/tag-evidence fallback reads, and aggregate-only evidence reads in `tests/unit/test_repositories.py`
-- [ ] T008 Implement Phase 4 Pydantic models and validators in `src/language_tutor/schemas.py`
-- [ ] T009 Update `export_json_schemas()` to include Phase 4 progress schema mirrors in `src/language_tutor/schemas.py`
-- [ ] T010 Add generated schema mirrors for progress request, progress report, and markdown export in `schemas/progress_request.schema.json`, `schemas/progress_report.schema.json`, and `schemas/progress_markdown_export.schema.json`
-- [ ] T011 Add read-performance indexes for bounded progress reads in `migrations/003_progress_indexes.sql`
-- [ ] T012 Implement narrow progress repository read methods returning typed aggregate-safe rows in `src/language_tutor/dal/repositories.py`
-- [ ] T013 Update `progress_report()` to accept `ProgressReportRequest`, injected `generated_at`, and repository read collaborators in `src/language_tutor/progress.py`
+- [X] T004 [P] Add failing schema tests for `ProgressReportRequest`, `ReportWindow`, `ProgressSnapshot`, `TagMastery`, `TextTrend`, `SkippedDataNotice`, `DueReviewSummary`, `ProgressReport`, and `ProgressMarkdownExport` in `tests/unit/test_schemas.py`
+- [X] T005 [P] Add failing JSON schema export assertions for progress schema mirror filenames in `tests/adapter_contract/test_cli_json_contract.py`
+- [X] T006 [P] Add failing migration order and progress-index assertions for `003_progress_indexes.sql` in `tests/migration/test_migrations.py`
+- [X] T007 [P] Add failing repository boundary tests for progress session windows, due-review summary reads, cost fallback reads, optional summary/tag-evidence fallback reads, and aggregate-only evidence reads in `tests/unit/test_repositories.py`
+- [X] T008 Implement Phase 4 Pydantic models and validators in `src/language_tutor/schemas.py`
+- [X] T009 Update `export_json_schemas()` to include Phase 4 progress schema mirrors in `src/language_tutor/schemas.py`
+- [X] T010 Add generated schema mirrors for progress request, progress report, and markdown export in `schemas/progress_request.schema.json`, `schemas/progress_report.schema.json`, and `schemas/progress_markdown_export.schema.json`
+- [X] T011 Add read-performance indexes for bounded progress reads in `migrations/003_progress_indexes.sql`
+- [X] T012 Implement narrow progress repository read methods returning typed aggregate-safe rows in `src/language_tutor/dal/repositories.py`
+- [X] T013 Update `progress_report()` to accept `ProgressReportRequest`, injected `generated_at`, and repository read collaborators in `src/language_tutor/progress.py`
 
 **Checkpoint**: Contracts, schema mirrors, migration, and repository read boundaries exist. User stories can start.
 
@@ -65,17 +65,17 @@ without raw learner answers or full feedback prose.
 
 ### Tests for User Story 1
 
-- [ ] T014 [P] [US1] Add failing unit tests for mastery component normalization formulas, weighting, band mapping, stale evidence, invalid/duplicate/unanalyzed evidence exclusion, shared `normalize_tag` identity, tie ordering, and next-practice hints in `tests/unit/test_progress.py`
-- [ ] T015 [P] [US1] Add failing repository tests for vocabulary-review, mistake-event, and session-summary mastery evidence rows that preserve normalized tag identity across sources in `tests/unit/test_repositories.py`
-- [ ] T016 [P] [US1] Add failing CLI contract tests for `tag_mastery` JSON shape and no-data mastery output in `tests/adapter_contract/test_progress_cli.py`
-- [ ] T017 [P] [US1] Add failing integration tests for no-history, mixed-tag history with shared normalized tag identity, stale-tag history, skipped-record mastery exclusion, and deterministic tied-tag ordering in `tests/integration/test_progress_flow.py`
+- [X] T014 [P] [US1] Add failing unit tests for mastery component normalization formulas, weighting, band mapping, stale evidence, invalid/duplicate/unanalyzed evidence exclusion, shared `normalize_tag` identity, tie ordering, and next-practice hints in `tests/unit/test_progress.py`
+- [X] T015 [P] [US1] Add failing repository tests for vocabulary-review, mistake-event, and session-summary mastery evidence rows that preserve normalized tag identity across sources in `tests/unit/test_repositories.py`
+- [X] T016 [P] [US1] Add failing CLI contract tests for `tag_mastery` JSON shape and no-data mastery output in `tests/adapter_contract/test_progress_cli.py`
+- [X] T017 [P] [US1] Add failing integration tests for no-history, mixed-tag history with shared normalized tag identity, stale-tag history, skipped-record mastery exclusion, and deterministic tied-tag ordering in `tests/integration/test_progress_flow.py`
 
 ### Implementation for User Story 1
 
-- [ ] T018 [P] [US1] Implement mastery component scoring, score clamping, band mapping, deterministic ordering, stale detection, and hint generation in `src/language_tutor/progress.py`
-- [ ] T019 [P] [US1] Implement aggregate-only mastery evidence reads for vocabulary reviews, mistake events, and safe session-summary weak tags in `src/language_tutor/dal/repositories.py`
-- [ ] T020 [US1] Integrate `tag_mastery`, preserved snapshot fields, and no-data next action into `ProgressReport` generation in `src/language_tutor/progress.py`
-- [ ] T021 [US1] Wire `tutor progress --json [payload]` to emit the richer `ProgressReport` while preserving existing no-payload behavior in `src/language_tutor/cli.py`
+- [X] T018 [P] [US1] Implement mastery component scoring, score clamping, band mapping, deterministic ordering, stale detection, and hint generation in `src/language_tutor/progress.py`
+- [X] T019 [P] [US1] Implement aggregate-only mastery evidence reads for vocabulary reviews, mistake events, and safe session-summary weak tags in `src/language_tutor/dal/repositories.py`
+- [X] T020 [US1] Integrate `tag_mastery`, preserved snapshot fields, and no-data next action into `ProgressReport` generation in `src/language_tutor/progress.py`
+- [X] T021 [US1] Wire `tutor progress --json [payload]` to emit the richer `ProgressReport` while preserving existing no-payload behavior in `src/language_tutor/cli.py`
 
 **Checkpoint**: User Story 1 works independently as the MVP progress report.
 
@@ -92,19 +92,19 @@ recap totals, direction labels, and sparkline strings.
 
 ### Tests for User Story 2
 
-- [ ] T022 [P] [US2] Add failing unit tests for trend direction polarity, odd-window middle-value handling, zero-baseline direction handling, under-10-percent steady threshold, insufficient-data handling, sparkline buckets, constant series, and min/max labels in `tests/unit/test_progress.py`
-- [ ] T023 [US2] Add failing unit tests for duplicate-session canonicalization, invalid/interrupted/missing-analysis skip counts, and recap window bounds in `tests/unit/test_progress.py`
-- [ ] T024 [P] [US2] Add failing repository tests for recent valid sessions, answer/review totals, severity totals, weak-tag changes, and current due-review summary in `tests/unit/test_repositories.py`
-- [ ] T025 [P] [US2] Add failing integration tests for recap windows 1, 5, 10, 30, fewer-than-requested sessions, skipped-data notices, older-state missing summaries, and missing optional tag evidence in `tests/integration/test_progress_flow.py`
-- [ ] T026 [P] [US2] Add failing CLI request-validation tests for `window_size` 0, `window_size` 31, bad JSON, unsupported format, and deterministic `generated_at` in `tests/adapter_contract/test_progress_cli.py`
+- [X] T022 [P] [US2] Add failing unit tests for trend direction polarity, odd-window middle-value handling, zero-baseline direction handling, under-10-percent steady threshold, insufficient-data handling, sparkline buckets, constant series, and min/max labels in `tests/unit/test_progress.py`
+- [X] T023 [US2] Add failing unit tests for duplicate-session canonicalization, invalid/interrupted/missing-analysis skip counts, and recap window bounds in `tests/unit/test_progress.py`
+- [X] T024 [P] [US2] Add failing repository tests for recent valid sessions, answer/review totals, severity totals, weak-tag changes, and current due-review summary in `tests/unit/test_repositories.py`
+- [X] T025 [P] [US2] Add failing integration tests for recap windows 1, 5, 10, 30, fewer-than-requested sessions, skipped-data notices, older-state missing summaries, and missing optional tag evidence in `tests/integration/test_progress_flow.py`
+- [X] T026 [P] [US2] Add failing CLI request-validation tests for `window_size` 0, `window_size` 31, bad JSON, unsupported format, and deterministic `generated_at` in `tests/adapter_contract/test_progress_cli.py`
 
 ### Implementation for User Story 2
 
-- [ ] T027 [P] [US2] Implement `TextTrend` value bucketing, sparkline generation, min/max labeling, and polarity-aware direction helpers in `src/language_tutor/progress.py`
-- [ ] T028 [US2] Implement canonical completed-session window selection and skipped-data notice aggregation in `src/language_tutor/progress.py`
-- [ ] T029 [P] [US2] Implement repository reads for recent session summaries, answer totals, review totals, mistake severity totals, weak-tag changes, and current due-review summary in `src/language_tutor/dal/repositories.py`
-- [ ] T030 [US2] Integrate `RecentSessionRecap`, `DueReviewSummary`, report window counts, and skipped-data notices into `ProgressReport` generation in `src/language_tutor/progress.py`
-- [ ] T031 [US2] Add progress payload parsing, request validation, deterministic UTC defaulting, and structured progress error mapping in `src/language_tutor/cli.py`
+- [X] T027 [P] [US2] Implement `TextTrend` value bucketing, sparkline generation, min/max labeling, and polarity-aware direction helpers in `src/language_tutor/progress.py`
+- [X] T028 [US2] Implement canonical completed-session window selection and skipped-data notice aggregation in `src/language_tutor/progress.py`
+- [X] T029 [P] [US2] Implement repository reads for recent session summaries, answer totals, review totals, mistake severity totals, weak-tag changes, and current due-review summary in `src/language_tutor/dal/repositories.py`
+- [X] T030 [US2] Integrate `RecentSessionRecap`, `DueReviewSummary`, report window counts, and skipped-data notices into `ProgressReport` generation in `src/language_tutor/progress.py`
+- [X] T031 [US2] Add progress payload parsing, request validation, deterministic UTC defaulting, and structured progress error mapping in `src/language_tutor/cli.py`
 
 **Checkpoint**: User Story 2 works independently from the richer JSON report.
 
@@ -121,19 +121,19 @@ ASCII-safe for trends and byte-stable for a fixed `generated_at`.
 
 ### Tests for User Story 3
 
-- [ ] T032 [P] [US3] Add failing golden tests for no-data markdown, non-empty markdown, top-three weakest-tag visibility in the first progress section within 30 nonblank lines, tied mastery ordering, stale tags, trend labels, skipped notices, 100-column wrapping, essential-field non-truncation, and long tag/hint/summary truncation rules in `tests/golden/test_progress_rendering.py`
-- [ ] T033 [P] [US3] Add failing CLI contract tests for `tutor render progress-report --json <payload>` and `tutor progress --json '{"format":"markdown"}'` in `tests/adapter_contract/test_progress_cli.py`
-- [ ] T034 [P] [US3] Add failing JSON round-trip and markdown/JSON core-fact equivalence tests in `tests/adapter_contract/test_cli_json_contract.py`
-- [ ] T035 [P] [US3] Add failing privacy and scope tests proving exports omit raw answers, span text, full feedback prose, event logs, host metadata, GUI, web, SVG, Mermaid, and graphical chart language in `tests/integration/test_progress_flow.py`
-- [ ] T036 [P] [US3] Run a subagent baseline against current `skills/tutor-progress/SKILL.md` using scenarios for markdown export, JSON export, and privacy guardrails; record RED evidence in `specs/004-richer-feedback-progress/skill-pressure-evidence.md`
+- [X] T032 [P] [US3] Add failing golden tests for no-data markdown, non-empty markdown, top-three weakest-tag visibility in the first progress section within 30 nonblank lines, tied mastery ordering, stale tags, trend labels, skipped notices, 100-column wrapping, essential-field non-truncation, and long tag/hint/summary truncation rules in `tests/golden/test_progress_rendering.py`
+- [X] T033 [P] [US3] Add failing CLI contract tests for `tutor render progress-report --json <payload>` and `tutor progress --json '{"format":"markdown"}'` in `tests/adapter_contract/test_progress_cli.py`
+- [X] T034 [P] [US3] Add failing JSON round-trip and markdown/JSON core-fact equivalence tests in `tests/adapter_contract/test_cli_json_contract.py`
+- [X] T035 [P] [US3] Add failing privacy and scope tests proving exports omit raw answers, span text, full feedback prose, event logs, host metadata, GUI, web, SVG, Mermaid, and graphical chart language in `tests/integration/test_progress_flow.py`
+- [X] T036 [P] [US3] Run a subagent baseline against current `skills/tutor-progress/SKILL.md` using scenarios for markdown export, JSON export, and privacy guardrails; record RED evidence in `specs/004-richer-feedback-progress/skill-pressure-evidence.md`
 
 ### Implementation for User Story 3
 
-- [ ] T037 [P] [US3] Implement deterministic markdown rendering from validated `ProgressReport` in `src/language_tutor/progress_rendering.py`
-- [ ] T038 [US3] Add `render progress-report` CLI command that validates `ProgressReport` input and emits `ProgressMarkdownExport` in `src/language_tutor/cli.py`
-- [ ] T039 [US3] Add direct markdown export support for `ProgressReportRequest.format == "markdown"` through `tutor progress --json` in `src/language_tutor/cli.py`
-- [ ] T040 [US3] Update `skills/tutor-progress/SKILL.md` through the assigned subagent after it reads the local writing-skills helper and required skill-authoring references
-- [ ] T041 [US3] Run subagent pressure verification for updated `skills/tutor-progress/SKILL.md`, perform activation/description trigger review, perform main-agent integration review of subagent-reported changed files, and record GREEN/REFACTOR evidence, changed files, closed loopholes, and remaining gaps in `specs/004-richer-feedback-progress/skill-pressure-evidence.md`
+- [X] T037 [P] [US3] Implement deterministic markdown rendering from validated `ProgressReport` in `src/language_tutor/progress_rendering.py`
+- [X] T038 [US3] Add `render progress-report` CLI command that validates `ProgressReport` input and emits `ProgressMarkdownExport` in `src/language_tutor/cli.py`
+- [X] T039 [US3] Add direct markdown export support for `ProgressReportRequest.format == "markdown"` through `tutor progress --json` in `src/language_tutor/cli.py`
+- [X] T040 [US3] Update `skills/tutor-progress/SKILL.md` through the assigned subagent after it reads the local writing-skills helper and required skill-authoring references
+- [X] T041 [US3] Run subagent pressure verification for updated `skills/tutor-progress/SKILL.md`, perform activation/description trigger review, perform main-agent integration review of subagent-reported changed files, and record GREEN/REFACTOR evidence, changed files, closed loopholes, and remaining gaps in `specs/004-richer-feedback-progress/skill-pressure-evidence.md`
 
 **Checkpoint**: User Story 3 exports validated JSON and markdown and the skill surface routes export requests.
 
@@ -144,15 +144,15 @@ ASCII-safe for trends and byte-stable for a fixed `generated_at`.
 **Purpose**: Performance, documentation, privacy hardening, and final verification across all
 stories.
 
-- [ ] T042 [P] Add one-year daily dense-history performance test for default JSON progress and markdown export under 5 seconds in `tests/performance/test_progress_performance.py`
-- [ ] T043 [P] Add committed one-year progress fixture data used by performance and integration tests in `tests/fixtures/progress/one_year.json`
-- [ ] T044 [P] Add export determinism fixture data for no-data, tied mastery, stale tags, skipped records, and long text in `tests/fixtures/progress/empty.json`
-- [ ] T045 [P] Update feature documentation for text-only progress reports and export commands in `docs/FEATURES.md`
-- [ ] T046 [P] Update Phase 4 exit-gate status notes only after all gates pass in `docs/ROADMAP.md`
-- [ ] T047 Refresh command examples and expected outputs after implementation in `specs/004-richer-feedback-progress/quickstart.md`
-- [ ] T048 Run unit, golden, adapter-contract, integration, migration, and performance gates listed in `specs/004-richer-feedback-progress/quickstart.md`
-- [ ] T049 Run `rtk uv run pyright` and `rtk uv run ruff check .` using configuration in `pyproject.toml`
-- [ ] T050 [P] Perform constitution compliance review for SOLID, DRY, KISS, YAGNI, SoC, composition, Demeter, local-first ownership, scope guardrails, and skill-gate evidence in `specs/004-richer-feedback-progress/tasks.md`
+- [X] T042 [P] Add one-year daily dense-history performance test for default JSON progress and markdown export under 5 seconds in `tests/performance/test_progress_performance.py`
+- [X] T043 [P] Add committed one-year progress fixture data used by performance and integration tests in `tests/fixtures/progress/one_year.json`
+- [X] T044 [P] Add export determinism fixture data for no-data, tied mastery, stale tags, skipped records, and long text in `tests/fixtures/progress/empty.json`
+- [X] T045 [P] Update feature documentation for text-only progress reports and export commands in `docs/FEATURES.md`
+- [X] T046 [P] Update Phase 4 exit-gate status notes only after all gates pass in `docs/ROADMAP.md`
+- [X] T047 Refresh command examples and expected outputs after implementation in `specs/004-richer-feedback-progress/quickstart.md`
+- [X] T048 Run unit, golden, adapter-contract, integration, migration, and performance gates listed in `specs/004-richer-feedback-progress/quickstart.md`
+- [X] T049 Run `rtk uv run pyright` and `rtk uv run ruff check .` using configuration in `pyproject.toml`
+- [X] T050 [P] Perform constitution compliance review for SOLID, DRY, KISS, YAGNI, SoC, composition, Demeter, local-first ownership, scope guardrails, and skill-gate evidence in `specs/004-richer-feedback-progress/tasks.md`
 
 ---
 
@@ -255,3 +255,13 @@ Task: "T036 [P] [US3] Run subagent baseline for skills/tutor-progress/SKILL.md"
 - Use `normalize_tag` from `src/language_tutor/vocab.py` for all tag identity.
 - Current `session_summaries.session_id` is unique; duplicate-session tests should cover canonicalizer inputs even when current SQLite storage collapses duplicates.
 - Commit after each task or logical group.
+
+## Completion Review
+
+- SOLID/SoC: CLI parses requests, core aggregates progress, DAL returns aggregate-safe rows, renderer renders validated reports, and schemas own contracts.
+- DRY: JSON is canonical; markdown renders from `ProgressReport`; schema mirrors are generated from Pydantic models; tag identity uses `normalize_tag`.
+- KISS/YAGNI: no runtime dependency, host adapter, dashboard, graphical chart, telemetry, cloud sync, or persisted progress table was added.
+- Composition/Demeter: progress generation composes repository read methods and renderer functions; no inheritance hierarchy or long DAL reach-through was introduced.
+- Privacy: progress reads do not return raw answers, span text, full feedback prose, event logs, host metadata, or local paths in reports/exports.
+- Skill gate: `skills/tutor-progress/SKILL.md` was updated by a subagent after reading the local writing-skills helper, with RED/GREEN/REFACTOR evidence in `skill-pressure-evidence.md`.
+- Verification: `rtk uv run pytest`, `rtk uv run pyright`, and `rtk uv run ruff check .` passed after implementation.

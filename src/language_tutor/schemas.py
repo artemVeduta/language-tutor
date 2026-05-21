@@ -4,9 +4,9 @@ import json
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 
 def utc_now() -> datetime:
@@ -461,15 +461,235 @@ class WritingRecordResult(TutorModel):
     persisted_mistakes: int
 
 
-class ProgressReport(TutorModel):
-    streak_days: int
-    due_count: int
-    weak_patterns: list[str]
-    maturity: dict[str, int]
-    latest_recap: str | None
-    month_to_date_estimated_usd: float | None
+class ProgressReportRequest(TutorModel):
+    window_size: int = Field(default=10, ge=1, le=30)
+    generated_at: datetime | None = None
+    format: Literal["json", "markdown"] = "json"
+
+    @field_validator("generated_at")
+    @classmethod
+    def normalize_generated_at(cls, value: datetime | None) -> datetime | None:
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=UTC)
+        return value.astimezone(UTC).replace(microsecond=0)
+
+
+class ReportWindow(TutorModel):
+    requested_session_count: int = Field(ge=1, le=30)
+    actual_session_count: int = Field(ge=0)
+    mastery_session_count: int = Field(ge=0, le=30)
+    start_date: str | None = None
+    end_date: str | None = None
+    active_mastery_window: str = "last_30_completed_sessions"
+
+    @model_validator(mode="after")
+    def valid_counts(self) -> ReportWindow:
+        if self.actual_session_count > self.requested_session_count:
+            raise ValueError("actual_session_count cannot exceed requested_session_count")
+        return self
+
+
+class ProgressSnapshot(TutorModel):
+    streak_days: int = Field(ge=0)
+    due_count: int = Field(ge=0)
+    maturity: dict[str, int] = Field(default_factory=dict[str, int])
+    top_weak_patterns: list[str] = Field(default_factory=list[str])
+    month_to_date_estimated_usd: float | None = Field(default=None, ge=0)
     cost_status: Literal["available", "partial", "unavailable"]
     next_action: str
+
+
+class TagMasteryBreakdown(TutorModel):
+    correctness: int = Field(ge=0, le=100)
+    severity: int = Field(ge=0, le=100)
+    recency: int = Field(ge=0, le=100)
+    confidence: int = Field(ge=0, le=100)
+
+
+class TagMastery(TutorModel):
+    tag: str
+    score: int = Field(ge=0, le=100)
+    band: Literal["emerging", "developing", "steady", "strong"]
+    evidence_count: int = Field(ge=0)
+    last_seen_at: datetime | None = None
+    last_seen_age_days: int | None = Field(default=None, ge=0)
+    stale: bool = False
+    trend: Literal["improving", "steady", "worsening", "insufficient_data"]
+    next_practice_hint: str
+    score_breakdown: TagMasteryBreakdown
+
+
+class TextTrend(TutorModel):
+    metric: str
+    label: str
+    polarity: Literal["higher_is_better", "lower_is_better"]
+    direction: Literal["improving", "steady", "worsening", "insufficient_data"]
+    sparkline: str
+    min_label: str
+    max_label: str
+    values_count: int = Field(ge=0)
+
+    @field_validator("sparkline")
+    @classmethod
+    def valid_sparkline(cls, value: str) -> str:
+        invalid = set(value) - set(".:-=+*#%@")
+        if invalid:
+            raise ValueError("sparkline contains invalid characters")
+        return value
+
+    @model_validator(mode="after")
+    def valid_length(self) -> TextTrend:
+        if len(self.sparkline) != self.values_count:
+            raise ValueError("sparkline length must match values_count")
+        return self
+
+
+class ProgressDateRange(TutorModel):
+    start_date: str | None = None
+    end_date: str | None = None
+
+
+class PracticeTotals(TutorModel):
+    answers: int = Field(default=0, ge=0)
+    vocabulary_reviews: int = Field(default=0, ge=0)
+    writing_answers: int = Field(default=0, ge=0)
+
+
+class DueReviewCompletion(TutorModel):
+    completed: int = Field(default=0, ge=0)
+    current_due_count: int = Field(default=0, ge=0)
+
+
+class MistakeSeverityTotals(TutorModel):
+    low: int = Field(default=0, ge=0)
+    medium: int = Field(default=0, ge=0)
+    high: int = Field(default=0, ge=0)
+
+
+class WeakTagChanges(TutorModel):
+    new: list[str] = Field(default_factory=list[str])
+    repeated: list[str] = Field(default_factory=list[str])
+    resolved: list[str] = Field(default_factory=list[str])
+
+
+class SkippedDataNotice(TutorModel):
+    reason: Literal[
+        "duplicate_session",
+        "invalid_session",
+        "interrupted_session",
+        "missing_analysis",
+        "stale_tag_evidence",
+        "unavailable_optional_field",
+    ]
+    count: int = Field(ge=0)
+    scope: Literal["mastery", "recap", "export", "snapshot"]
+    message: str
+
+
+class RecentSessionRecap(TutorModel):
+    actual_session_count: int = Field(ge=0)
+    date_range: ProgressDateRange = Field(default_factory=ProgressDateRange)
+    practice_totals: PracticeTotals = Field(default_factory=PracticeTotals)
+    due_review_completion: DueReviewCompletion = Field(default_factory=DueReviewCompletion)
+    mistake_severity_totals: MistakeSeverityTotals = Field(default_factory=MistakeSeverityTotals)
+    weak_tag_changes: WeakTagChanges = Field(default_factory=WeakTagChanges)
+    latest_session_summary: str | None = None
+    trends: list[TextTrend] = Field(default_factory=list[TextTrend])
+    skipped_data: list[SkippedDataNotice] = Field(default_factory=list[SkippedDataNotice])
+
+
+class DueReviewSummary(TutorModel):
+    due_count: int = Field(ge=0)
+    completed_in_window: int = Field(ge=0)
+    low_quality_in_window: int = Field(ge=0)
+    maturity: dict[str, int] = Field(default_factory=dict[str, int])
+
+
+class ProgressReport(TutorModel):
+    schema_version: int = 1
+    generated_at: datetime
+    report_window: ReportWindow
+    snapshot: ProgressSnapshot
+    tag_mastery: list[TagMastery] = Field(default_factory=list[TagMastery])
+    recent_recap: RecentSessionRecap
+    due_review_summary: DueReviewSummary
+    skipped_data: list[SkippedDataNotice] = Field(default_factory=list[SkippedDataNotice])
+    scope_guardrails: list[str] = Field(
+        default_factory=lambda: [
+            "text_markdown_only",
+            "aggregate_metrics_only",
+            "no_raw_answers",
+            "no_host_metadata",
+        ]
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def drop_legacy_computed_input(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        cleaned = cast(dict[str, Any], data).copy()
+        for key in (
+            "streak_days",
+            "due_count",
+            "weak_patterns",
+            "maturity",
+            "latest_recap",
+            "month_to_date_estimated_usd",
+            "cost_status",
+            "next_action",
+        ):
+            cleaned.pop(key, None)
+        return cleaned
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def streak_days(self) -> int:
+        return self.snapshot.streak_days
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def due_count(self) -> int:
+        return self.snapshot.due_count
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def weak_patterns(self) -> list[str]:
+        return self.snapshot.top_weak_patterns
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def maturity(self) -> dict[str, int]:
+        return self.snapshot.maturity
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def latest_recap(self) -> str | None:
+        return self.recent_recap.latest_session_summary
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def month_to_date_estimated_usd(self) -> float | None:
+        return self.snapshot.month_to_date_estimated_usd
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def cost_status(self) -> Literal["available", "partial", "unavailable"]:
+        return self.snapshot.cost_status
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def next_action(self) -> str:
+        return self.snapshot.next_action
+
+
+class ProgressMarkdownExport(TutorModel):
+    content_type: Literal["text/markdown"] = "text/markdown"
+    generated_at: datetime
+    report_window: ReportWindow
+    markdown: str
 
 
 class SessionAnalysis(TutorModel):
@@ -530,6 +750,9 @@ def export_json_schemas(output_dir: Path) -> None:
         "weak_tag_signal.schema.json": WeakTagSignal,
         "selection_reason.schema.json": SelectionReason,
         "vocabulary_review_history.schema.json": VocabularyReviewHistory,
+        "progress_request.schema.json": ProgressReportRequest,
+        "progress_report.schema.json": ProgressReport,
+        "progress_markdown_export.schema.json": ProgressMarkdownExport,
     }
     for filename, model in mapping.items():
         (output_dir / filename).write_text(

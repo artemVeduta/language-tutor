@@ -31,6 +31,12 @@ Expected:
 - Sparkline output uses only `.:-=+*#%@`.
 - No chart, GUI, web view, Mermaid, SVG, or rich dashboard output.
 
+Direct markdown export uses the same renderer and contract:
+
+```bash
+rtk tutor progress --json '{"window_size":10,"generated_at":"2026-05-21T12:00:00Z","format":"markdown"}'
+```
+
 ## No-Data Flow
 
 ```bash

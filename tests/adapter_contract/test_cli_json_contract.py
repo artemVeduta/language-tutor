@@ -4,8 +4,12 @@ import json
 from datetime import UTC, datetime
 
 from language_tutor.dal.paths import resolve_paths
+from language_tutor.dal.repositories import TutorRepository
 from language_tutor.dal.sqlite_store import connect
+from language_tutor.progress_rendering import render_progress_markdown
+from language_tutor.schemas import ProgressReport, export_json_schemas
 from tests.conftest import invoke_json
+from tests.fixtures.progress.phase4_scenarios import seed_mixed_history
 
 
 def test_cli_error_envelope(runner) -> None:  # type: ignore[no-untyped-def]
@@ -78,3 +82,26 @@ def test_vocab_start_json_selection_reason_invariants(runner) -> None:  # type: 
     assert reason_ids == item_ids
     assert len(plan["active_weak_tags"]) <= 5  # type: ignore[arg-type]
     assert "learner_answer" not in json.dumps(plan)
+
+
+def test_progress_schema_mirrors_export(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    export_json_schemas(tmp_path)
+    assert (tmp_path / "progress_request.schema.json").exists()
+    assert (tmp_path / "progress_report.schema.json").exists()
+    assert (tmp_path / "progress_markdown_export.schema.json").exists()
+
+
+def test_progress_json_round_trip_and_markdown_equivalence(runner) -> None:  # type: ignore[no-untyped-def]
+    conn = connect(resolve_paths().database_path)
+    try:
+        seed_mixed_history(TutorRepository(conn), 4)
+    finally:
+        conn.close()
+    payload = '{"window_size":4,"generated_at":"2026-05-21T12:00:00Z"}'
+    report_json = invoke_json(runner, ["progress", "--json", payload])
+    report = ProgressReport.model_validate(report_json)
+    assert ProgressReport.model_validate_json(report.model_dump_json()).generated_at == report.generated_at
+    markdown = render_progress_markdown(report).markdown
+    assert report.tag_mastery[0].tag in markdown
+    assert str(report.report_window.actual_session_count) in markdown
+    assert "private answer" not in markdown

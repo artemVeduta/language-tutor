@@ -1,0 +1,90 @@
+{
+  "$defs": {
+    "ReportWindow": {
+      "additionalProperties": false,
+      "properties": {
+        "active_mastery_window": {
+          "default": "last_30_completed_sessions",
+          "title": "Active Mastery Window",
+          "type": "string"
+        },
+        "actual_session_count": {
+          "minimum": 0,
+          "title": "Actual Session Count",
+          "type": "integer"
+        },
+        "end_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Date"
+        },
+        "mastery_session_count": {
+          "maximum": 30,
+          "minimum": 0,
+          "title": "Mastery Session Count",
+          "type": "integer"
+        },
+        "requested_session_count": {
+          "maximum": 30,
+          "minimum": 1,
+          "title": "Requested Session Count",
+          "type": "integer"
+        },
+        "start_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Date"
+        }
+      },
+      "required": [
+        "requested_session_count",
+        "actual_session_count",
+        "mastery_session_count"
+      ],
+      "title": "ReportWindow",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "content_type": {
+      "const": "text/markdown",
+      "default": "text/markdown",
+      "title": "Content Type",
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "markdown": {
+      "title": "Markdown",
+      "type": "string"
+    },
+    "report_window": {
+      "$ref": "#/$defs/ReportWindow"
+    }
+  },
+  "required": [
+    "generated_at",
+    "report_window",
+    "markdown"
+  ],
+  "title": "ProgressMarkdownExport",
+  "type": "object"
+}

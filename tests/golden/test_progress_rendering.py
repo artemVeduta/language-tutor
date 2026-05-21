@@ -1,49 +1,44 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
-
-from language_tutor.dal.paths import resolve_paths
+from language_tutor.dal.repositories import TutorRepository
 from language_tutor.dal.sqlite_store import connect
-from tests.conftest import invoke_json
+from language_tutor.progress import progress_report
+from language_tutor.progress_rendering import render_progress_markdown
+from language_tutor.schemas import LearnerPreferences, ProgressReportRequest
+from tests.fixtures.progress.phase4_scenarios import BASE_TIME, seed_mixed_history
 
 
-def test_progress_json_stable_shape(runner) -> None:  # type: ignore[no-untyped-def]
-    result = invoke_json(runner, ["progress", "--json"])
-    assert set(result) >= {"streak_days", "due_count", "weak_patterns", "maturity"}
-
-
-def test_progress_uses_active_weak_tag_signals(runner) -> None:  # type: ignore[no-untyped-def]
-    invoke_json(
-        runner,
-        [
-            "setup",
-            "write",
-            "--json",
-            '{"profile":{"native_language":"en","target_language":"uk"},"preferences":{}}',
-        ],
-    )
-    conn = connect(resolve_paths().database_path)
+def test_progress_markdown_no_data(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    conn = connect(tmp_path / "db.sqlite3")
     try:
-        for session_id, day in (("s1", 20), ("s2", 21)):
-            conn.execute(
-                """
-                INSERT INTO session_summaries(
-                  id, session_id, summary_for_user, summary_for_next_boot,
-                  weak_tags_json, next_focus, cost_snapshot_json, created_at
-                ) VALUES (?, ?, 'u', 'b', '[]', 'focus', '{}', ?)
-                """,
-                (f"summary_{session_id}", session_id, datetime(2026, 5, day, tzinfo=UTC).isoformat()),
-            )
-            conn.execute(
-                """
-                INSERT INTO mistake_events(
-                  id, session_id, skill, severity, tag, explanation, confidence, created_at
-                ) VALUES (?, ?, 'writing', 'low', 'case', 'private', 'high', ?)
-                """,
-                (f"mistake_{session_id}", session_id, datetime(2026, 5, day, tzinfo=UTC).isoformat()),
-            )
-        conn.commit()
+        report = progress_report(
+            TutorRepository(conn),
+            LearnerPreferences(),
+            ProgressReportRequest(generated_at=BASE_TIME),
+        )
+        markdown = render_progress_markdown(report).markdown
+        assert "# Progress Report" in markdown
+        assert "No mastery evidence yet." in markdown
+        assert "Start vocabulary or writing practice." in markdown
     finally:
         conn.close()
-    result = invoke_json(runner, ["progress", "--json"])
-    assert result["weak_patterns"] == ["case"]
+
+
+def test_progress_markdown_non_empty_is_stable_and_ascii(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    conn = connect(tmp_path / "db.sqlite3")
+    try:
+        repo = TutorRepository(conn)
+        seed_mixed_history(repo, 10)
+        request = ProgressReportRequest(window_size=10, generated_at=BASE_TIME)
+        report = progress_report(repo, LearnerPreferences(), request)
+        markdown_a = render_progress_markdown(report).markdown
+        markdown_b = render_progress_markdown(report).markdown
+        assert markdown_a == markdown_b
+        assert "## Tag Mastery" in markdown_a
+        first_section = [line for line in markdown_a.splitlines() if line.strip()][:30]
+        assert any("case" in line or "aspect" in line for line in first_section)
+        assert all(len(line) <= 120 for line in markdown_a.splitlines())
+        assert "Mermaid" not in markdown_a
+        assert "SVG" not in markdown_a
+    finally:
+        conn.close()
