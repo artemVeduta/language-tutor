@@ -52,6 +52,10 @@ def test_vocab_add_import_filter_and_history_contract(runner) -> None:  # type: 
     assert imported["invalid_count"] == 1
     filtered = invoke_json(runner, ["vocab", "start", "--json", '{"tags":["daily"]}'])
     assert filtered["matching_count"] == 1
+    assert filtered["effective_count"] == 10
+    assert filtered["selection_policy"]["intensity"] == "normal"  # type: ignore[index]
+    assert filtered["selection_reasons"][0]["item_id"] == filtered["items"][0]["id"]  # type: ignore[index]
+    assert "explicit_filter_match" in filtered["selection_reasons"][0]["reasons"]  # type: ignore[index]
     assert filtered["items"][0]["id"] == add["item_id"]  # type: ignore[index]
     history = invoke_json(
         runner, ["vocab", "history", "--json", json.dumps({"item_id": add["item_id"]})]
@@ -79,3 +83,20 @@ def test_vocab_cloze_reveals_answer(runner) -> None:  # type: ignore[no-untyped-
     )
     answer = invoke_json(runner, ["vocab", "answer", "--json", answer_payload])
     assert answer["feedback"]["cloze_sentence"] == "дякую means thank you."
+
+
+def test_vocab_start_reports_effective_count_and_policy_intensity(runner) -> None:  # type: ignore[no-untyped-def]
+    invoke_json(
+        runner,
+        [
+            "setup",
+            "write",
+            "--json",
+            '{"profile":{"native_language":"en","target_language":"uk"},"preferences":{"session_length":60,"review_intensity":"heavy"}}',
+        ],
+    )
+    plan = invoke_json(runner, ["vocab", "start", "--json"])
+    assert plan["requested_count"] == 90
+    assert plan["effective_count"] == 60
+    assert plan["selection_policy"]["intensity"] == "heavy"  # type: ignore[index]
+    assert len(plan["selection_reasons"]) == len(plan["items"])  # type: ignore[arg-type]

@@ -10,6 +10,18 @@ v1 surface = six skills: `tutor-setup`, `tutor-vocab`, `tutor-writing`, `tutor-f
 
 ## Feature Landscape
 
+### Smarter Vocabulary Engine
+
+`tutor vocab start --json` now returns a deterministic due-first queue with
+`effective_count`, `active_weak_tags`, `selection_reasons`, and
+`selection_policy`. Weak tags are derived from the last 10 completed analyzed
+sessions and limited to the top 5 signals; explicit tag filters remain hard
+boundaries before weak targeting is applied.
+
+Review intensity changes queue pressure only: `light` is 50%, `normal` is 100%,
+and `heavy` is 150% of session length, with a final 60-card cap. SM-2 scheduling
+does not read review intensity.
+
 ### Table Stakes (Users Expect These)
 
 Missing any of these makes the product feel broken to a learner who has used Anki, Duolingo, italki, or ChatGPT-as-tutor.

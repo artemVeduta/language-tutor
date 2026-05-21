@@ -58,6 +58,23 @@ def test_vocab_depth_migration_backfills_metadata_and_preserves_reviews(tmp_path
             """,
             (state_json, state_json, "2026-05-21T00:00:00+00:00"),
         )
+        conn.execute(
+            """
+            INSERT INTO mistake_events(
+              id, session_id, answer_event_id, skill, severity, tag, explanation, confidence, created_at
+            ) VALUES ('mistake_1', 's1', 'ans_1', 'vocab', 'low', 'case', '', 'high', ?)
+            """,
+            ("2026-05-21T00:00:00+00:00",),
+        )
+        conn.execute(
+            """
+            INSERT INTO session_summaries(
+              id, session_id, summary_for_user, summary_for_next_boot,
+              weak_tags_json, next_focus, cost_snapshot_json, created_at
+            ) VALUES ('summary_1', 's1', 'u', 'b', '["case"]', 'review', '{}', ?)
+            """,
+            ("2026-05-21T00:00:00+00:00",),
+        )
         conn.commit()
     finally:
         conn.close()
@@ -66,10 +83,16 @@ def test_vocab_depth_migration_backfills_metadata_and_preserves_reviews(tmp_path
     try:
         row = migrated.execute("SELECT * FROM vocabulary_items WHERE id = 'vocab_1'").fetchone()
         review_count = migrated.execute("SELECT COUNT(*) AS count FROM vocabulary_reviews").fetchone()
+        mistake_count = migrated.execute("SELECT COUNT(*) AS count FROM mistake_events").fetchone()
+        summary_count = migrated.execute("SELECT COUNT(*) AS count FROM session_summaries").fetchone()
+        migration_count = migrated.execute("SELECT COUNT(*) AS count FROM migration_records").fetchone()
         assert row["card_type"] == "standard"
         assert row["notes_json"] == "[]"
         assert row["sources_json"] == "[]"
         assert str(row["dedupe_key"]).startswith("standard:")
         assert int(review_count["count"]) == 1
+        assert int(mistake_count["count"]) == 1
+        assert int(summary_count["count"]) == 1
+        assert int(migration_count["count"]) == 2
     finally:
         migrated.close()

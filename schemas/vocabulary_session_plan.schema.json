@@ -1,5 +1,111 @@
 {
   "$defs": {
+    "ReviewIntensity": {
+      "enum": [
+        "light",
+        "normal",
+        "heavy"
+      ],
+      "title": "ReviewIntensity",
+      "type": "string"
+    },
+    "SelectionPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "due_first": {
+          "default": true,
+          "title": "Due First",
+          "type": "boolean"
+        },
+        "intensity": {
+          "$ref": "#/$defs/ReviewIntensity",
+          "default": "normal"
+        },
+        "recent_session_limit": {
+          "default": 10,
+          "title": "Recent Session Limit",
+          "type": "integer"
+        },
+        "reserved_non_weak_due_slot": {
+          "default": false,
+          "title": "Reserved Non Weak Due Slot",
+          "type": "boolean"
+        },
+        "weak_tag_limit": {
+          "default": 5,
+          "title": "Weak Tag Limit",
+          "type": "integer"
+        }
+      },
+      "title": "SelectionPolicy",
+      "type": "object"
+    },
+    "SelectionReason": {
+      "additionalProperties": false,
+      "properties": {
+        "bucket": {
+          "enum": [
+            "overdue_due",
+            "due_today",
+            "new_fill"
+          ],
+          "title": "Bucket",
+          "type": "string"
+        },
+        "due_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Due At"
+        },
+        "item_id": {
+          "title": "Item Id",
+          "type": "string"
+        },
+        "matched_weak_tags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Matched Weak Tags",
+          "type": "array"
+        },
+        "rank": {
+          "minimum": 1,
+          "title": "Rank",
+          "type": "integer"
+        },
+        "reasons": {
+          "items": {
+            "enum": [
+              "overdue",
+              "due",
+              "weak_tag_match",
+              "explicit_filter_match",
+              "reserved_non_weak_due",
+              "new_card_fill"
+            ],
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "item_id",
+        "rank",
+        "bucket",
+        "reasons"
+      ],
+      "title": "SelectionReason",
+      "type": "object"
+    },
     "VocabularyItem": {
       "additionalProperties": false,
       "properties": {
@@ -130,10 +236,71 @@
       },
       "title": "VocabularyItemState",
       "type": "object"
+    },
+    "WeakTagSignal": {
+      "additionalProperties": false,
+      "properties": {
+        "latest_seen_at": {
+          "format": "date-time",
+          "title": "Latest Seen At",
+          "type": "string"
+        },
+        "priority_rank": {
+          "minimum": 1,
+          "title": "Priority Rank",
+          "type": "integer"
+        },
+        "session_count": {
+          "minimum": 2,
+          "title": "Session Count",
+          "type": "integer"
+        },
+        "source_counts": {
+          "$ref": "#/$defs/WeakTagSourceCounts"
+        },
+        "tag": {
+          "title": "Tag",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tag",
+        "session_count",
+        "latest_seen_at",
+        "priority_rank"
+      ],
+      "title": "WeakTagSignal",
+      "type": "object"
+    },
+    "WeakTagSourceCounts": {
+      "additionalProperties": false,
+      "properties": {
+        "low_quality_reviews": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Low Quality Reviews",
+          "type": "integer"
+        },
+        "mistake_events": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Mistake Events",
+          "type": "integer"
+        }
+      },
+      "title": "WeakTagSourceCounts",
+      "type": "object"
     }
   },
   "additionalProperties": false,
   "properties": {
+    "active_weak_tags": {
+      "items": {
+        "$ref": "#/$defs/WeakTagSignal"
+      },
+      "title": "Active Weak Tags",
+      "type": "array"
+    },
     "due_matching_count": {
       "anyOf": [
         {
@@ -145,6 +312,18 @@
       ],
       "default": null,
       "title": "Due Matching Count"
+    },
+    "effective_count": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Effective Count"
     },
     "empty_reason": {
       "anyOf": [
@@ -191,6 +370,16 @@
     "requested_count": {
       "title": "Requested Count",
       "type": "integer"
+    },
+    "selection_policy": {
+      "$ref": "#/$defs/SelectionPolicy"
+    },
+    "selection_reasons": {
+      "items": {
+        "$ref": "#/$defs/SelectionReason"
+      },
+      "title": "Selection Reasons",
+      "type": "array"
     },
     "starter_content_required": {
       "default": false,

@@ -18,6 +18,15 @@
 
 ## Standard Architecture
 
+### Smarter Engine Boundaries
+
+Weak-tag signal ranking and queue selection live in `src/language_tutor/vocab.py`.
+`src/language_tutor/dal/repositories.py` only supplies bounded source rows and
+candidate cards. `src/language_tutor/schemas.py` owns the JSON contracts for
+signals, reasons, policies, and session plans. `boot_context.py` and
+`progress.py` render the shared weak-signal helper output without reading raw
+events or feedback prose.
+
 ### System Overview
 
 ```

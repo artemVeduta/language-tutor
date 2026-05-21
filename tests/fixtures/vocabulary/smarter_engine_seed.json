@@ -1,0 +1,44 @@
+[
+  {
+    "target": "книга",
+    "prompt": "book",
+    "accepted_answers": ["книга"],
+    "tags": ["case"],
+    "case": "weak_due_today"
+  },
+  {
+    "target": "йти",
+    "prompt": "go",
+    "accepted_answers": ["йти"],
+    "tags": ["aspect"],
+    "case": "overdue"
+  },
+  {
+    "target": "так",
+    "prompt": "yes",
+    "accepted_answers": ["так"],
+    "tags": ["confirm"],
+    "case": "non_weak_due_today"
+  },
+  {
+    "target": "читати",
+    "prompt": "read",
+    "accepted_answers": ["читати"],
+    "tags": ["case", "aspect"],
+    "case": "multi_tag_new"
+  },
+  {
+    "target": "і",
+    "prompt": "and",
+    "accepted_answers": ["і"],
+    "tags": [],
+    "case": "untagged_fallback"
+  },
+  {
+    "target": "завтра",
+    "prompt": "tomorrow",
+    "accepted_answers": ["завтра"],
+    "tags": ["case"],
+    "case": "weak_card_not_due"
+  }
+]

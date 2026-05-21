@@ -168,3 +168,77 @@ def test_review_history_orders_attempts_and_keeps_new_status(tmp_path) -> None: 
         assert history.attempts[0].answer_detail_available is True
     finally:
         conn.close()
+
+
+def test_recent_analyzed_sessions_and_weak_sources_are_bounded(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    conn = connect(tmp_path / "db.sqlite3")
+    try:
+        repo = TutorRepository(conn)
+        for index in range(12):
+            conn.execute(
+                """
+                INSERT INTO session_summaries(
+                  id, session_id, summary_for_user, summary_for_next_boot,
+                  weak_tags_json, next_focus, cost_snapshot_json, created_at
+                ) VALUES (?, ?, 'u', 'b', '[]', 'focus', '{}', ?)
+                """,
+                (
+                    f"summary_{index}",
+                    f"s{index}",
+                    (datetime(2026, 5, 1, tzinfo=UTC) + timedelta(days=index)).isoformat(),
+                ),
+            )
+        conn.execute(
+            """
+            INSERT INTO mistake_events(
+              id, session_id, skill, severity, tag, explanation, confidence, created_at
+            ) VALUES ('m1', 's11', 'writing', 'low', 'case', '', 'high', ?)
+            """,
+            (datetime(2026, 5, 21, tzinfo=UTC).isoformat(),),
+        )
+        conn.commit()
+        session_ids = repo.recent_analyzed_session_ids(10)
+        events = repo.weak_tag_source_events(session_ids)
+        assert session_ids[0] == "s11"
+        assert len(session_ids) == 10
+        assert [(event.session_id, event.tag, event.source) for event in events] == [
+            ("s11", "case", "mistake_events")
+        ]
+    finally:
+        conn.close()
+
+
+def test_vocabulary_selection_candidates_include_ordering_and_filter_boundary(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    conn = connect(tmp_path / "db.sqlite3")
+    try:
+        repo = TutorRepository(conn)
+        first = VocabularyItem(
+            id="vocab_case",
+            target_language="uk",
+            prompt="book",
+            accepted_answers=["книга"],
+            tags=["Case"],
+        )
+        second = VocabularyItem(
+            id="vocab_aspect",
+            target_language="uk",
+            prompt="read",
+            accepted_answers=["читати"],
+            tags=["aspect"],
+        )
+        repo.insert_vocabulary_item(first)
+        repo.insert_vocabulary_item(second)
+        conn.execute(
+            "UPDATE vocabulary_items SET created_at = ? WHERE id = ?",
+            (datetime(2026, 5, 20, tzinfo=UTC).isoformat(), first.id),
+        )
+        conn.execute(
+            "UPDATE vocabulary_items SET created_at = ? WHERE id = ?",
+            (datetime(2026, 5, 21, tzinfo=UTC).isoformat(), second.id),
+        )
+        conn.commit()
+        candidates = repo.vocabulary_selection_candidates(["case"])
+        assert [candidate.item.id for candidate in candidates] == ["vocab_case"]
+        assert candidates[0].created_at == datetime(2026, 5, 20, tzinfo=UTC)
+    finally:
+        conn.close()

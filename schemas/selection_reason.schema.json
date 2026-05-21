@@ -1,0 +1,66 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "bucket": {
+      "enum": [
+        "overdue_due",
+        "due_today",
+        "new_fill"
+      ],
+      "title": "Bucket",
+      "type": "string"
+    },
+    "due_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Due At"
+    },
+    "item_id": {
+      "title": "Item Id",
+      "type": "string"
+    },
+    "matched_weak_tags": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Matched Weak Tags",
+      "type": "array"
+    },
+    "rank": {
+      "minimum": 1,
+      "title": "Rank",
+      "type": "integer"
+    },
+    "reasons": {
+      "items": {
+        "enum": [
+          "overdue",
+          "due",
+          "weak_tag_match",
+          "explicit_filter_match",
+          "reserved_non_weak_due",
+          "new_card_fill"
+        ],
+        "type": "string"
+      },
+      "title": "Reasons",
+      "type": "array"
+    }
+  },
+  "required": [
+    "item_id",
+    "rank",
+    "bucket",
+    "reasons"
+  ],
+  "title": "SelectionReason",
+  "type": "object"
+}

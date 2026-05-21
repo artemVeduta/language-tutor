@@ -8,10 +8,16 @@ from pydantic import ValidationError
 
 from language_tutor.schemas import (
     FeedbackEnvelope,
+    LearnerPreferences,
     LearnerProfile,
+    SelectionPolicy,
+    SelectionReason,
     VocabularyCardDefinition,
     VocabularyDrillRequest,
     VocabularyItem,
+    VocabularySessionPlan,
+    WeakTagSignal,
+    WeakTagSourceCounts,
     export_json_schemas,
 )
 
@@ -28,6 +34,8 @@ def test_json_schema_export(tmp_path: Path) -> None:
     assert (tmp_path / "vocabulary_card_definition.schema.json").exists()
     assert (tmp_path / "vocabulary_import_summary.schema.json").exists()
     assert (tmp_path / "vocabulary_session_plan.schema.json").exists()
+    assert (tmp_path / "weak_tag_signal.schema.json").exists()
+    assert (tmp_path / "selection_reason.schema.json").exists()
     assert (tmp_path / "vocabulary_review_history.schema.json").exists()
 
 
@@ -79,3 +87,45 @@ def test_card_definition_validates_cloze_marker_count() -> None:
 def test_drill_request_rejects_empty_tags() -> None:
     with pytest.raises(ValidationError):
         VocabularyDrillRequest.model_validate({"tags": []})
+
+
+def test_smarter_engine_schema_contracts() -> None:
+    signal = WeakTagSignal(
+        tag="case",
+        session_count=2,
+        latest_seen_at="2026-05-21T12:00:00Z",
+        priority_rank=1,
+        source_counts=WeakTagSourceCounts(mistake_events=2, low_quality_reviews=1),
+    )
+    reason = SelectionReason(
+        item_id="vocab_1",
+        rank=1,
+        bucket="due_today",
+        reasons=["due", "weak_tag_match"],
+        matched_weak_tags=["case"],
+        due_at="2026-05-21T12:00:00Z",
+    )
+    plan = VocabularySessionPlan(
+        items=[
+            VocabularyItem(
+                id="vocab_1",
+                target_language="uk",
+                prompt="book",
+                accepted_answers=["книга"],
+            )
+        ],
+        requested_count=90,
+        effective_count=60,
+        active_weak_tags=[signal],
+        selection_reasons=[reason],
+        selection_policy=SelectionPolicy(intensity="heavy", reserved_non_weak_due_slot=True),
+    )
+    assert plan.active_weak_tags[0].source_counts.low_quality_reviews == 1
+    assert plan.selection_reasons[0].item_id == "vocab_1"
+    assert plan.selection_policy.intensity == "heavy"
+
+
+def test_review_intensity_validation() -> None:
+    assert LearnerPreferences().review_intensity == "normal"
+    with pytest.raises(ValidationError):
+        LearnerPreferences.model_validate({"review_intensity": "extreme"})

@@ -15,6 +15,11 @@ Run only `bin/tutor` for stateful work:
 - Record answer once: `bin/tutor vocab answer --json '<payload>'`
 - Inspect history: `bin/tutor vocab history --json '<{"item_id":"vocab_..."}>'`
 
+Queue JSON includes `effective_count`, `active_weak_tags`, `selection_reasons`,
+and `selection_policy`. `review_intensity` means light = 50%, normal = 100%, and
+heavy = 150% of configured session length, capped at 60 cards. Tag filters are
+hard boundaries.
+
 Cloze cards use `card_type:"cloze"` and exactly one `{{answer}}` marker in
 `prompt`. The CLI hides the marker during drill and reveals the sentence after
 answering.
