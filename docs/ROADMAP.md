@@ -1,7 +1,7 @@
 # language-tutor — Capability-Expansion Roadmap
 
 **Date:** 2026-05-21
-**Status:** Approved design (pending user spec review)
+**Status:** Phase 3 implemented in draft PR #5
 **Baseline:** Phase 1 = spec `001-build-language-tutor` (full v1) — treated as **complete** (98/98 tasks, 28 tests passing, layered Python package + 4 skills + Claude adapter shipped).
 
 ## Goal
@@ -17,7 +17,7 @@ Check a phase when its exit gate is met. (Granular item boxes live in each phase
 
 - [x] **Phase 1** — Foundation + Core Loop
 - [x] **Phase 2** — Vocab Depth
-- [ ] **Phase 3** — Smarter Engine
+- [x] **Phase 3** — Smarter Engine
 - [ ] **Phase 4** — Richer Feedback & Progress
 - [ ] **Phase 5** — Text Modalities
 - [ ] **Phase 6** — Host-Capability Layer + Adapter Framework
@@ -88,21 +88,27 @@ Deepen the existing SRS loop. No host dependency.
 `tutor-vocab` drills filterable by tag; you can build and drill your own Slavic
 deck end-to-end.
 
-### Phase 3 — Smarter Engine
+### Phase 3 — Smarter Engine ✅ *(implemented)*
 Core analysis depth. No host dependency. **SM-2 stays the only algorithm** —
 FSRS remains explicitly out of scope (per `REQUIREMENTS.md`); this phase makes
 the *existing* SM-2 loop smarter, not pluggable.
 
-- [ ] Richer `SessionAnalysis`: cross-session weak-tag targeting feeds the next
+- [x] Richer `SessionAnalysis`: cross-session weak-tag targeting feeds the next
   due-queue.
-- [ ] Adaptive item selection: weak-pattern signal biases which due items and
+- [x] Adaptive item selection: weak-pattern signal biases which due items and
   which new items surface (selection logic, not a new scheduling algorithm).
-- [ ] SM-2 parameter tuning surfaced through preferences (intensity already
+- [x] SM-2 parameter tuning surfaced through preferences (intensity already
   exists), golden-tested.
 
 **Exit gate:** weak-tag targeting demonstrably changes which cards surface;
 selection logic golden-tested deterministic; SM-2 math unchanged and still
 passes its existing golden suite.
+
+**Status:** Implemented via spec `003-smarter-engine`. Adds weak-tag signal
+contracts, deterministic weak-aware queue selection, safe boot/progress weak
+summaries, intensity queue sizing capped at 60, and schema/contract/golden/
+integration coverage. Verification: `rtk uv run pytest`, `rtk uv run pyright`,
+and `rtk uv run ruff check .`.
 
 ### Phase 4 — Richer Feedback & Progress
 Renderer / analysis surface. No host dependency. **Text/markdown only** — stays
