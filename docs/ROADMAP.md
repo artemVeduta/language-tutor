@@ -16,7 +16,7 @@ unlocking audio modalities last.
 Check a phase when its exit gate is met. (Granular item boxes live in each phase below.)
 
 - [x] **Phase 1** — Foundation + Core Loop
-- [ ] **Phase 2** — Vocab Depth
+- [x] **Phase 2** — Vocab Depth
 - [ ] **Phase 3** — Smarter Engine
 - [ ] **Phase 4** — Richer Feedback & Progress
 - [ ] **Phase 5** — Text Modalities
@@ -75,14 +75,14 @@ roadmap builds on.
 requirements (PLAT, DATA, CTRC, ONBD, VOCB-01..06, WRIT, FDBK, ANLZ, PROG, QUAL,
 DIST) — see `REQUIREMENTS.md` traceability.
 
-### Phase 2 — Vocab Depth
+### Phase 2 — Vocab Depth ✅ *(complete)*
 Deepen the existing SRS loop. No host dependency.
 
-- [ ] Manual card add (CLI command + `tutor-vocab` path).
-- [ ] User seed-word lists (YAML in, idempotent import).
-- [ ] Per-card review history view.
-- [ ] Tag-filtered drills.
-- [ ] Cloze card type (new `VocabularyItem` kind + renderer branch).
+- [x] Manual card add (CLI command + `tutor-vocab` path).
+- [x] User seed-word lists (JSON in, idempotent import).
+- [x] Per-card review history view.
+- [x] Tag-filtered drills.
+- [x] Cloze card type (new `VocabularyItem` kind + renderer branch).
 
 **Exit gate:** new card kinds golden-tested; seed-list import idempotent;
 `tutor-vocab` drills filterable by tag; you can build and drill your own Slavic

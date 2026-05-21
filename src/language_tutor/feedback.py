@@ -8,8 +8,10 @@ from language_tutor.schemas import (
     ErrorSpan,
     ErrorTag,
     FeedbackEnvelope,
+    SeedImportResult,
     Severity,
     Verdict,
+    VocabularyReviewHistory,
 )
 
 CYRILLIC_LATIN = str.maketrans(
@@ -159,4 +161,47 @@ def render_feedback(feedback: FeedbackEnvelope, *, ascii_fallback: bool = False)
     for span in feedback.error_spans:
         lines.append(f"{marker} {span.tag}: {span.text} - {span.explanation}")
     lines.append(f"{marker} Next drill: {feedback.next_drill_hint}")
+    if feedback.cloze_sentence:
+        lines.append(f"{marker} Sentence: {feedback.cloze_sentence}")
+    if feedback.accepted_answer:
+        lines.append(f"{marker} Accepted answer: {feedback.accepted_answer}")
+    return "\n".join(lines)
+
+
+def render_vocab_import_summary(result: SeedImportResult) -> str:
+    lines = [
+        f"Import: {result.path}",
+        (
+            "Created: "
+            f"{result.created_count}; Updated: {result.updated_count}; "
+            f"Skipped: {result.skipped_count}; Invalid: {result.invalid_count}"
+        ),
+    ]
+    for entry in result.entries:
+        detail = f"{entry.index}: {entry.status}"
+        if entry.item_id:
+            detail += f" {entry.item_id}"
+        if entry.repair_hint:
+            detail += f" - {entry.repair_hint}"
+        lines.append(detail)
+    return "\n".join(lines)
+
+
+def render_vocab_review_history(history: VocabularyReviewHistory) -> str:
+    lines = [
+        f"Card: {history.item.id} ({history.item.card_type})",
+        f"Prompt: {history.item.prompt}",
+        f"Due status: {history.due_status}",
+        f"Attempts: {len(history.attempts)}",
+    ]
+    attempts = history.attempts
+    visible = attempts if len(attempts) <= 10 else attempts[:5] + attempts[-5:]
+    for attempt in visible:
+        answer = attempt.learner_answer if attempt.answer_detail_available else "unavailable"
+        lines.append(
+            f"{attempt.reviewed_at.isoformat()} {attempt.verdict} "
+            f"q={attempt.quality} answer={answer}"
+        )
+    if len(visible) != len(attempts):
+        lines.insert(9, f"... {len(attempts) - len(visible)} older attempts omitted ...")
     return "\n".join(lines)

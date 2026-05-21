@@ -1191,6 +1191,16 @@ Components auto-discovered from `skills/`, `agents/`, `hooks/hooks.json`.
 
 ---
 
+## Phase 2 Vocabulary Data Ownership
+
+Vocabulary Phase 2 keeps the same layered boundary:
+
+- `schemas.py` owns card definition, import summary, drill request/session plan, and review-history contracts plus JSON schema mirrors.
+- `vocab.py` owns duplicate identity normalization, cloze prompt/reveal helpers, import orchestration, drill selection rules, and history service composition.
+- `repositories.py` owns SQLite persistence, per-entry import transactions, additive metadata merge, tag-filter query, and review-history joins.
+- SQLite remains canonical for cards, review state, imports, and attempts. Seed JSON is an input only.
+- `skills/tutor-vocab` still shells out to `bin/tutor`; it does not implement scheduling, validation, or persistence.
+
 ## Sources
 
 - [Plugins reference - Claude Code Docs](https://code.claude.com/docs/en/plugins-reference) — plugin.json schema, component discovery, `${CLAUDE_PLUGIN_ROOT}` / `${CLAUDE_PLUGIN_DATA}` placeholders

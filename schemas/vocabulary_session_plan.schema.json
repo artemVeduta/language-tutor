@@ -1,0 +1,207 @@
+{
+  "$defs": {
+    "VocabularyItem": {
+      "additionalProperties": false,
+      "properties": {
+        "accepted_answers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Accepted Answers",
+          "type": "array"
+        },
+        "card_type": {
+          "default": "standard",
+          "enum": [
+            "standard",
+            "cloze"
+          ],
+          "title": "Card Type",
+          "type": "string"
+        },
+        "hint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hint"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "lemma": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lemma"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "sources": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "state": {
+          "$ref": "#/$defs/VocabularyItemState"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "target_language": {
+          "title": "Target Language",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "target_language",
+        "prompt",
+        "accepted_answers"
+      ],
+      "title": "VocabularyItem",
+      "type": "object"
+    },
+    "VocabularyItemState": {
+      "additionalProperties": false,
+      "properties": {
+        "due_at": {
+          "format": "date-time",
+          "title": "Due At",
+          "type": "string"
+        },
+        "ease_factor": {
+          "default": 2.5,
+          "minimum": 1.3,
+          "title": "Ease Factor",
+          "type": "number"
+        },
+        "interval_days": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Interval Days",
+          "type": "integer"
+        },
+        "repetition_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Repetition Count",
+          "type": "integer"
+        },
+        "state": {
+          "default": "new",
+          "enum": [
+            "new",
+            "learning",
+            "review",
+            "mature",
+            "relearning"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "title": "VocabularyItemState",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "due_matching_count": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Due Matching Count"
+    },
+    "empty_reason": {
+      "anyOf": [
+        {
+          "enum": [
+            "no_matching_cards",
+            "matching_cards_not_due"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Empty Reason"
+    },
+    "filter": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Filter",
+      "type": "array"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/VocabularyItem"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "matching_count": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Matching Count"
+    },
+    "requested_count": {
+      "title": "Requested Count",
+      "type": "integer"
+    },
+    "starter_content_required": {
+      "default": false,
+      "title": "Starter Content Required",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "items",
+    "requested_count"
+  ],
+  "title": "VocabularySessionPlan",
+  "type": "object"
+}

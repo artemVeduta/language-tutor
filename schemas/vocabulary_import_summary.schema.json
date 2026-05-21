@@ -1,0 +1,117 @@
+{
+  "$defs": {
+    "SeedImportEntryResult": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code"
+        },
+        "index": {
+          "minimum": 0,
+          "title": "Index",
+          "type": "integer"
+        },
+        "item_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Item Id"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message"
+        },
+        "repair_hint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Repair Hint"
+        },
+        "status": {
+          "enum": [
+            "created",
+            "updated",
+            "skipped",
+            "invalid"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "index",
+        "status"
+      ],
+      "title": "SeedImportEntryResult",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "created_count": {
+      "default": 0,
+      "title": "Created Count",
+      "type": "integer"
+    },
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/SeedImportEntryResult"
+      },
+      "title": "Entries",
+      "type": "array"
+    },
+    "invalid_count": {
+      "default": 0,
+      "title": "Invalid Count",
+      "type": "integer"
+    },
+    "path": {
+      "title": "Path",
+      "type": "string"
+    },
+    "skipped_count": {
+      "default": 0,
+      "title": "Skipped Count",
+      "type": "integer"
+    },
+    "updated_count": {
+      "default": 0,
+      "title": "Updated Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "path"
+  ],
+  "title": "SeedImportResult",
+  "type": "object"
+}

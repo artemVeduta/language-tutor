@@ -1,0 +1,35 @@
+[
+  {
+    "card_type": "standard",
+    "target": "привіт",
+    "prompt": "hello",
+    "accepted_answers": ["привіт", "privit"],
+    "tags": ["greetings"],
+    "notes": ["informal greeting"],
+    "source": "phase2"
+  },
+  {
+    "card_type": "standard",
+    "target": "Привіт",
+    "prompt": " hello ",
+    "accepted_answers": ["pryvit"],
+    "tags": ["daily"],
+    "notes": ["alternate transliteration"],
+    "source": "phase2-update"
+  },
+  {
+    "card_type": "cloze",
+    "target": "дякую",
+    "prompt": "{{answer}} means thank you.",
+    "accepted_answers": ["дякую", "diakuiu"],
+    "tags": ["thanks", "cloze"],
+    "source": "phase2"
+  },
+  {
+    "card_type": "standard",
+    "target": "",
+    "prompt": "bad",
+    "accepted_answers": ["bad"],
+    "tags": ["invalid"]
+  }
+]

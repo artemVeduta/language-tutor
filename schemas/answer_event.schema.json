@@ -78,6 +78,30 @@
     "FeedbackEnvelope": {
       "additionalProperties": false,
       "properties": {
+        "accepted_answer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Accepted Answer"
+        },
+        "cloze_sentence": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cloze Sentence"
+        },
         "confidence": {
           "$ref": "#/$defs/Confidence",
           "default": "low"

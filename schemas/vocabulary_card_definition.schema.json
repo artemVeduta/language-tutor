@@ -1,0 +1,91 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "accepted_answers": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Accepted Answers",
+      "type": "array"
+    },
+    "card_type": {
+      "default": "standard",
+      "enum": [
+        "standard",
+        "cloze"
+      ],
+      "title": "Card Type",
+      "type": "string"
+    },
+    "hint": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Hint"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "prompt": {
+      "title": "Prompt",
+      "type": "string"
+    },
+    "source": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source"
+    },
+    "tags": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Tags",
+      "type": "array"
+    },
+    "target": {
+      "title": "Target",
+      "type": "string"
+    }
+  },
+  "required": [
+    "target",
+    "prompt",
+    "accepted_answers"
+  ],
+  "title": "VocabularyCardDefinition",
+  "type": "object"
+}

@@ -1,0 +1,10 @@
+{
+  "item": {
+    "card_type": "standard",
+    "target": "привіт",
+    "prompt": "hello",
+    "accepted_answers": ["привіт"],
+    "tags": ["history"]
+  },
+  "attempts": 500
+}
