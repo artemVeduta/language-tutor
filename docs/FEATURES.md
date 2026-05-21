@@ -78,6 +78,9 @@ Missing any of these makes the product feel broken to a learner who has used Ank
 | Current streak (days with ≥1 session) | Universal across SRS/learning apps; cheap psychological hook | LOW | Compute from `session_summaries.created_at`. |
 | Due count (today / next 7 days) | Users plan around it | LOW | SQL aggregate over `srs_items`. |
 | Recent weak patterns (top error tags) | The "what should I work on next" answer | MEDIUM | Aggregate `mistake_events.tag` over last N sessions. |
+| Per-tag mastery rows | Learners need a ranked list of weak/strong tags, not only raw weak tags | MEDIUM | Derived from aggregate-safe review, mistake, and session-summary evidence. |
+| Last-N recap with ASCII trends | Shows recent direction without adding charts or a dashboard | MEDIUM | `tutor progress --json` supports 1-30 completed-session windows and ASCII sparklines. |
+| Markdown / JSON export | Progress should be shareable and contract-validatable | LOW | JSON is canonical; markdown renders from validated `ProgressReport`. |
 | Item count by maturity (new / learning / mature) | Standard Anki/SRS overview | LOW | SQL aggregate by interval bucket. |
 | Last-session summary recap | Boot context already produces it; show it for free | LOW | Read `session_summaries.summary_for_next_boot`. |
 
@@ -223,7 +226,7 @@ Translanguaging research ([drpress.org/EHSS/17531](https://drpress.org/ojs/index
 - [ ] **Controlled error-tag vocabulary** (Slavic-aware) — Frozen for v1; documented.
 - [ ] **`tutor-session-analyzer`** — Validated JSON output; persists `summary_for_next_boot`.
 - [ ] **`get_boot_context()`** — Deterministic, token-budgeted, handles cold-start.
-- [ ] **`tutor-progress`** — Plain markdown: streak, due count (today + 7d), top weak tags, last-session summary, item counts by maturity.
+- [ ] **`tutor-progress`** — Validated JSON and terminal markdown: streak, due count, per-tag mastery, top weak tags, last-N recap, ASCII trends, skipped-data notices, and item counts by maturity.
 - [ ] **Claude plugin manifest + skills frontmatter** — So it actually installs.
 - [ ] **Adapter contract test suite** — Proves Claude adapter covers full lifecycle.
 

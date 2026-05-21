@@ -1018,7 +1018,7 @@ Top-down dependency stack. **Build bottom-up.**
 | **6 Adapter contract tests** | Prove Claude adapter satisfies generic contract | `tests/adapter_contract/` | `pytest tests/adapter_contract` passes |
 | **7 Distribution** | Plugin installs cleanly from marketplace | `marketplace.json` entry, install docs | Fresh-machine install works |
 
-**Key build rule:** No skill can be merged until its underlying schemas + DAL repos + golden render tests exist. This stops "skill works locally but writes nothing useful to DB."
+**Key build rule:** No skill can be merged until its underlying schemas + DAL repos + golden render tests exist. New or edited `SKILL.md` files also require assigned-subagent RED/GREEN/REFACTOR pressure evidence using the local writing-skills helper and active spec references. This stops "skill works locally but writes nothing useful to DB" and "skill routes correctly only when the author is driving."
 
 ---
 

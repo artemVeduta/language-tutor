@@ -37,6 +37,10 @@
 
 - [ ] CHKXXX Layer boundaries, contracts, data ownership, and scope guardrails are verified
 - [ ] CHKXXX Required deterministic, contract, migration, and semantic-eval tests are listed
+- [ ] CHKXXX Any SKILL.md creation/update uses assigned subagent work, local
+  writing-skills helper, active spec references, and RED/GREEN/REFACTOR evidence
+- [ ] CHKXXX Skill descriptions/frontmatter, trigger overlap, progressive
+  disclosure, and changed-file reports are reviewed when skills change
 
 ## Notes
 

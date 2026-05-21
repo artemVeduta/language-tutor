@@ -1,27 +1,21 @@
 <!--
 Sync Impact Report
-Version change: template -> 1.0.0
+Version change: 1.1.0 -> 1.1.1
 Modified principles:
-- Placeholder Principle 1 -> I. Layered Single-Responsibility Boundaries
-- Placeholder Principle 2 -> II. Contracts and Abstractions First
-- Placeholder Principle 3 -> III. Testable Deterministic Behavior
-- Placeholder Principle 4 -> IV. Local-First Data Ownership
-- Placeholder Principle 5 -> V. Simplicity and Scope Discipline
+- VIII. Skill Creation as Tested Contract -> VIII. Skill Creation as Tested Contract
 Added principles:
-- VI. DRY Without False Coupling
-- VII. Composition and Demeter
+- None
 Added sections:
-- Operational Constraints
-- Development Workflow
+- None
 Removed sections:
-- Template placeholder section 2
-- Template placeholder section 3
+- None
 Templates requiring updates:
-- ✅ updated .specify/templates/plan-template.md
-- ✅ updated .specify/templates/spec-template.md
-- ✅ updated .specify/templates/tasks-template.md
-- ✅ updated .specify/templates/checklist-template.md
+- ✅ checked .specify/templates/plan-template.md
+- ✅ checked .specify/templates/spec-template.md
+- ✅ checked .specify/templates/tasks-template.md
+- ✅ checked .specify/templates/checklist-template.md
 - ✅ checked .specify/extensions/git/commands/*.md
+- ✅ updated docs/ROADMAP.md
 - ✅ updated AGENTS.md
 Follow-up TODOs:
 - None
@@ -62,9 +56,12 @@ validation, schema validation, and migration behavior require unit or golden
 tests. Host adapters require contract tests. User journeys that cross CLI,
 core, and DAL require integration tests. LLM evaluator quality requires
 semantic fixture evaluation with controlled tags and confidence thresholds.
+Skill creation and rewrite behavior requires subagent pressure tests and
+best-practice compliance checks before any `SKILL.md` change ships.
 
 Rationale: a language tutor loses trust when schedules, corrections, or rendered
-feedback drift without explanation.
+feedback drift without explanation, and a skill-driven product loses trust when
+its invocation rules fail under realistic agent pressure.
 
 ### IV. Local-First Data Ownership
 
@@ -81,11 +78,12 @@ truth between editable config and computed learner state.
 
 Implement current v1 requirements only: Claude Code adapter, local Python core,
 YAML and SQLite persistence, vocab SRS, free writing, feedback rendering,
-session analysis, progress, and install checks. New hosts, modalities,
-dashboards, gamification, cloud sync, multi-user support, FSRS, and bundled
-curricula are out of scope until a documented amendment moves them into scope.
-Plans MUST reject speculative abstractions, unused dependencies, and methods
-without current callers.
+session analysis, progress, install checks, and skill-suite quality gates. New
+hosts, modalities, dashboards, gamification, cloud sync, multi-user support,
+FSRS, bundled curricula, and new user-facing skills are out of scope until a
+documented amendment or feature spec moves them into scope. Plans MUST reject
+speculative abstractions, unused dependencies, and methods without current
+callers.
 
 Rationale: the MVP must become a daily-use tutor before the architecture expands.
 
@@ -111,6 +109,27 @@ talk only to its immediate collaborators through explicit methods or Protocols.
 Rationale: composition keeps tests small and prevents feature code from reaching
 through adapters, DAL internals, or renderer details.
 
+### VIII. Skill Creation as Tested Contract
+
+Every creation or update of a project `SKILL.md` MUST be treated as a tested
+contract change, not as prose cleanup. The work MUST use a subagent per skill or
+coherent skill family. The subagent prompt MUST explicitly require reading the
+local helper at
+`/Users/artem.veduta/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/writing-skills`
+and reporting changed files. Skill work MUST apply the active feature's required
+external skill-authoring references; the baseline skill-authoring references are
+Anthropic skill authoring best practices, Anthropic's Complete Guide to Building
+Skills, and the Superpowers skill corpus. No skill may ship without documented
+RED/GREEN/REFACTOR evidence: baseline subagent behavior without the change,
+minimal skill change, pressure verification with the change, and any loophole
+closures. `SKILL.md` files MUST remain thin orchestration and discovery
+documents; pedagogy, persistence, rendering, scoring, migrations, and privacy
+filters belong in validated Python contracts and tests.
+
+Rationale: skills are runtime control surfaces. Untested or overgrown skills
+silently misroute learner requests, duplicate core logic, and bypass the
+deterministic contracts that make the tutor auditable.
+
 ## Operational Constraints
 
 - Runtime MUST remain Python 3.12+ with a synchronous core.
@@ -123,6 +142,12 @@ through adapters, DAL internals, or renderer details.
   contracts and adapter seams used by the Claude adapter.
 - LLM evaluator outputs MUST be schema-validated before persistence or rendering.
 - Boot context MUST be deterministic and token-budgeted.
+- Skill frontmatter names MUST use lowercase letters, numbers, and hyphens; the
+  description MUST be third-person, concrete, trigger-oriented, and free of
+  workflow summaries that let an agent skip the full skill body.
+- Skill reference files MUST use progressive disclosure: one-level links from
+  `SKILL.md`, descriptive filenames, and scripts for deterministic operations
+  where a script is safer than generated instructions.
 - Shell verification in this repository MUST use the `rtk` command prefix.
 
 ## Development Workflow
@@ -133,11 +158,17 @@ through adapters, DAL internals, or renderer details.
 - Every task list MUST group work by independently testable user story and add
   contract, data, rendering, migration, and semantic-eval tasks when those
   surfaces change.
+- Every task list that creates or changes project skills MUST include skill
+  inventory, subagent dispatch, local writing-skills helper use, external
+  reference checks, pressure-test evidence, activation/description review, and a
+  main-agent integration review of reported changed files.
 - Tests that define required behavior MUST be written before implementation for
   contract, persistence, rendering, SRS, boot-context, and evaluator semantics.
+- Skill tests MUST be written before skill edits: pressure scenarios first,
+  baseline failure documented, then skill edit, then subagent verification.
 - Reviews MUST reject SOLID, DRY, KISS, YAGNI, SoC, composition, or Demeter
-  violations unless the plan records the violation and the simpler alternative
-  rejected.
+  violations and skill-creation gate violations unless the plan records the
+  violation and the simpler alternative rejected.
 - Changes MUST preserve existing user work in the repository and avoid unrelated
   refactors.
 
@@ -160,7 +191,10 @@ Compliance review expectations:
   dependencies, cross-layer calls, or scope changes.
 - Template updates MUST be completed in the same change as constitutional
   amendments.
+- Skill governance updates MUST cite the local writing-skills helper and the
+  active spec's required skill-authoring references when skill creation or
+  rewrite work is in scope.
 - Deferred governance questions MUST be recorded as TODO entries in the Sync
   Impact Report and resolved before implementation depends on them.
 
-**Version**: 1.0.0 | **Ratified**: 2026-05-19 | **Last Amended**: 2026-05-19
+**Version**: 1.1.1 | **Ratified**: 2026-05-19 | **Last Amended**: 2026-05-21

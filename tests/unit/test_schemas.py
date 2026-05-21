@@ -10,8 +10,12 @@ from language_tutor.schemas import (
     FeedbackEnvelope,
     LearnerPreferences,
     LearnerProfile,
+    ProgressMarkdownExport,
+    ProgressReport,
+    ProgressReportRequest,
     SelectionPolicy,
     SelectionReason,
+    TextTrend,
     VocabularyCardDefinition,
     VocabularyDrillRequest,
     VocabularyItem,
@@ -37,6 +41,9 @@ def test_json_schema_export(tmp_path: Path) -> None:
     assert (tmp_path / "weak_tag_signal.schema.json").exists()
     assert (tmp_path / "selection_reason.schema.json").exists()
     assert (tmp_path / "vocabulary_review_history.schema.json").exists()
+    assert (tmp_path / "progress_request.schema.json").exists()
+    assert (tmp_path / "progress_report.schema.json").exists()
+    assert (tmp_path / "progress_markdown_export.schema.json").exists()
 
 
 def test_vocabulary_item_phase2_defaults() -> None:
@@ -129,3 +136,52 @@ def test_review_intensity_validation() -> None:
     assert LearnerPreferences().review_intensity == "normal"
     with pytest.raises(ValidationError):
         LearnerPreferences.model_validate({"review_intensity": "extreme"})
+
+
+def test_progress_schema_contracts() -> None:
+    request = ProgressReportRequest.model_validate({"format": "markdown", "window_size": 1})
+    assert request.format == "markdown"
+    report = ProgressReport.model_validate(
+        {
+            "generated_at": "2026-05-21T12:00:00Z",
+            "report_window": {
+                "requested_session_count": 1,
+                "actual_session_count": 0,
+                "mastery_session_count": 0,
+            },
+            "snapshot": {
+                "streak_days": 0,
+                "due_count": 0,
+                "maturity": {},
+                "top_weak_patterns": [],
+                "cost_status": "unavailable",
+                "next_action": "Start vocabulary or writing practice.",
+            },
+            "recent_recap": {"actual_session_count": 0},
+            "due_review_summary": {
+                "due_count": 0,
+                "completed_in_window": 0,
+                "low_quality_in_window": 0,
+                "maturity": {},
+            },
+        }
+    )
+    assert report.schema_version == 1
+    assert report.cost_status == "unavailable"
+    export = ProgressMarkdownExport(
+        generated_at=report.generated_at,
+        report_window=report.report_window,
+        markdown="# Progress Report\n",
+    )
+    assert export.content_type == "text/markdown"
+    trend = TextTrend(
+        metric="answers",
+        label="Answers",
+        polarity="higher_is_better",
+        direction="steady",
+        sparkline="+++",
+        min_label="min 1",
+        max_label="max 1",
+        values_count=3,
+    )
+    assert trend.sparkline == "+++"

@@ -1,1 +1,5 @@
-{"days": 365}
+{
+  "scenario": "one_year_daily_dense_history",
+  "days": 365,
+  "builder": "tests.fixtures.progress.phase4_scenarios.seed_one_year"
+}

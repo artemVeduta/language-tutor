@@ -18,7 +18,7 @@ Check a phase when its exit gate is met. (Granular item boxes live in each phase
 - [x] **Phase 1** — Foundation + Core Loop
 - [x] **Phase 2** — Vocab Depth
 - [x] **Phase 3** — Smarter Engine
-- [ ] **Phase 4** — Richer Feedback & Progress
+- [x] **Phase 4** — Richer Feedback & Progress
 - [ ] **Phase 5** — Text Modalities
 - [ ] **Phase 6** — Host-Capability Layer + Adapter Framework
 - [ ] **Phase 6.x** — Adapter Rollout (openclaw / hermess / codex / antigravity)
@@ -55,6 +55,10 @@ reaches depth; fuzzy checkpoints; violates focus).
   `FeedbackEnvelope`/boot-context usage, no duplicated pedagogy, and the combined
   skill-listing stays within Claude Code's description budget. New skills must
   slot into the suite, not fork it.
+- **Skill creation is subagent-tested:** every new or edited `SKILL.md` uses the
+  local writing-skills helper, external best-practice references required by the
+  active spec, and RED/GREEN/REFACTOR pressure evidence from an assigned
+  subagent before it ships.
 
 ## Phases
 
@@ -110,31 +114,50 @@ summaries, intensity queue sizing capped at 60, and schema/contract/golden/
 integration coverage. Verification: `rtk uv run pytest`, `rtk uv run pyright`,
 and `rtk uv run ruff check .`.
 
-### Phase 4 — Richer Feedback & Progress
+### Phase 4 — Richer Feedback & Progress ✅ *(implemented)*
 Renderer / analysis surface. No host dependency. **Text/markdown only** — stays
 clear of the banned "rich analytics dashboard" (`REQUIREMENTS.md` Out of Scope):
 no charts, no GUI, no web view.
 
-- [ ] Per-tag mastery view.
-- [ ] Text trend / ASCII sparkline; last-N-session recap.
-- [ ] Exportable report (markdown / JSON, terminal-printable).
+- [x] Per-tag mastery view.
+- [x] Text trend / ASCII sparkline; last-N-session recap.
+- [x] Exportable report (markdown / JSON, terminal-printable).
 
 **Exit gate:** progress views golden-tested deterministic; export round-trips;
 output is text/markdown only (no graphical surface); progress view <5s on one
 year of daily history (spec-001 perf bar preserved).
 
-### Phase 5 — Text Modalities
-First new exercise types. Text-only, runs on any host.
+**Status:** Implemented via spec `004-richer-feedback-progress`. Adds validated
+progress report/request/markdown contracts, schema mirrors, aggregate-safe DAL
+reads, read-performance indexes, deterministic markdown rendering, CLI JSON and
+markdown export paths, `tutor-progress` routing updates, skill pressure evidence,
+and unit/golden/contract/integration/migration/performance coverage.
+Verification: `rtk uv run pytest`, `rtk uv run pyright`, and
+`rtk uv run ruff check .`.
 
+### Phase 5 — Text Modalities + Skill Authoring
+First new exercise types plus full project skill review/rewrite. Text-only,
+runs on any host.
+
+- [ ] Inventory and review every project `SKILL.md` under `.agents/skills/` and
+  `skills/`, including active Speckit skills used during the phase.
+- [ ] Rewrite existing skills where needed using the local writing-skills helper,
+  required external skill-authoring references, and assigned subagent
+  RED/GREEN/REFACTOR pressure evidence.
+- [ ] Confirm trigger descriptions, frontmatter, progressive disclosure,
+  CLI/contract conventions, and no duplicated pedagogy across the full skill
+  suite before adding new skills.
 - [ ] `tutor-reading` — LLM-generated passage + comprehension questions,
   feedback via the existing `FeedbackEnvelope`.
 - [ ] `tutor-lesson` — guided micro-lesson.
 - [ ] Dictation / transcript drill as a text-based "listening" proxy.
 
-**Exit gate:** each new skill reuses `FeedbackEnvelope` + judge contract; emits
-`mistake_events`; introduces no new persistence path; **skill-suite coherence
-audit passes** (existing tutor-vocab/writing/progress/setup re-checked for
-trigger overlap and convention sync); two new skills live and dogfoodable.
+**Exit gate:** 100% of project `SKILL.md` files are inventoried and either
+confirmed compliant or rewritten with subagent evidence; each new skill reuses
+`FeedbackEnvelope` + judge contract, emits `mistake_events`, and introduces no
+new persistence path; **skill-suite coherence audit passes** (existing
+tutor-vocab/writing/progress/setup and Speckit skills re-checked for trigger
+overlap and convention sync); two new skills live and dogfoodable.
 
 ### Phase 6 — Host-Capability Layer + Adapter Framework
 Architecture only — no new host lands in this phase.

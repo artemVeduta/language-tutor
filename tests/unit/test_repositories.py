@@ -7,6 +7,7 @@ from language_tutor.dal.sqlite_store import connect
 from language_tutor.feedback import vocabulary_feedback
 from language_tutor.schemas import VocabularyItem
 from language_tutor.srs import quality_for_verdict, schedule_review
+from tests.fixtures.progress.phase4_scenarios import seed_mixed_history
 
 
 def test_vocab_answer_idempotency(tmp_path) -> None:  # type: ignore[no-untyped-def]
@@ -240,5 +241,28 @@ def test_vocabulary_selection_candidates_include_ordering_and_filter_boundary(tm
         candidates = repo.vocabulary_selection_candidates(["case"])
         assert [candidate.item.id for candidate in candidates] == ["vocab_case"]
         assert candidates[0].created_at == datetime(2026, 5, 20, tzinfo=UTC)
+    finally:
+        conn.close()
+
+
+def test_progress_repository_reads_are_bounded_and_aggregate_safe(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    conn = connect(tmp_path / "db.sqlite3")
+    try:
+        repo = TutorRepository(conn)
+        seed_mixed_history(repo, 12)
+        sessions = repo.recent_progress_sessions(5)
+        session_ids = [session.session_id for session in sessions]
+        evidence = repo.progress_mastery_evidence(session_ids)
+        answers = repo.progress_answer_totals(session_ids)
+        reviews = repo.progress_review_totals(session_ids)
+        mistakes = repo.progress_mistake_severity_totals(session_ids)
+        assert len(sessions) == 5
+        assert {row.session_id for row in answers} <= set(session_ids)
+        assert {row.session_id for row in reviews} <= set(session_ids)
+        assert {row.session_id for row in mistakes} <= set(session_ids)
+        serialized = "".join(str(row) for row in evidence)
+        assert "private answer" not in serialized
+        assert "private span" not in serialized
+        assert "private prose" not in serialized
     finally:
         conn.close()

@@ -12,6 +12,8 @@ description: "Task list template for feature implementation"
 **Tests**: Include tests required by the feature specification and constitution.
 Contract, schema, migration, rendering, SRS, boot-context, and evaluator
 semantic changes require test tasks before implementation tasks.
+Skill creation or rewrite work requires subagent pressure-test tasks before
+`SKILL.md` edits, plus verification tasks after each skill or skill family.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -75,6 +77,10 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T011 Define or update narrow Protocols for cross-layer dependencies
 - [ ] T012 Add migration/YAML validation fixtures for changed data ownership
 - [ ] T013 Add contract/golden tests for changed deterministic behavior
+- [ ] T014 Inventory affected project SKILL.md files and assign one subagent per
+      skill or coherent skill family when skill changes are in scope
+- [ ] T015 Create skill pressure scenarios using the local writing-skills helper
+      and active spec external references before editing any SKILL.md
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -90,18 +96,24 @@ Examples of foundational tasks (adjust based on your project):
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T014 [P] [US1] Contract test for [endpoint/schema/CLI JSON] in tests/contract/test_[name].py
-- [ ] T015 [P] [US1] Golden test for [renderer/boot context/SRS mapping] in tests/golden/test_[name].py
-- [ ] T016 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T016 [P] [US1] Contract test for [endpoint/schema/CLI JSON] in tests/contract/test_[name].py
+- [ ] T017 [P] [US1] Golden test for [renderer/boot context/SRS mapping] in tests/golden/test_[name].py
+- [ ] T018 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T019 [P] [US1] Skill pressure baseline for [SKILL.md path] via subagent
+      without the proposed skill change, when this story changes skills
 
 ### Implementation for User Story 1
 
-- [ ] T017 [P] [US1] Create [Entity1] model in src/models/[entity1].py
-- [ ] T018 [P] [US1] Create [Entity2] model in src/models/[entity2].py
-- [ ] T019 [US1] Implement [Service] in src/services/[service].py (depends on T017, T018)
-- [ ] T020 [US1] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T021 [US1] Add validation and error handling
-- [ ] T022 [US1] Add logging for user story 1 operations
+- [ ] T020 [P] [US1] Create [Entity1] model in src/models/[entity1].py
+- [ ] T021 [P] [US1] Create [Entity2] model in src/models/[entity2].py
+- [ ] T022 [US1] Implement [Service] in src/services/[service].py (depends on T020, T021)
+- [ ] T023 [US1] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T024 [US1] Update [SKILL.md path] through assigned subagent using the
+      local writing-skills helper, when this story changes skills
+- [ ] T025 [US1] Add validation and error handling
+- [ ] T026 [US1] Add logging for user story 1 operations
+- [ ] T027 [US1] Verify changed skills with subagent pressure scenarios and
+      record changed files, rationalizations closed, and remaining gaps
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -115,15 +127,19 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Tests for User Story 2 (include when required) ⚠️
 
-- [ ] T023 [P] [US2] Contract test for [endpoint/schema/CLI JSON] in tests/contract/test_[name].py
-- [ ] T024 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T028 [P] [US2] Contract test for [endpoint/schema/CLI JSON] in tests/contract/test_[name].py
+- [ ] T029 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T030 [P] [US2] Skill pressure baseline for [SKILL.md path] via subagent
+      without the proposed skill change, when this story changes skills
 
 ### Implementation for User Story 2
 
-- [ ] T025 [P] [US2] Create [Entity] model in src/models/[entity].py
-- [ ] T026 [US2] Implement [Service] in src/services/[service].py
-- [ ] T027 [US2] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T028 [US2] Integrate with User Story 1 components (if needed)
+- [ ] T031 [P] [US2] Create [Entity] model in src/models/[entity].py
+- [ ] T032 [US2] Implement [Service] in src/services/[service].py
+- [ ] T033 [US2] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T034 [US2] Update and verify [SKILL.md path] through assigned subagent,
+      when this story changes skills
+- [ ] T035 [US2] Integrate with User Story 1 components (if needed)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -137,14 +153,18 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Tests for User Story 3 (include when required) ⚠️
 
-- [ ] T029 [P] [US3] Contract test for [endpoint/schema/CLI JSON] in tests/contract/test_[name].py
-- [ ] T030 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T036 [P] [US3] Contract test for [endpoint/schema/CLI JSON] in tests/contract/test_[name].py
+- [ ] T037 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T038 [P] [US3] Skill pressure baseline for [SKILL.md path] via subagent
+      without the proposed skill change, when this story changes skills
 
 ### Implementation for User Story 3
 
-- [ ] T031 [P] [US3] Create [Entity] model in src/models/[entity].py
-- [ ] T032 [US3] Implement [Service] in src/services/[service].py
-- [ ] T033 [US3] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T039 [P] [US3] Create [Entity] model in src/models/[entity].py
+- [ ] T040 [US3] Implement [Service] in src/services/[service].py
+- [ ] T041 [US3] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T042 [US3] Update and verify [SKILL.md path] through assigned subagent,
+      when this story changes skills
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -163,6 +183,8 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] TXXX Performance optimization across all stories
 - [ ] TXXX [P] Additional unit tests in tests/unit/
 - [ ] TXXX [P] Constitution compliance review for SOLID/DRY/KISS/YAGNI/SoC/Demeter
+- [ ] TXXX [P] Skill-suite coherence audit for trigger overlap, frontmatter,
+      helper/reference evidence, and changed-file reports when skills changed
 - [ ] TXXX Security hardening
 - [ ] TXXX Run quickstart.md validation
 
@@ -188,12 +210,15 @@ Examples of foundational tasks (adjust based on your project):
 ### Within Each User Story
 
 - Required tests MUST be written and FAIL before implementation
+- Required skill pressure baselines MUST run before skill edits
 - Models before services
 - Services before endpoints
 - Contracts before cross-layer integration
 - Migrations before repository behavior
 - Core implementation before integration
 - Story complete before moving to next priority
+- Changed skills MUST be verified by their assigned subagent before moving to
+  another skill or story
 
 ### Parallel Opportunities
 
@@ -257,6 +282,8 @@ With multiple developers:
 - [Story] label maps task to specific user story for traceability
 - Each user story should be independently completable and testable
 - Verify required tests fail before implementing
+- Verify skill pressure baselines fail before editing SKILL.md files, and verify
+  subagents pass the same scenarios after edits
 - Keep host adapter, core, DAL, renderer, and skill tasks in separate files where possible
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently

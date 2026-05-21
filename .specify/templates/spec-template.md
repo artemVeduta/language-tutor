@@ -114,6 +114,8 @@
 - **Data Ownership**: [YAML config, SQLite state, no data, or NEEDS CLARIFICATION]
 - **Contract Surfaces**: [Pydantic model/JSON schema/CLI JSON/SQL migration/Protocol]
 - **Required Validation**: [Unit/golden/contract/integration/migration/semantic eval]
+- **Skill Creation**: [No skill changes, or affected SKILL.md paths plus required
+  writing-skills helper/external references/subagent pressure-test evidence]
 - **Scope Guardrails**: [Explicit out-of-scope items and anti-features]
 
 ## Success Criteria *(mandatory)*
