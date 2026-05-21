@@ -1,0 +1,251 @@
+{
+  "$defs": {
+    "Verdict": {
+      "enum": [
+        "correct",
+        "partial",
+        "missed",
+        "unanswered",
+        "needs_review"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    },
+    "VocabularyItem": {
+      "additionalProperties": false,
+      "properties": {
+        "accepted_answers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Accepted Answers",
+          "type": "array"
+        },
+        "card_type": {
+          "default": "standard",
+          "enum": [
+            "standard",
+            "cloze"
+          ],
+          "title": "Card Type",
+          "type": "string"
+        },
+        "hint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hint"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "lemma": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lemma"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "sources": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "state": {
+          "$ref": "#/$defs/VocabularyItemState"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "target_language": {
+          "title": "Target Language",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "target_language",
+        "prompt",
+        "accepted_answers"
+      ],
+      "title": "VocabularyItem",
+      "type": "object"
+    },
+    "VocabularyItemState": {
+      "additionalProperties": false,
+      "properties": {
+        "due_at": {
+          "format": "date-time",
+          "title": "Due At",
+          "type": "string"
+        },
+        "ease_factor": {
+          "default": 2.5,
+          "minimum": 1.3,
+          "title": "Ease Factor",
+          "type": "number"
+        },
+        "interval_days": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Interval Days",
+          "type": "integer"
+        },
+        "repetition_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Repetition Count",
+          "type": "integer"
+        },
+        "state": {
+          "default": "new",
+          "enum": [
+            "new",
+            "learning",
+            "review",
+            "mature",
+            "relearning"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "title": "VocabularyItemState",
+      "type": "object"
+    },
+    "VocabularyReviewAttempt": {
+      "additionalProperties": false,
+      "properties": {
+        "answer_detail_available": {
+          "default": true,
+          "title": "Answer Detail Available",
+          "type": "boolean"
+        },
+        "answer_event_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Answer Event Id"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "learner_answer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Learner Answer"
+        },
+        "next_state": {
+          "$ref": "#/$defs/VocabularyItemState"
+        },
+        "previous_state": {
+          "$ref": "#/$defs/VocabularyItemState"
+        },
+        "quality": {
+          "maximum": 5,
+          "minimum": 0,
+          "title": "Quality",
+          "type": "integer"
+        },
+        "reviewed_at": {
+          "format": "date-time",
+          "title": "Reviewed At",
+          "type": "string"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "verdict": {
+          "$ref": "#/$defs/Verdict"
+        }
+      },
+      "required": [
+        "id",
+        "session_id",
+        "verdict",
+        "quality",
+        "previous_state",
+        "next_state",
+        "reviewed_at"
+      ],
+      "title": "VocabularyReviewAttempt",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "attempts": {
+      "items": {
+        "$ref": "#/$defs/VocabularyReviewAttempt"
+      },
+      "title": "Attempts",
+      "type": "array"
+    },
+    "current_state": {
+      "$ref": "#/$defs/VocabularyItemState"
+    },
+    "due_status": {
+      "enum": [
+        "new",
+        "due",
+        "not_due"
+      ],
+      "title": "Due Status",
+      "type": "string"
+    },
+    "item": {
+      "$ref": "#/$defs/VocabularyItem"
+    }
+  },
+  "required": [
+    "item",
+    "current_state",
+    "due_status"
+  ],
+  "title": "VocabularyReviewHistory",
+  "type": "object"
+}

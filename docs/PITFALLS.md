@@ -560,6 +560,16 @@ Phase 1 lands SQLite migrations as a stub ("just run `init.sql`"). Phase 3 needs
 
 ---
 
+## Phase 2 Vocabulary Pitfalls
+
+| Pitfall | Prevention |
+|---------|------------|
+| Duplicate cards differ only by case, spacing, punctuation, or apostrophe variant | Use shared duplicate identity normalization in `vocab.py`; never duplicate this logic in CLI or DAL. |
+| Seed JSON becomes a second source of truth | Treat seed files as import inputs only; SQLite owns canonical cards, metadata, state, and history after import. |
+| Import overwrites review state or removes user metadata | Merge only accepted answers, notes, sources, and tags additively; never update SRS state during import. |
+| Tag filters silently use AND semantics | Keep inclusive OR matching and expose `matching_count`, `due_matching_count`, and empty reason in the session plan. |
+| Cloze prompt accepts zero or multiple markers | Validate exactly one `{{answer}}` marker at the card-definition contract boundary. |
+
 ## Sources
 
 - [Plugins reference — Claude Code Docs](https://code.claude.com/docs/en/plugins-reference)

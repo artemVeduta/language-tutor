@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 def main() -> int:
+    # Keep routing transparent so add/import/history and cloze payloads stay CLI-owned.
     return subprocess.call([str(ROOT / "bin" / "tutor"), *sys.argv[1:]])
 
 

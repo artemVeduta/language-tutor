@@ -21,12 +21,22 @@ from language_tutor.schemas import (
     FeedbackEnvelope,
     LearnerPreferences,
     LearnerProfile,
+    SeedImportRequest,
     SessionEndInput,
     VocabularyAnswerInput,
+    VocabularyCardDefinition,
+    VocabularyDrillRequest,
+    VocabularyReviewHistoryRequest,
     WritingRecordInput,
 )
 from language_tutor.setup import read_setup, write_setup
-from language_tutor.vocab import answer_vocab, start_vocab
+from language_tutor.vocab import (
+    add_vocab_card,
+    answer_vocab,
+    import_seed_list,
+    review_history,
+    start_vocab,
+)
 from language_tutor.writing import record_writing, writing_prompt
 
 
@@ -188,18 +198,79 @@ def vocab() -> None:
 
 @vocab.command("start")
 @click.option("--json-output", "--json", "json_output", is_flag=True)
-def vocab_start(json_output: bool) -> None:
+@click.argument("payload", required=False)
+def vocab_start(json_output: bool, payload: str | None) -> None:
     del json_output
     try:
         state = read_setup(resolve_paths())
+        request = VocabularyDrillRequest.model_validate(parse_payload(payload)) if payload else None
         repo, conn = open_repo()
         try:
-            emit(start_vocab(repo, state.profile.target_language, state.preferences))
+            emit(start_vocab(repo, state.profile.target_language, state.preferences, request))
             conn.commit()
         finally:
             conn.close()
-    except TutorError as exc:
-        fail_json(exc)
+    except (TutorError, ValidationError) as exc:
+        if isinstance(exc, TutorError):
+            fail_json(exc)
+        fail_json(
+            TutorError(
+                "invalid_vocab_start",
+                "Vocabulary start payload failed validation.",
+                "Pass tags as a non-empty list or omit the payload.",
+            )
+        )
+
+
+@vocab.command("add")
+@click.option("--json-output", "--json", "json_output", is_flag=True)
+@click.argument("payload", required=True)
+def vocab_add(json_output: bool, payload: str) -> None:
+    del json_output
+    try:
+        state = read_setup(resolve_paths())
+        definition = VocabularyCardDefinition.model_validate(parse_payload(payload))
+        repo, conn = open_repo()
+        try:
+            emit(add_vocab_card(repo, definition, state.profile.target_language))
+            conn.commit()
+        finally:
+            conn.close()
+    except (TutorError, ValidationError) as exc:
+        if isinstance(exc, TutorError):
+            fail_json(exc)
+        fail_json(
+            TutorError(
+                "invalid_vocab_card",
+                "Vocabulary card failed validation.",
+                "Provide target, prompt, and accepted_answers; cloze prompts need one {{answer}} marker.",
+            )
+        )
+
+
+@vocab.command("import")
+@click.option("--json-output", "--json", "json_output", is_flag=True)
+@click.argument("payload", required=True)
+def vocab_import(json_output: bool, payload: str) -> None:
+    del json_output
+    try:
+        state = read_setup(resolve_paths())
+        request = SeedImportRequest.model_validate(parse_payload(payload))
+        repo, conn = open_repo()
+        try:
+            emit(import_seed_list(repo, request, state.profile.target_language))
+        finally:
+            conn.close()
+    except (TutorError, ValidationError) as exc:
+        if isinstance(exc, TutorError):
+            fail_json(exc)
+        fail_json(
+            TutorError(
+                "invalid_seed_import",
+                "Seed import payload failed validation.",
+                "Pass {'path':'...json'} as the payload.",
+            )
+        )
 
 
 @vocab.command("answer")
@@ -223,6 +294,38 @@ def vocab_answer(json_output: bool, payload: str) -> None:
                 "vocab_answer_failed",
                 "Vocabulary answer failed.",
                 "Run vocab start and pass a valid item_id.",
+            )
+        )
+
+
+@vocab.command("history")
+@click.option("--json-output", "--json", "json_output", is_flag=True)
+@click.argument("payload", required=True)
+def vocab_history(json_output: bool, payload: str) -> None:
+    del json_output
+    try:
+        request = VocabularyReviewHistoryRequest.model_validate(parse_payload(payload))
+        repo, conn = open_repo()
+        try:
+            emit(review_history(repo, request))
+        finally:
+            conn.close()
+    except (TutorError, ValidationError, KeyError) as exc:
+        if isinstance(exc, TutorError):
+            fail_json(exc)
+        if isinstance(exc, KeyError):
+            fail_json(
+                TutorError(
+                    "vocab_card_not_found",
+                    "Vocabulary card was not found.",
+                    "Run vocab start or import/add the card before requesting history.",
+                )
+            )
+        fail_json(
+            TutorError(
+                "invalid_vocab_history",
+                "Vocabulary history payload failed validation.",
+                "Pass {'item_id':'...'} as the payload.",
             )
         )
 

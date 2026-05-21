@@ -20,9 +20,9 @@
 
 **Purpose**: Add Phase 2 fixtures and seed inputs used across stories.
 
-- [ ] T001 Create canonical Phase 2 seed JSON fixture with standard, duplicate-update, cloze, and invalid entries in tests/fixtures/vocabulary/phase2_seed.json
-- [ ] T002 [P] Create malformed and empty JSON import fixtures for repair-path coverage in tests/fixtures/vocabulary/phase2_invalid.json
-- [ ] T003 [P] Create large review-history fixture helper data for 500-attempt history tests in tests/fixtures/vocabulary/phase2_history.json
+- [X] T001 Create canonical Phase 2 seed JSON fixture with standard, duplicate-update, cloze, and invalid entries in tests/fixtures/vocabulary/phase2_seed.json
+- [X] T002 [P] Create malformed and empty JSON import fixtures for repair-path coverage in tests/fixtures/vocabulary/phase2_invalid.json
+- [X] T003 [P] Create large review-history fixture helper data for 500-attempt history tests in tests/fixtures/vocabulary/phase2_history.json
 
 ---
 
@@ -32,14 +32,14 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T004 [P] Add failing migration tests for `002_vocab_depth.sql` card metadata backfill, dedupe uniqueness, and review preservation in tests/migration/test_migrations.py
-- [ ] T005 [P] Add failing schema tests for foundational Phase 2 vocabulary contract defaults, existing vocabulary schema compatibility, and schema export registry wiring in tests/unit/test_schemas.py
-- [ ] T006 Create SQLite migration for card type, notes, stored additive source values, and recalculated dedupe keys in migrations/002_vocab_depth.sql
-- [ ] T007 Update migration loader expectations for the new Phase 2 migration file in src/language_tutor/dal/migrations.py
-- [ ] T008 Define shared vocabulary normalization, tag normalization, and duplicate identity helpers in src/language_tutor/vocab.py
-- [ ] T009 Extend `VocabularyItem` with `card_type`, notes, stored additive source values, and Phase 2 defaults in src/language_tutor/schemas.py
-- [ ] T010 Update repository row mapping and default seed rows for Phase 2 vocabulary columns in src/language_tutor/dal/repositories.py
-- [ ] T011 Add regression tests for existing unfiltered vocabulary start/answer behavior before Phase 2 changes in tests/adapter_contract/test_vocab_cli.py and tests/integration/test_vocabulary_flow.py
+- [X] T004 [P] Add failing migration tests for `002_vocab_depth.sql` card metadata backfill, dedupe uniqueness, and review preservation in tests/migration/test_migrations.py
+- [X] T005 [P] Add failing schema tests for foundational Phase 2 vocabulary contract defaults, existing vocabulary schema compatibility, and schema export registry wiring in tests/unit/test_schemas.py
+- [X] T006 Create SQLite migration for card type, notes, stored additive source values, and recalculated dedupe keys in migrations/002_vocab_depth.sql
+- [X] T007 Update migration loader expectations for the new Phase 2 migration file in src/language_tutor/dal/migrations.py
+- [X] T008 Define shared vocabulary normalization, tag normalization, and duplicate identity helpers in src/language_tutor/vocab.py
+- [X] T009 Extend `VocabularyItem` with `card_type`, notes, stored additive source values, and Phase 2 defaults in src/language_tutor/schemas.py
+- [X] T010 Update repository row mapping and default seed rows for Phase 2 vocabulary columns in src/language_tutor/dal/repositories.py
+- [X] T011 Add regression tests for existing unfiltered vocabulary start/answer behavior before Phase 2 changes in tests/adapter_contract/test_vocab_cli.py and tests/integration/test_vocabulary_flow.py
 
 **Checkpoint**: Foundation ready; user story implementation can proceed.
 
@@ -53,19 +53,19 @@
 
 ### Tests for User Story 1
 
-- [ ] T012 [P] [US1] Add CLI and schema contract tests for `vocab add --json`, `vocab import --json`, duplicate rejection, empty tag/source metadata repair hints, and card/import JSON schema mirrors in tests/adapter_contract/test_vocab_cli.py and tests/unit/test_schemas.py
-- [ ] T013 [P] [US1] Add repository unit tests for duplicate identity, additive metadata merge, accepted-answer union, empty tag/source metadata validation, and per-entry import atomicity in tests/unit/test_repositories.py
-- [ ] T014 [P] [US1] Add integration test for manual add, seed import, idempotent re-import, and review-history preservation in tests/integration/test_vocabulary_flow.py
-- [ ] T015 [P] [US1] Add golden tests for deterministic import summary rendering and duplicate-repair text in tests/golden/test_vocab_feedback.py
+- [X] T012 [P] [US1] Add CLI and schema contract tests for `vocab add --json`, `vocab import --json`, duplicate rejection, empty tag/source metadata repair hints, and card/import JSON schema mirrors in tests/adapter_contract/test_vocab_cli.py and tests/unit/test_schemas.py
+- [X] T013 [P] [US1] Add repository unit tests for duplicate identity, additive metadata merge, accepted-answer union, empty tag/source metadata validation, and per-entry import atomicity in tests/unit/test_repositories.py
+- [X] T014 [P] [US1] Add integration test for manual add, seed import, idempotent re-import, and review-history preservation in tests/integration/test_vocabulary_flow.py
+- [X] T015 [P] [US1] Add golden tests for deterministic import summary rendering and duplicate-repair text in tests/golden/test_vocab_feedback.py
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Add `VocabularyCardDefinition`, `VocabularyCardAddResult`, `SeedImportRequest`, and `SeedImportResult` contracts in src/language_tutor/schemas.py
-- [ ] T017 [US1] Implement card validation, empty tag/source metadata rejection, and manual-card creation service using shared duplicate identity in src/language_tutor/vocab.py
-- [ ] T018 [US1] Implement JSON seed-list parsing, per-entry validation, and import orchestration with repair details in src/language_tutor/vocab.py
-- [ ] T019 [US1] Implement repository methods for manual insert, duplicate lookup, import upsert, and additive metadata merge in src/language_tutor/dal/repositories.py
-- [ ] T020 [US1] Add `tutor vocab add --json` and `tutor vocab import --json` CLI commands with existing error-envelope behavior in src/language_tutor/cli.py
-- [ ] T021 [US1] Register and generate schema mirrors for card definitions and import summaries in src/language_tutor/schemas.py, schemas/vocabulary_card_definition.schema.json, and schemas/vocabulary_import_summary.schema.json
+- [X] T016 [US1] Add `VocabularyCardDefinition`, `VocabularyCardAddResult`, `SeedImportRequest`, and `SeedImportResult` contracts in src/language_tutor/schemas.py
+- [X] T017 [US1] Implement card validation, empty tag/source metadata rejection, and manual-card creation service using shared duplicate identity in src/language_tutor/vocab.py
+- [X] T018 [US1] Implement JSON seed-list parsing, per-entry validation, and import orchestration with repair details in src/language_tutor/vocab.py
+- [X] T019 [US1] Implement repository methods for manual insert, duplicate lookup, import upsert, and additive metadata merge in src/language_tutor/dal/repositories.py
+- [X] T020 [US1] Add `tutor vocab add --json` and `tutor vocab import --json` CLI commands with existing error-envelope behavior in src/language_tutor/cli.py
+- [X] T021 [US1] Register and generate schema mirrors for card definitions and import summaries in src/language_tutor/schemas.py, schemas/vocabulary_card_definition.schema.json, and schemas/vocabulary_import_summary.schema.json
 
 **Checkpoint**: User Story 1 works independently and is the MVP.
 
@@ -79,18 +79,18 @@
 
 ### Tests for User Story 2
 
-- [ ] T022 [P] [US2] Add schema tests for `VocabularyDrillRequest`, normalized tag filters, empty filter rejection, and session-plan JSON schema mirror export in tests/unit/test_schemas.py
-- [ ] T023 [P] [US2] Add repository unit tests for inclusive tag filtering, due-first ordering, and empty-state counts in tests/unit/test_repositories.py
-- [ ] T024 [P] [US2] Add CLI contract tests for `vocab start --json` tag payloads and empty-state reasons in tests/adapter_contract/test_vocab_cli.py
-- [ ] T025 [P] [US2] Add integration test for filtered drill selection and answer review persistence in tests/integration/test_vocabulary_flow.py
+- [X] T022 [P] [US2] Add schema tests for `VocabularyDrillRequest`, normalized tag filters, empty filter rejection, and session-plan JSON schema mirror export in tests/unit/test_schemas.py
+- [X] T023 [P] [US2] Add repository unit tests for inclusive tag filtering, due-first ordering, and empty-state counts in tests/unit/test_repositories.py
+- [X] T024 [P] [US2] Add CLI contract tests for `vocab start --json` tag payloads and empty-state reasons in tests/adapter_contract/test_vocab_cli.py
+- [X] T025 [P] [US2] Add integration test for filtered drill selection and answer review persistence in tests/integration/test_vocabulary_flow.py
 
 ### Implementation for User Story 2
 
-- [ ] T026 [US2] Add `VocabularyDrillRequest` and filtered session-plan fields to vocabulary contracts in src/language_tutor/schemas.py
-- [ ] T027 [US2] Implement normalized tag-filter query support and matching/due counts in src/language_tutor/dal/repositories.py
-- [ ] T028 [US2] Update `start_vocab` to accept drill requests, preserve due-first ordering, and return `no_matching_cards` versus `matching_cards_not_due` in src/language_tutor/vocab.py
-- [ ] T029 [US2] Parse optional payload for `tutor vocab start --json` without changing unfiltered behavior in src/language_tutor/cli.py
-- [ ] T030 [US2] Register and generate session-plan schema mirror with filter fields in src/language_tutor/schemas.py and schemas/vocabulary_session_plan.schema.json
+- [X] T026 [US2] Add `VocabularyDrillRequest` and filtered session-plan fields to vocabulary contracts in src/language_tutor/schemas.py
+- [X] T027 [US2] Implement normalized tag-filter query support and matching/due counts in src/language_tutor/dal/repositories.py
+- [X] T028 [US2] Update `start_vocab` to accept drill requests, preserve due-first ordering, and return `no_matching_cards` versus `matching_cards_not_due` in src/language_tutor/vocab.py
+- [X] T029 [US2] Parse optional payload for `tutor vocab start --json` without changing unfiltered behavior in src/language_tutor/cli.py
+- [X] T030 [US2] Register and generate session-plan schema mirror with filter fields in src/language_tutor/schemas.py and schemas/vocabulary_session_plan.schema.json
 
 **Checkpoint**: User Story 2 works independently after foundational tasks.
 
@@ -104,19 +104,19 @@
 
 ### Tests for User Story 3
 
-- [ ] T031 [P] [US3] Add schema tests for cloze card type, exactly one `{{answer}}` marker, missing-marker rejection, multi-marker rejection, and accepted-answer requirements in tests/unit/test_schemas.py
-- [ ] T032 [P] [US3] Add golden tests for cloze drill prompt hiding and feedback reveal text in tests/golden/test_vocab_feedback.py
-- [ ] T033 [P] [US3] Add CLI contract tests for cloze add, cloze import, invalid marker counts, and answer reveal in tests/adapter_contract/test_vocab_cli.py
-- [ ] T034 [P] [US3] Add integration test for cloze add/import/start/answer/review flow in tests/integration/test_vocabulary_flow.py
+- [X] T031 [P] [US3] Add schema tests for cloze card type, exactly one `{{answer}}` marker, missing-marker rejection, multi-marker rejection, and accepted-answer requirements in tests/unit/test_schemas.py
+- [X] T032 [P] [US3] Add golden tests for cloze drill prompt hiding and feedback reveal text in tests/golden/test_vocab_feedback.py
+- [X] T033 [P] [US3] Add CLI contract tests for cloze add, cloze import, invalid marker counts, and answer reveal in tests/adapter_contract/test_vocab_cli.py
+- [X] T034 [P] [US3] Add integration test for cloze add/import/start/answer/review flow in tests/integration/test_vocabulary_flow.py
 
 ### Implementation for User Story 3
 
-- [ ] T035 [US3] Extend vocabulary contracts with `card_type="cloze"` validation and legacy `standard` defaults in src/language_tutor/schemas.py
-- [ ] T036 [US3] Implement cloze prompt hiding, full-sentence reveal, and accepted-answer selection helpers in src/language_tutor/vocab.py
-- [ ] T037 [US3] Persist and hydrate `card_type` for standard and cloze cards in src/language_tutor/dal/repositories.py
-- [ ] T038 [US3] Add cloze reveal details to vocabulary answer feedback without changing SM-2 scheduling in src/language_tutor/feedback.py
-- [ ] T039 [US3] Update `tutor-vocab` skill guidance for cloze add, import, start, and answer workflows in skills/tutor-vocab/SKILL.md
-- [ ] T040 [US3] Update `tutor-vocab` helper script for cloze-aware command routing in skills/tutor-vocab/scripts/run.py
+- [X] T035 [US3] Extend vocabulary contracts with `card_type="cloze"` validation and legacy `standard` defaults in src/language_tutor/schemas.py
+- [X] T036 [US3] Implement cloze prompt hiding, full-sentence reveal, and accepted-answer selection helpers in src/language_tutor/vocab.py
+- [X] T037 [US3] Persist and hydrate `card_type` for standard and cloze cards in src/language_tutor/dal/repositories.py
+- [X] T038 [US3] Add cloze reveal details to vocabulary answer feedback without changing SM-2 scheduling in src/language_tutor/feedback.py
+- [X] T039 [US3] Update `tutor-vocab` skill guidance for cloze add, import, start, and answer workflows in skills/tutor-vocab/SKILL.md
+- [X] T040 [US3] Update `tutor-vocab` helper script for cloze-aware command routing in skills/tutor-vocab/scripts/run.py
 
 **Checkpoint**: User Story 3 works independently after foundational tasks.
 
@@ -130,20 +130,20 @@
 
 ### Tests for User Story 4
 
-- [ ] T041 [P] [US4] Add CLI and schema contract tests for `vocab history --json`, missing-card errors, new-card history, complete 500-attempt JSON output under 2 seconds, and review-history JSON schema mirror export in tests/adapter_contract/test_vocab_cli.py and tests/unit/test_schemas.py
-- [ ] T042 [P] [US4] Add repository unit tests for chronological review joins, current due status, and new-card empty attempts in tests/unit/test_repositories.py
-- [ ] T043 [P] [US4] Add golden tests for readable review-history rendering that summarizes long histories while preserving complete attempt detail in JSON in tests/golden/test_vocab_feedback.py
-- [ ] T044 [P] [US4] Add integration test for multiple review attempts and history audit output in tests/integration/test_vocabulary_flow.py
+- [X] T041 [P] [US4] Add CLI and schema contract tests for `vocab history --json`, missing-card errors, new-card history, complete 500-attempt JSON output under 2 seconds, and review-history JSON schema mirror export in tests/adapter_contract/test_vocab_cli.py and tests/unit/test_schemas.py
+- [X] T042 [P] [US4] Add repository unit tests for chronological review joins, current due status, and new-card empty attempts in tests/unit/test_repositories.py
+- [X] T043 [P] [US4] Add golden tests for readable review-history rendering that summarizes long histories while preserving complete attempt detail in JSON in tests/golden/test_vocab_feedback.py
+- [X] T044 [P] [US4] Add integration test for multiple review attempts and history audit output in tests/integration/test_vocabulary_flow.py
 
 ### Implementation for User Story 4
 
-- [ ] T045 [US4] Add `VocabularyReviewHistoryRequest`, `VocabularyReviewHistory`, and attempt summary contracts in src/language_tutor/schemas.py
-- [ ] T046 [US4] Implement repository review-history query joining `vocabulary_reviews` and `answer_events` in src/language_tutor/dal/repositories.py
-- [ ] T047 [US4] Implement review-history service and due-status calculation in src/language_tutor/vocab.py
-- [ ] T048 [US4] Add deterministic review-history text rendering in src/language_tutor/feedback.py
-- [ ] T049 [US4] Add `tutor vocab history --json` CLI command with `vocab_card_not_found` repair errors in src/language_tutor/cli.py
-- [ ] T050 [US4] Register and generate review-history schema mirror in src/language_tutor/schemas.py and schemas/vocabulary_review_history.schema.json
-- [ ] T051 [US4] Update `tutor-vocab` skill guidance for per-card history inspection in skills/tutor-vocab/SKILL.md
+- [X] T045 [US4] Add `VocabularyReviewHistoryRequest`, `VocabularyReviewHistory`, and attempt summary contracts in src/language_tutor/schemas.py
+- [X] T046 [US4] Implement repository review-history query joining `vocabulary_reviews` and `answer_events` in src/language_tutor/dal/repositories.py
+- [X] T047 [US4] Implement review-history service and due-status calculation in src/language_tutor/vocab.py
+- [X] T048 [US4] Add deterministic review-history text rendering in src/language_tutor/feedback.py
+- [X] T049 [US4] Add `tutor vocab history --json` CLI command with `vocab_card_not_found` repair errors in src/language_tutor/cli.py
+- [X] T050 [US4] Register and generate review-history schema mirror in src/language_tutor/schemas.py and schemas/vocabulary_review_history.schema.json
+- [X] T051 [US4] Update `tutor-vocab` skill guidance for per-card history inspection in skills/tutor-vocab/SKILL.md
 
 **Checkpoint**: User Story 4 works independently after foundational tasks.
 
@@ -153,12 +153,12 @@
 
 **Purpose**: Verify no regressions, update user-facing docs, and enforce architecture gates.
 
-- [ ] T052 [P] Update vocabulary feature documentation for manual add, imports, tag filters, cloze cards, and history in docs/FEATURES.md
-- [ ] T053 [P] Update implementation notes and local-first data ownership details for Phase 2 vocabulary in docs/ARCHITECTURE.md
-- [ ] T054 [P] Update known pitfalls for duplicate identity, JSON import repair, tag normalization, and cloze marker validation in docs/PITFALLS.md
-- [ ] T055 Run quickstart verification commands and record any deviations in specs/002-vocab-depth/quickstart.md
-- [ ] T056 Run full verification gates listed in specs/002-vocab-depth/plan.md, including existing unfiltered vocabulary regression tests, and fix failures in src/language_tutor/, tests/, skills/tutor-vocab/, migrations/, schemas/, or docs/
-- [ ] T057 Perform constitution compliance review for SOLID/DRY/KISS/YAGNI/SoC/Demeter across src/language_tutor/, tests/, docs/, specs/002-vocab-depth/spec.md, specs/002-vocab-depth/plan.md, and specs/002-vocab-depth/tasks.md before implementation is considered complete
+- [X] T052 [P] Update vocabulary feature documentation for manual add, imports, tag filters, cloze cards, and history in docs/FEATURES.md
+- [X] T053 [P] Update implementation notes and local-first data ownership details for Phase 2 vocabulary in docs/ARCHITECTURE.md
+- [X] T054 [P] Update known pitfalls for duplicate identity, JSON import repair, tag normalization, and cloze marker validation in docs/PITFALLS.md
+- [X] T055 Run quickstart verification commands and record any deviations in specs/002-vocab-depth/quickstart.md
+- [X] T056 Run full verification gates listed in specs/002-vocab-depth/plan.md, including existing unfiltered vocabulary regression tests, and fix failures in src/language_tutor/, tests/, skills/tutor-vocab/, migrations/, schemas/, or docs/
+- [X] T057 Perform constitution compliance review for SOLID/DRY/KISS/YAGNI/SoC/Demeter across src/language_tutor/, tests/, docs/, specs/002-vocab-depth/spec.md, specs/002-vocab-depth/plan.md, and specs/002-vocab-depth/tasks.md before implementation is considered complete
 
 ---
 

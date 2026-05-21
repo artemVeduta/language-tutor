@@ -4,6 +4,7 @@ import json
 import sqlite3
 import uuid
 from datetime import UTC, datetime
+from typing import Literal, cast
 
 from language_tutor.dal.sqlite_store import transaction
 from language_tutor.schemas import (
@@ -16,6 +17,14 @@ from language_tutor.schemas import (
     VocabularyItem,
     VocabularyItemState,
     VocabularyReview,
+    VocabularyReviewAttempt,
+    VocabularyReviewHistory,
+)
+from language_tutor.vocab import (
+    dedupe_key_for_item,
+    merge_display_values,
+    merge_tags,
+    normalize_tag,
 )
 
 
@@ -27,37 +36,49 @@ def now_iso() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
-def normalize_key(target_language: str, lemma: str | None, prompt: str) -> str:
-    basis = lemma or prompt
-    return f"{target_language.strip().lower()}:{' '.join(basis.lower().split())}"
-
-
 class TutorRepository:
     def __init__(self, conn: sqlite3.Connection) -> None:
         self.conn = conn
 
+    def create_id(self, prefix: str) -> str:
+        return new_id(prefix)
+
     def upsert_vocabulary_item(self, item: VocabularyItem) -> str:
-        dedupe = normalize_key(item.target_language, item.lemma, item.prompt)
+        current = self.find_vocabulary_duplicate(item)
+        if current:
+            return current
+        return self.insert_vocabulary_item(item)
+
+    def find_vocabulary_duplicate(self, item: VocabularyItem) -> str | None:
+        dedupe = dedupe_key_for_item(item)
         current = self.conn.execute(
             "SELECT id FROM vocabulary_items WHERE dedupe_key = ?", (dedupe,)
         ).fetchone()
         if current:
             return str(current["id"])
+        return None
+
+    def insert_vocabulary_item(self, item: VocabularyItem) -> str:
+        dedupe = dedupe_key_for_item(item)
         state = item.state
         self.conn.execute(
             """
             INSERT INTO vocabulary_items(
-              id, target_language, prompt, lemma, accepted_answers_json, hint, tags_json, state,
+              id, card_type, target_language, prompt, lemma, accepted_answers_json, hint,
+              notes_json, sources_json, tags_json, state,
               ease_factor, repetition_count, interval_days, due_at, created_at, updated_at, dedupe_key
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 item.id,
+                item.card_type,
                 item.target_language,
                 item.prompt,
                 item.lemma,
                 json.dumps(item.accepted_answers, ensure_ascii=False),
                 item.hint,
+                json.dumps(item.notes, ensure_ascii=False),
+                json.dumps(item.sources, ensure_ascii=False),
                 json.dumps(item.tags, ensure_ascii=False),
                 state.state,
                 state.ease_factor,
@@ -71,12 +92,66 @@ class TutorRepository:
         )
         return item.id
 
+    def import_vocabulary_item(
+        self, item: VocabularyItem
+    ) -> tuple[Literal["created", "updated", "skipped"], str]:
+        with transaction(self.conn):
+            current_id = self.find_vocabulary_duplicate(item)
+            if current_id is None:
+                return "created", self.insert_vocabulary_item(item)
+            row = self.conn.execute(
+                "SELECT * FROM vocabulary_items WHERE id = ?", (current_id,)
+            ).fetchone()
+            current = self._row_to_vocab(row)
+            accepted_answers, changed_answers = merge_display_values(
+                current.accepted_answers, item.accepted_answers
+            )
+            notes, changed_notes = merge_display_values(current.notes, item.notes)
+            sources, changed_sources = merge_display_values(current.sources, item.sources)
+            tags, changed_tags = merge_tags(current.tags, item.tags)
+            changed = changed_answers or changed_notes or changed_sources or changed_tags
+            if not changed:
+                return "skipped", current_id
+            self.conn.execute(
+                """
+                UPDATE vocabulary_items
+                SET accepted_answers_json = ?, notes_json = ?, sources_json = ?,
+                    tags_json = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (
+                    json.dumps(accepted_answers, ensure_ascii=False),
+                    json.dumps(notes, ensure_ascii=False),
+                    json.dumps(sources, ensure_ascii=False),
+                    json.dumps(tags, ensure_ascii=False),
+                    now_iso(),
+                    current_id,
+                ),
+            )
+            return "updated", current_id
+
     def due_vocabulary(self, limit: int, now: datetime) -> list[VocabularyItem]:
         rows = self.conn.execute(
             "SELECT * FROM vocabulary_items WHERE due_at <= ? ORDER BY due_at, created_at LIMIT ?",
             (now.isoformat(), limit),
         ).fetchall()
         return [self._row_to_vocab(row) for row in rows]
+
+    def due_vocabulary_by_tags(
+        self, limit: int, now: datetime, normalized_tags: list[str]
+    ) -> tuple[list[VocabularyItem], int, int]:
+        rows = self.conn.execute("SELECT * FROM vocabulary_items ORDER BY due_at, created_at").fetchall()
+        matching: list[sqlite3.Row] = []
+        due: list[sqlite3.Row] = []
+        requested = set(normalized_tags)
+        for row in rows:
+            tags = json.loads(str(row["tags_json"]))
+            if not requested.intersection({normalize_tag(tag) for tag in tags}):
+                continue
+            matching.append(row)
+            if datetime.fromisoformat(str(row["due_at"])) <= now:
+                due.append(row)
+        return [self._row_to_vocab(row) for row in due[:limit]], len(matching), len(due)
 
     def get_vocabulary_item(self, item_id: str) -> VocabularyItem:
         row = self.conn.execute(
@@ -85,6 +160,53 @@ class TutorRepository:
         if row is None:
             raise KeyError(item_id)
         return self._row_to_vocab(row)
+
+    def vocabulary_review_history(
+        self, item_id: str, now: datetime
+    ) -> VocabularyReviewHistory:
+        item = self.get_vocabulary_item(item_id)
+        rows = self.conn.execute(
+            """
+            SELECT
+              vr.id, vr.session_id, vr.answer_event_id, vr.verdict, vr.quality,
+              vr.previous_state_json, vr.next_state_json, vr.reviewed_at,
+              ae.learner_answer
+            FROM vocabulary_reviews vr
+            LEFT JOIN answer_events ae ON ae.id = vr.answer_event_id
+            WHERE vr.vocabulary_item_id = ?
+            ORDER BY vr.reviewed_at, vr.id
+            """,
+            (item_id,),
+        ).fetchall()
+        attempts = [
+            VocabularyReviewAttempt(
+                id=str(row["id"]),
+                session_id=str(row["session_id"]),
+                answer_event_id=row["answer_event_id"],
+                learner_answer=row["learner_answer"],
+                answer_detail_available=row["learner_answer"] is not None,
+                verdict=row["verdict"],
+                quality=int(row["quality"]),
+                previous_state=VocabularyItemState.model_validate_json(
+                    row["previous_state_json"]
+                ),
+                next_state=VocabularyItemState.model_validate_json(row["next_state_json"]),
+                reviewed_at=datetime.fromisoformat(str(row["reviewed_at"])),
+            )
+            for row in rows
+        ]
+        if not attempts and item.state.repetition_count == 0:
+            due_status = "new"
+        elif item.state.due_at <= now:
+            due_status = "due"
+        else:
+            due_status = "not_due"
+        return VocabularyReviewHistory(
+            item=item,
+            current_state=item.state,
+            due_status=due_status,
+            attempts=attempts,
+        )
 
     def record_vocab_answer(
         self,
@@ -375,13 +497,17 @@ class TutorRepository:
         return [str(row["recorded_at"])[:10] for row in rows]
 
     def _row_to_vocab(self, row: sqlite3.Row) -> VocabularyItem:
+        card_type = cast(Literal["standard", "cloze"], str(row["card_type"]))
         return VocabularyItem(
             id=str(row["id"]),
+            card_type=card_type,
             target_language=str(row["target_language"]),
             prompt=str(row["prompt"]),
             lemma=row["lemma"],
             accepted_answers=json.loads(str(row["accepted_answers_json"])),
             hint=row["hint"],
+            notes=json.loads(str(row["notes_json"])),
+            sources=json.loads(str(row["sources_json"])),
             tags=json.loads(str(row["tags_json"])),
             state=VocabularyItemState(
                 state=row["state"],

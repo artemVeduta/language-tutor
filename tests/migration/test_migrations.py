@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import sqlite3
+from pathlib import Path
+
 from language_tutor.dal.sqlite_store import connect
 
 
@@ -12,3 +15,61 @@ def test_initial_migration_creates_tables(tmp_path) -> None:  # type: ignore[no-
         assert {"vocabulary_items", "answer_events", "migration_records"} <= tables
     finally:
         conn.close()
+
+
+def test_vocab_depth_migration_backfills_metadata_and_preserves_reviews(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    db_path = tmp_path / "legacy.sqlite3"
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        initial_sql = Path(__file__).resolve().parents[2] / "migrations" / "001_initial.sql"
+        conn.executescript(initial_sql.read_text(encoding="utf-8"))
+        conn.execute(
+            """
+            INSERT INTO vocabulary_items(
+              id, target_language, prompt, lemma, accepted_answers_json, hint, tags_json,
+              state, ease_factor, repetition_count, interval_days, due_at, created_at,
+              updated_at, dedupe_key
+            ) VALUES (
+              'vocab_1', 'uk', 'hello', 'привіт', '["привіт"]', NULL, '[]',
+              'new', 2.5, 0, 0, '2026-05-21T00:00:00+00:00',
+              '2026-05-21T00:00:00+00:00', '2026-05-21T00:00:00+00:00', 'uk:привіт'
+            )
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO answer_events(
+              id, idempotency_key, session_id, skill, prompt_ref, learner_answer,
+              outcome, feedback_envelope_json, recorded_at
+            ) VALUES (
+              'ans_1', 'k1', 's1', 'vocab', 'vocab_1', 'привіт', 'correct', NULL,
+              '2026-05-21T00:00:00+00:00'
+            )
+            """
+        )
+        state_json = '{"state":"new","ease_factor":2.5,"repetition_count":0,"interval_days":0,"due_at":"2026-05-21T00:00:00Z"}'
+        conn.execute(
+            """
+            INSERT INTO vocabulary_reviews(
+              id, session_id, vocabulary_item_id, answer_event_id, verdict, quality,
+              previous_state_json, next_state_json, reviewed_at
+            ) VALUES ('rev_1', 's1', 'vocab_1', 'ans_1', 'correct', 5, ?, ?, ?)
+            """,
+            (state_json, state_json, "2026-05-21T00:00:00+00:00"),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    migrated = connect(db_path)
+    try:
+        row = migrated.execute("SELECT * FROM vocabulary_items WHERE id = 'vocab_1'").fetchone()
+        review_count = migrated.execute("SELECT COUNT(*) AS count FROM vocabulary_reviews").fetchone()
+        assert row["card_type"] == "standard"
+        assert row["notes_json"] == "[]"
+        assert row["sources_json"] == "[]"
+        assert str(row["dedupe_key"]).startswith("standard:")
+        assert int(review_count["count"]) == 1
+    finally:
+        migrated.close()

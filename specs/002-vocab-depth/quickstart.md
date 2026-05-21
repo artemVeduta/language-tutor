@@ -86,3 +86,11 @@ rtk ruff check .
 ```
 
 Expected result: Phase 2 vocabulary behavior is deterministic, local-first, schema-validated, and host-independent.
+
+## Verification Record
+
+2026-05-21: Quickstart commands were run against
+`LANGUAGE_TUTOR_HOME=/tmp/language-tutor-quickstart-codex-v2`. No deviations were
+observed. Targeted adapter/integration gates were run with `--no-cov` because
+the project coverage threshold is enforced on the full suite; the full suite
+was run separately with coverage.

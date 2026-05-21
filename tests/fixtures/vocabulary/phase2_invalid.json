@@ -1,0 +1,21 @@
+[
+  {
+    "card_type": "cloze",
+    "target": "привіт",
+    "prompt": "No marker here.",
+    "accepted_answers": ["привіт"]
+  },
+  {
+    "card_type": "standard",
+    "target": "дякую",
+    "prompt": "thank you",
+    "accepted_answers": []
+  },
+  {
+    "card_type": "standard",
+    "target": "так",
+    "prompt": "yes",
+    "accepted_answers": ["так"],
+    "unsupported": true
+  }
+]

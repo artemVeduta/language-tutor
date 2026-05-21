@@ -273,6 +273,16 @@ Translanguaging research ([drpress.org/EHSS/17531](https://drpress.org/ojs/index
 | Curriculum dependency | User-built | Heavy | Peer-supplied | LLM-generated | LLM-generated |
 | Reproducible feedback | N/A | N/A | No (peer variance) | No (sampling) | Goal (golden tests + low temp) |
 
+## Phase 2 Vocabulary Depth
+
+Implemented vocabulary depth adds local deck ownership without changing SM-2:
+
+- Manual add: `tutor vocab add --json '<card>'` stores standard or cloze cards.
+- Seed import: `tutor vocab import --json '{"path":"...json"}'` validates each entry independently, merges duplicate metadata additively, and keeps SQLite canonical after import.
+- Tag drills: `tutor vocab start --json '{"tags":["greetings"]}'` uses inclusive OR matching and reports no-match versus not-due empty states.
+- Cloze cards: `card_type:"cloze"` requires exactly one `{{answer}}` marker, hides it during drill, and reveals the full sentence in feedback.
+- Review history: `tutor vocab history --json '{"item_id":"vocab_..."}'` returns current due status and chronological attempts.
+
 ## Sources
 
 - [SM-2 Spaced Repetition Algorithm](https://github.com/cnnrhill/sm-2) — Reference implementation

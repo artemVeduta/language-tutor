@@ -6,7 +6,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 def utc_now() -> datetime:
@@ -132,6 +132,8 @@ class FeedbackEnvelope(TutorModel):
     error_spans: list[ErrorSpan] = Field(default_factory=empty_error_spans)
     explanation: str = ""
     next_drill_hint: str = ""
+    cloze_sentence: str | None = None
+    accepted_answer: str | None = None
     srs_update: dict[str, Any] | None = None
 
 
@@ -158,11 +160,14 @@ class VocabularyItemState(TutorModel):
 
 class VocabularyItem(TutorModel):
     id: str
+    card_type: Literal["standard", "cloze"] = "standard"
     target_language: str
     prompt: str
     lemma: str | None = None
     accepted_answers: list[str]
     hint: str | None = None
+    notes: list[str] = Field(default_factory=list)
+    sources: list[str] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
     state: VocabularyItemState = Field(default_factory=VocabularyItemState)
 
@@ -171,6 +176,136 @@ class VocabularySessionPlan(TutorModel):
     items: list[VocabularyItem]
     requested_count: int
     starter_content_required: bool = False
+    filter: list[str] = Field(default_factory=list)
+    matching_count: int | None = None
+    due_matching_count: int | None = None
+    empty_reason: Literal["no_matching_cards", "matching_cards_not_due"] | None = None
+
+
+def _clean_string(value: str, field_name: str) -> str:
+    value = value.strip()
+    if not value:
+        raise ValueError(f"{field_name} must not be empty")
+    return value
+
+
+def _clean_string_list(values: list[str], field_name: str) -> list[str]:
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        text = _clean_string(value, field_name)
+        key = text.casefold()
+        if key not in seen:
+            cleaned.append(text)
+            seen.add(key)
+    if not cleaned:
+        raise ValueError(f"{field_name} must contain at least one value")
+    return cleaned
+
+
+class VocabularyCardDefinition(TutorModel):
+    card_type: Literal["standard", "cloze"] = "standard"
+    target: str
+    prompt: str
+    accepted_answers: list[str]
+    hint: str | None = None
+    notes: str | list[str] | None = None
+    source: str | list[str] | None = None
+    tags: list[str] = Field(default_factory=list)
+
+    @field_validator("target", "prompt")
+    @classmethod
+    def required_text(cls, value: str) -> str:
+        return _clean_string(value, "field")
+
+    @field_validator("accepted_answers")
+    @classmethod
+    def required_answers(cls, value: list[str]) -> list[str]:
+        return _clean_string_list(value, "accepted_answers")
+
+    @field_validator("tags")
+    @classmethod
+    def valid_tags(cls, value: list[str]) -> list[str]:
+        if not value:
+            return []
+        return _clean_string_list(value, "tags")
+
+    @field_validator("notes", "source")
+    @classmethod
+    def valid_metadata(cls, value: str | list[str] | None) -> str | list[str] | None:
+        if value is None:
+            return None
+        if isinstance(value, str):
+            return _clean_string(value, "metadata")
+        return _clean_string_list(value, "metadata")
+
+    @model_validator(mode="after")
+    def valid_cloze(self) -> VocabularyCardDefinition:
+        marker_count = self.prompt.count("{{answer}}")
+        if self.card_type == "cloze" and marker_count != 1:
+            raise ValueError("cloze prompt must contain exactly one {{answer}} marker")
+        return self
+
+    def notes_list(self) -> list[str]:
+        if self.notes is None:
+            return []
+        return [self.notes] if isinstance(self.notes, str) else list(self.notes)
+
+    def sources_list(self) -> list[str]:
+        if self.source is None:
+            return []
+        return [self.source] if isinstance(self.source, str) else list(self.source)
+
+
+class VocabularyCardAddResult(TutorModel):
+    status: Literal["created", "duplicate"]
+    item_id: str
+    duplicate: bool = False
+    message: str
+    repair_hint: str | None = None
+
+
+class SeedImportRequest(TutorModel):
+    path: str
+
+    @field_validator("path")
+    @classmethod
+    def valid_path(cls, value: str) -> str:
+        return _clean_string(value, "path")
+
+
+class SeedImportEntryResult(TutorModel):
+    index: int = Field(ge=0)
+    status: Literal["created", "updated", "skipped", "invalid"]
+    item_id: str | None = None
+    code: str | None = None
+    message: str | None = None
+    repair_hint: str | None = None
+
+
+def empty_seed_import_entries() -> list[SeedImportEntryResult]:
+    return []
+
+
+class SeedImportResult(TutorModel):
+    path: str
+    created_count: int = 0
+    updated_count: int = 0
+    skipped_count: int = 0
+    invalid_count: int = 0
+    entries: list[SeedImportEntryResult] = Field(default_factory=empty_seed_import_entries)
+
+
+class VocabularyDrillRequest(TutorModel):
+    tags: list[str] | None = None
+    requested_count: int | None = Field(default=None, ge=1, le=100)
+
+    @field_validator("tags")
+    @classmethod
+    def valid_filter_tags(cls, value: list[str] | None) -> list[str] | None:
+        if value is None:
+            return None
+        return _clean_string_list(value, "tags")
 
 
 class VocabularyAnswerInput(TutorModel):
@@ -208,6 +343,39 @@ class VocabularyAnswerResult(TutorModel):
     answer_event: AnswerEvent
     review: VocabularyReview
     duplicate: bool = False
+
+
+class VocabularyReviewHistoryRequest(TutorModel):
+    item_id: str
+
+    @field_validator("item_id")
+    @classmethod
+    def valid_item_id(cls, value: str) -> str:
+        return _clean_string(value, "item_id")
+
+
+class VocabularyReviewAttempt(TutorModel):
+    id: str
+    session_id: str
+    answer_event_id: str | None = None
+    learner_answer: str | None = None
+    answer_detail_available: bool = True
+    verdict: Verdict
+    quality: int = Field(ge=0, le=5)
+    previous_state: VocabularyItemState
+    next_state: VocabularyItemState
+    reviewed_at: datetime
+
+
+def empty_review_attempts() -> list[VocabularyReviewAttempt]:
+    return []
+
+
+class VocabularyReviewHistory(TutorModel):
+    item: VocabularyItem
+    current_state: VocabularyItemState
+    due_status: Literal["new", "due", "not_due"]
+    attempts: list[VocabularyReviewAttempt] = Field(default_factory=empty_review_attempts)
 
 
 class WritingPromptResult(TutorModel):
@@ -293,6 +461,10 @@ def export_json_schemas(output_dir: Path) -> None:
         "feedback_envelope.schema.json": FeedbackEnvelope,
         "session_analysis.schema.json": SessionAnalysis,
         "answer_event.schema.json": AnswerEvent,
+        "vocabulary_card_definition.schema.json": VocabularyCardDefinition,
+        "vocabulary_import_summary.schema.json": SeedImportResult,
+        "vocabulary_session_plan.schema.json": VocabularySessionPlan,
+        "vocabulary_review_history.schema.json": VocabularyReviewHistory,
     }
     for filename, model in mapping.items():
         (output_dir / filename).write_text(
