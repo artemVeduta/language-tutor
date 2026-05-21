@@ -216,7 +216,9 @@
     "skill": {
       "enum": [
         "vocab",
-        "writing"
+        "writing",
+        "reading",
+        "lesson"
       ],
       "title": "Skill",
       "type": "string"

@@ -1,0 +1,250 @@
+{
+  "$defs": {
+    "Confidence": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "Confidence",
+      "type": "string"
+    },
+    "ErrorSpan": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End"
+        },
+        "explanation": {
+          "default": "",
+          "title": "Explanation",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity",
+          "default": "low"
+        },
+        "start": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start"
+        },
+        "tag": {
+          "$ref": "#/$defs/ErrorTag",
+          "default": "uncategorized"
+        },
+        "text": {
+          "default": "",
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "title": "ErrorSpan",
+      "type": "object"
+    },
+    "ErrorTag": {
+      "enum": [
+        "case",
+        "aspect",
+        "agreement",
+        "animacy",
+        "verbs_of_motion",
+        "punctuation",
+        "interference",
+        "vocabulary",
+        "spelling",
+        "word_order",
+        "uncategorized"
+      ],
+      "title": "ErrorTag",
+      "type": "string"
+    },
+    "FeedbackEnvelope": {
+      "additionalProperties": false,
+      "properties": {
+        "accepted_answer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Accepted Answer"
+        },
+        "cloze_sentence": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cloze Sentence"
+        },
+        "confidence": {
+          "$ref": "#/$defs/Confidence",
+          "default": "low"
+        },
+        "corrected_answer": {
+          "default": "",
+          "title": "Corrected Answer",
+          "type": "string"
+        },
+        "error_spans": {
+          "items": {
+            "$ref": "#/$defs/ErrorSpan"
+          },
+          "title": "Error Spans",
+          "type": "array"
+        },
+        "explanation": {
+          "default": "",
+          "title": "Explanation",
+          "type": "string"
+        },
+        "next_drill_hint": {
+          "default": "",
+          "title": "Next Drill Hint",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity",
+          "default": "low"
+        },
+        "srs_update": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Srs Update"
+        },
+        "verdict": {
+          "$ref": "#/$defs/Verdict",
+          "default": "needs_review"
+        }
+      },
+      "title": "FeedbackEnvelope",
+      "type": "object"
+    },
+    "Severity": {
+      "enum": [
+        "none",
+        "low",
+        "medium",
+        "high"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "Verdict": {
+      "enum": [
+        "correct",
+        "partial",
+        "missed",
+        "unanswered",
+        "needs_review"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "CLI input for completed or attempted text-modality responses.",
+  "properties": {
+    "candidate_feedback": {
+      "$ref": "#/$defs/FeedbackEnvelope"
+    },
+    "exercise_id": {
+      "title": "Exercise Id",
+      "type": "string"
+    },
+    "exercise_summary": {
+      "default": "",
+      "title": "Exercise Summary",
+      "type": "string"
+    },
+    "idempotency_key": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Idempotency Key"
+    },
+    "learner_response": {
+      "default": "",
+      "title": "Learner Response",
+      "type": "string"
+    },
+    "modality": {
+      "enum": [
+        "reading",
+        "lesson",
+        "transcript"
+      ],
+      "title": "Modality",
+      "type": "string"
+    },
+    "response_status": {
+      "default": "completed",
+      "enum": [
+        "completed",
+        "empty",
+        "abandoned",
+        "off_topic",
+        "mixed_language",
+        "refused"
+      ],
+      "title": "Response Status",
+      "type": "string"
+    },
+    "score_metadata": {
+      "additionalProperties": true,
+      "title": "Score Metadata",
+      "type": "object"
+    },
+    "session_id": {
+      "default": "default",
+      "title": "Session Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "exercise_id",
+    "modality",
+    "candidate_feedback"
+  ],
+  "title": "TextModalityRecordInput",
+  "type": "object"
+}
