@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 
 from language_tutor.dal.repositories import TutorRepository
 from language_tutor.schemas import BootContext, BootSection, LearnerPreferences, LearnerProfile
+from language_tutor.vocab import derive_active_weak_tag_signals
 
 
 def build_boot_context(
@@ -11,8 +12,16 @@ def build_boot_context(
 ) -> BootContext:
     now = datetime.now(UTC).replace(microsecond=0)
     due = repo.due_count(now)
-    weak = repo.weak_tags()
+    weak = derive_active_weak_tag_signals(repo)
     latest = repo.latest_summary()
+    weak_lines = [
+        (
+            f"{signal.priority_rank}. {signal.tag}: seen in {signal.session_count} sessions "
+            f"(mistakes {signal.source_counts.mistake_events}, vocab reviews "
+            f"{signal.source_counts.low_quality_reviews})"
+        )
+        for signal in weak
+    ]
     sections = [
         BootSection(
             title="Profile",
@@ -29,7 +38,7 @@ def build_boot_context(
             ],
         ),
         BootSection(title="Due Review", lines=[f"Due items: {due}"]),
-        BootSection(title="Weak Patterns", lines=weak or ["No weak patterns yet."]),
+        BootSection(title="Weak Patterns", lines=weak_lines or ["No weak patterns yet."]),
         BootSection(
             title="Latest Recap",
             lines=[

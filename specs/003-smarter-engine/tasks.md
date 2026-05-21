@@ -18,8 +18,8 @@
 
 **Purpose**: Add reusable fixture data for deterministic Phase 3 tests.
 
-- [ ] T001 Create weak-tag signal session fixture data with repeated tags, one-off tags, invalid summaries, and low-quality reviews in `tests/fixtures/vocabulary/smarter_engine_history.json`
-- [ ] T002 [P] Create queue-selection card fixture data with overdue, due-today, new, weak-tagged, non-weak, filtered, untagged, multi-tag, no weak-matching vocabulary, and weak-card-not-due cases in `tests/fixtures/vocabulary/smarter_engine_seed.json`
+- [X] T001 Create weak-tag signal session fixture data with repeated tags, one-off tags, invalid summaries, and low-quality reviews in `tests/fixtures/vocabulary/smarter_engine_history.json`
+- [X] T002 [P] Create queue-selection card fixture data with overdue, due-today, new, weak-tagged, non-weak, filtered, untagged, multi-tag, no weak-matching vocabulary, and weak-card-not-due cases in `tests/fixtures/vocabulary/smarter_engine_seed.json`
 
 ---
 
@@ -31,18 +31,18 @@
 
 ### Tests
 
-- [ ] T003 Add schema tests for `WeakTagSignal`, `SelectionReason`, `SelectionPolicy`, and extended `VocabularySessionPlan` in `tests/unit/test_schemas.py`
-- [ ] T004 Add schema export tests for `weak_tag_signal.schema.json`, `selection_reason.schema.json`, and extended `vocabulary_session_plan.schema.json` in `tests/unit/test_schemas.py`
-- [ ] T005 Add repository tests for recent completed analyzed session ordering and bounded source reads in `tests/unit/test_repositories.py`
-- [ ] T006 Add repository tests for vocabulary selection candidates, stored ordering fields, and explicit tag filtering boundaries in `tests/unit/test_repositories.py`
-- [ ] T007 Add migration compatibility coverage for existing vocabulary cards, reviews, mistakes, and summaries without a new Phase 3 migration in `tests/migration/test_migrations.py`
+- [X] T003 Add schema tests for `WeakTagSignal`, `SelectionReason`, `SelectionPolicy`, and extended `VocabularySessionPlan` in `tests/unit/test_schemas.py`
+- [X] T004 Add schema export tests for `weak_tag_signal.schema.json`, `selection_reason.schema.json`, and extended `vocabulary_session_plan.schema.json` in `tests/unit/test_schemas.py`
+- [X] T005 Add repository tests for recent completed analyzed session ordering and bounded source reads in `tests/unit/test_repositories.py`
+- [X] T006 Add repository tests for vocabulary selection candidates, stored ordering fields, and explicit tag filtering boundaries in `tests/unit/test_repositories.py`
+- [X] T007 Add migration compatibility coverage for existing vocabulary cards, reviews, mistakes, and summaries without a new Phase 3 migration in `tests/migration/test_migrations.py`
 
 ### Implementation
 
-- [ ] T008 Define `WeakTagSourceCounts`, `WeakTagSignal`, `SelectionReason`, `SelectionPolicy`, and additive `VocabularySessionPlan` fields in `src/language_tutor/schemas.py`
-- [ ] T009 Export new schema files and extended vocabulary plan schema from `src/language_tutor/schemas.py`
-- [ ] T010 Update generated JSON schemas in `schemas/vocabulary_session_plan.schema.json`, `schemas/weak_tag_signal.schema.json`, and `schemas/selection_reason.schema.json`
-- [ ] T011 Implement narrow repository read methods for recent session summaries, weak-tag source rows, and vocabulary selection candidates in `src/language_tutor/dal/repositories.py`
+- [X] T008 Define `WeakTagSourceCounts`, `WeakTagSignal`, `SelectionReason`, `SelectionPolicy`, and additive `VocabularySessionPlan` fields in `src/language_tutor/schemas.py`
+- [X] T009 Export new schema files and extended vocabulary plan schema from `src/language_tutor/schemas.py`
+- [X] T010 Update generated JSON schemas in `schemas/vocabulary_session_plan.schema.json`, `schemas/weak_tag_signal.schema.json`, and `schemas/selection_reason.schema.json`
+- [X] T011 Implement narrow repository read methods for recent session summaries, weak-tag source rows, and vocabulary selection candidates in `src/language_tutor/dal/repositories.py`
 
 **Checkpoint**: Contracts, schemas, and repository reads exist; story work can start.
 
@@ -56,17 +56,17 @@
 
 ### Tests for User Story 1
 
-- [ ] T012 [US1] Add unit tests for weak-tag contribution, `session_count >= 2`, top-5 ranking, source counts, and deterministic tie-breaks in `tests/unit/test_vocab_selection.py`
-- [ ] T013 [P] [US1] Add golden boot-context and progress rendering tests for safe weak-tag signal summaries below the 6000-character context budget with 10 analyzed sessions and 25 weak-tag events, without raw answers or full feedback prose, in `tests/golden/test_boot_context.py` and `tests/golden/test_progress_rendering.py`
-- [ ] T014 [P] [US1] Add adapter contract coverage for `tutor boot-context --json` weak-tag summary fields in `tests/adapter_contract/test_cli_json_contract.py`
-- [ ] T015 [US1] Add integration coverage for repeated weak tags changing at least one selected due card versus baseline due-date-only order in `tests/integration/test_vocabulary_flow.py`
+- [X] T012 [US1] Add unit tests for weak-tag contribution, `session_count >= 2`, top-5 ranking, source counts, and deterministic tie-breaks in `tests/unit/test_vocab_selection.py`
+- [X] T013 [P] [US1] Add golden boot-context and progress rendering tests for safe weak-tag signal summaries below the 6000-character context budget with 10 analyzed sessions and 25 weak-tag events, without raw answers or full feedback prose, in `tests/golden/test_boot_context.py` and `tests/golden/test_progress_rendering.py`
+- [X] T014 [P] [US1] Add adapter contract coverage for `tutor boot-context --json` weak-tag summary fields in `tests/adapter_contract/test_cli_json_contract.py`
+- [X] T015 [US1] Add integration coverage for repeated weak tags changing at least one selected due card versus baseline due-date-only order in `tests/integration/test_vocabulary_flow.py`
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Implement active weak-tag derivation, session-level contribution counting, ranking, and top-5 limiting in `src/language_tutor/vocab.py`
-- [ ] T017 [US1] Add weak-aware due-today ranking for comparable due cards and matching selection reasons in `src/language_tutor/vocab.py`
-- [ ] T018 [US1] Replace legacy mistake-count weak-tag rendering with shared weak-tag signals in `src/language_tutor/boot_context.py`
-- [ ] T019 [US1] Replace progress weak-tag signal aggregation with shared weak-tag signals in `src/language_tutor/progress.py`
+- [X] T016 [US1] Implement active weak-tag derivation, session-level contribution counting, ranking, and top-5 limiting in `src/language_tutor/vocab.py`
+- [X] T017 [US1] Add weak-aware due-today ranking for comparable due cards and matching selection reasons in `src/language_tutor/vocab.py`
+- [X] T018 [US1] Replace legacy mistake-count weak-tag rendering with shared weak-tag signals in `src/language_tutor/boot_context.py`
+- [X] T019 [US1] Replace progress weak-tag signal aggregation with shared weak-tag signals in `src/language_tutor/progress.py`
 
 **Checkpoint**: User Story 1 is independently testable through weak-tag signal unit tests, boot-context/progress golden tests, and targeted due-card integration tests.
 
@@ -80,21 +80,21 @@
 
 ### Tests for User Story 2
 
-- [ ] T020 [US2] Add unit tests for overdue-first ordering, UTC overdue-vs-due-today boundaries, weak priority within due-today cards, reserved non-weak due slot behavior, multi-tag weak matches, and deterministic due timestamp, creation timestamp, prompt, and item-ID tie-breaks in `tests/unit/test_vocab_selection.py`
-- [ ] T021 [US2] Add unit tests for due-first new-card fill, weak-tagged new-card preference, no matching weak-tag vocabulary cards, all weak-tag cards not due, no new cards when due fills queue, untagged-card fallback, and new-card tie-breaks that start with creation timestamp when due timestamp is absent in `tests/unit/test_vocab_selection.py`
-- [ ] T022 [US2] Add unit tests proving explicit tag filters are hard boundaries when active weak tags conflict with the requested tags in `tests/unit/test_vocab_selection.py`
-- [ ] T023 [P] [US2] Add `tutor vocab start --json` contract tests for `effective_count`, `active_weak_tags`, `selection_reasons`, `selection_policy`, and filter invariants in `tests/adapter_contract/test_vocab_cli.py`
-- [ ] T024 [P] [US2] Add schema contract assertions that every `selection_reasons[*].item_id` appears in `items` and no raw event data is exposed in `tests/adapter_contract/test_cli_json_contract.py`
-- [ ] T025 [P] [US2] Add golden queue-selection snapshot coverage for selected IDs, selection reasons, selection policy, and deterministic ordering in `tests/golden/test_vocab_feedback.py`
-- [ ] T026 [US2] Add integration coverage for cross-session weak targeting, explicit filter precedence, missing/invalid/incomplete analysis fallback, and 100 repeated deterministic queue builds in `tests/integration/test_vocabulary_flow.py`
+- [X] T020 [US2] Add unit tests for overdue-first ordering, UTC overdue-vs-due-today boundaries, weak priority within due-today cards, reserved non-weak due slot behavior, multi-tag weak matches, and deterministic due timestamp, creation timestamp, prompt, and item-ID tie-breaks in `tests/unit/test_vocab_selection.py`
+- [X] T021 [US2] Add unit tests for due-first new-card fill, weak-tagged new-card preference, no matching weak-tag vocabulary cards, all weak-tag cards not due, no new cards when due fills queue, untagged-card fallback, and new-card tie-breaks that start with creation timestamp when due timestamp is absent in `tests/unit/test_vocab_selection.py`
+- [X] T022 [US2] Add unit tests proving explicit tag filters are hard boundaries when active weak tags conflict with the requested tags in `tests/unit/test_vocab_selection.py`
+- [X] T023 [P] [US2] Add `tutor vocab start --json` contract tests for `effective_count`, `active_weak_tags`, `selection_reasons`, `selection_policy`, and filter invariants in `tests/adapter_contract/test_vocab_cli.py`
+- [X] T024 [P] [US2] Add schema contract assertions that every `selection_reasons[*].item_id` appears in `items` and no raw event data is exposed in `tests/adapter_contract/test_cli_json_contract.py`
+- [X] T025 [P] [US2] Add golden queue-selection snapshot coverage for selected IDs, selection reasons, selection policy, and deterministic ordering in `tests/golden/test_vocab_feedback.py`
+- [X] T026 [US2] Add integration coverage for cross-session weak targeting, explicit filter precedence, missing/invalid/incomplete analysis fallback, and 100 repeated deterministic queue builds in `tests/integration/test_vocabulary_flow.py`
 
 ### Implementation for User Story 2
 
-- [ ] T027 [US2] Implement `VocabularySelectionCandidate` construction, normalized tags, due/new flags, overdue flags, and explicit filter annotations in `src/language_tutor/vocab.py`
-- [ ] T028 [US2] Implement due-first queue selection with UTC overdue/due-today bucket boundaries, due-today weak priority, reserved non-weak due slot, and stable tie-breakers in `src/language_tutor/vocab.py`
-- [ ] T029 [US2] Implement weak-tagged new-card fill only when due cards cannot fill effective queue size, with deterministic new-card tie-breaks for cards that have no due timestamp, in `src/language_tutor/vocab.py`
-- [ ] T030 [US2] Wire `start_vocab` through candidate reads, active weak-tag signals, effective queue size, selection policy, presentation conversion, and starter seeding in `src/language_tutor/vocab.py`
-- [ ] T031 [US2] Preserve existing `invalid_vocab_start`, `invalid_vocab_filter`, empty filtered queue, and starter content behavior in `src/language_tutor/cli.py`
+- [X] T027 [US2] Implement `VocabularySelectionCandidate` construction, normalized tags, due/new flags, overdue flags, and explicit filter annotations in `src/language_tutor/vocab.py`
+- [X] T028 [US2] Implement due-first queue selection with UTC overdue/due-today bucket boundaries, due-today weak priority, reserved non-weak due slot, and stable tie-breakers in `src/language_tutor/vocab.py`
+- [X] T029 [US2] Implement weak-tagged new-card fill only when due cards cannot fill effective queue size, with deterministic new-card tie-breaks for cards that have no due timestamp, in `src/language_tutor/vocab.py`
+- [X] T030 [US2] Wire `start_vocab` through candidate reads, active weak-tag signals, effective queue size, selection policy, presentation conversion, and starter seeding in `src/language_tutor/vocab.py`
+- [X] T031 [US2] Preserve existing `invalid_vocab_start`, `invalid_vocab_filter`, empty filtered queue, and starter content behavior in `src/language_tutor/cli.py`
 
 **Checkpoint**: User Story 2 is independently testable through queue unit tests, CLI JSON contract tests, and integration flow tests.
 
@@ -108,17 +108,17 @@
 
 ### Tests for User Story 3
 
-- [ ] T032 [US3] Add unit tests for light, normal, heavy, Python `round()` behavior, minimum 1, and 60-card cap queue sizing in `tests/unit/test_vocab_selection.py`
-- [ ] T033 [P] [US3] Add preference validation tests for missing and unsupported `review_intensity` values in `tests/unit/test_schemas.py` and validation/repair-flow contract coverage for unsupported intensity guidance in `tests/adapter_contract/test_cli_json_contract.py`
-- [ ] T034 [P] [US3] Add SM-2 invariance tests across light, normal, and heavy intensity using identical previous state, verdict, and frozen review timestamp in `tests/unit/test_srs.py`
-- [ ] T035 [P] [US3] Add CLI contract coverage for effective count and selection policy intensity in `tests/adapter_contract/test_vocab_cli.py`
+- [X] T032 [US3] Add unit tests for light, normal, heavy, Python `round()` behavior, minimum 1, and 60-card cap queue sizing in `tests/unit/test_vocab_selection.py`
+- [X] T033 [P] [US3] Add preference validation tests for missing and unsupported `review_intensity` values in `tests/unit/test_schemas.py` and validation/repair-flow contract coverage for unsupported intensity guidance in `tests/adapter_contract/test_cli_json_contract.py`
+- [X] T034 [P] [US3] Add SM-2 invariance tests across light, normal, and heavy intensity using identical previous state, verdict, and frozen review timestamp in `tests/unit/test_srs.py`
+- [X] T035 [P] [US3] Add CLI contract coverage for effective count and selection policy intensity in `tests/adapter_contract/test_vocab_cli.py`
 
 ### Implementation for User Story 3
 
-- [ ] T036 [US3] Cap review-intensity queue sizing at 60 while preserving minimum 1 and current rounding behavior in `src/language_tutor/vocab.py`
-- [ ] T037 [US3] Populate `requested_count`, `effective_count`, and `selection_policy.intensity` consistently for requested-count and preference-derived queues in `src/language_tutor/vocab.py`
-- [ ] T038 [US3] Keep `schedule_review` independent from `LearnerPreferences.review_intensity` while preserving existing scheduler API in `src/language_tutor/srs.py`
-- [ ] T039 [US3] Surface light, normal, and heavy review-intensity meanings in the vocabulary skill guidance in `skills/tutor-vocab/SKILL.md`
+- [X] T036 [US3] Cap review-intensity queue sizing at 60 while preserving minimum 1 and current rounding behavior in `src/language_tutor/vocab.py`
+- [X] T037 [US3] Populate `requested_count`, `effective_count`, and `selection_policy.intensity` consistently for requested-count and preference-derived queues in `src/language_tutor/vocab.py`
+- [X] T038 [US3] Keep `schedule_review` independent from `LearnerPreferences.review_intensity` while preserving existing scheduler API in `src/language_tutor/srs.py`
+- [X] T039 [US3] Surface light, normal, and heavy review-intensity meanings in the vocabulary skill guidance in `skills/tutor-vocab/SKILL.md`
 
 **Checkpoint**: User Story 3 is independently testable through intensity unit tests, SM-2 invariance tests, and CLI contract tests.
 
@@ -128,13 +128,13 @@
 
 **Purpose**: Documentation, skill surface, verification, and architecture review.
 
-- [ ] T040 [P] Update feature documentation for weak targeting, selection reasons, explicit filter boundaries, and intensity behavior in `docs/FEATURES.md`
-- [ ] T041 [P] Update architecture documentation for core/DAL/schema/renderer boundaries and shared weak-tag signal helper ownership in `docs/ARCHITECTURE.md`
-- [ ] T042 [P] Update pitfall documentation for SM-2 invariance, explicit filter hard boundaries, and weak-summary privacy limits in `docs/PITFALLS.md`
-- [ ] T043 [P] Update progress skill guidance for active weak-tag signal summaries in `skills/tutor-progress/SKILL.md`
-- [ ] T044 Run quickstart verification commands from `specs/003-smarter-engine/quickstart.md`
-- [ ] T045 Run full static and lint gates for `src/language_tutor` and `tests` with `rtk pyright` and `rtk ruff check .`
-- [ ] T046 Perform constitution compliance and manual implementation-sizing review for SOLID, DRY, KISS, YAGNI, SoC, composition, Demeter, local-first data ownership, host independence, and the 2-second local fixture target around 500 attempts/cards in `specs/003-smarter-engine/tasks.md`
+- [X] T040 [P] Update feature documentation for weak targeting, selection reasons, explicit filter boundaries, and intensity behavior in `docs/FEATURES.md`
+- [X] T041 [P] Update architecture documentation for core/DAL/schema/renderer boundaries and shared weak-tag signal helper ownership in `docs/ARCHITECTURE.md`
+- [X] T042 [P] Update pitfall documentation for SM-2 invariance, explicit filter hard boundaries, and weak-summary privacy limits in `docs/PITFALLS.md`
+- [X] T043 [P] Update progress skill guidance for active weak-tag signal summaries in `skills/tutor-progress/SKILL.md`
+- [X] T044 Run quickstart verification commands from `specs/003-smarter-engine/quickstart.md`
+- [X] T045 Run full static and lint gates for `src/language_tutor` and `tests` with `rtk pyright` and `rtk ruff check .`
+- [X] T046 Perform constitution compliance and manual implementation-sizing review for SOLID, DRY, KISS, YAGNI, SoC, composition, Demeter, local-first data ownership, host independence, and the 2-second local fixture target around 500 attempts/cards in `specs/003-smarter-engine/tasks.md`
 
 ---
 
@@ -239,3 +239,11 @@ rtk ruff check .
 - Keep weak summaries learner-safe: no raw answers, full feedback prose, or complete event logs.
 - Keep weak targeting derived from local SQLite state; do not add cloud, telemetry, host adapters, FSRS, dashboards, or new scheduler algorithms.
 - Keep shared rules single-source in core helpers and narrow repository reads; do not duplicate weak-ranking, tag-normalization, queue-size, or selection-reason vocabulary.
+
+## T046 Compliance Review
+
+- SOLID/SoC: PASS. DAL supplies bounded rows; core owns pedagogy; renderers only format safe summaries.
+- DRY/KISS/YAGNI: PASS. Weak-signal ranking, tag normalization, queue sizing, and selection reasons are single-source helpers; no new scheduler, table, service layer, or host adapter.
+- Composition/Demeter: PASS. CLI calls core through existing functions; core consumes repository methods and Pydantic contracts only.
+- Local-first ownership: PASS. Signals derive from SQLite; preferences remain YAML; no remote state or telemetry.
+- Performance sizing: PASS by inspection. Weak signals read at most 10 sessions; queue selection sorts local candidate lists and remains appropriate for the 500-card/attempt fixture target.

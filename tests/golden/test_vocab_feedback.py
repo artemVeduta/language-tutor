@@ -16,6 +16,13 @@ from language_tutor.schemas import (
     VocabularyItemState,
     VocabularyReviewAttempt,
     VocabularyReviewHistory,
+    VocabularySelectionSource,
+    WeakTagSourceEvent,
+)
+from language_tutor.vocab import (
+    active_weak_tag_signals,
+    select_vocabulary_queue,
+    selection_candidates,
 )
 
 
@@ -75,3 +82,67 @@ def test_vocab_history_rendering_summarizes_attempts() -> None:
     rendered = render_vocab_review_history(history)
     assert "Attempts: 12" in rendered
     assert "2 older attempts omitted" in rendered
+
+
+def test_queue_selection_snapshot() -> None:
+    now = datetime(2026, 5, 21, 12, tzinfo=UTC)
+    signals = active_weak_tag_signals(
+        [
+            WeakTagSourceEvent(
+                session_id="s1", tag="case", source="mistake_events", observed_at=now
+            ),
+            WeakTagSourceEvent(
+                session_id="s2", tag="case", source="mistake_events", observed_at=now
+            ),
+        ]
+    )
+    sources = [
+        VocabularySelectionSource(
+            item=VocabularyItem(
+                id="vocab_case",
+                target_language="uk",
+                prompt="book",
+                accepted_answers=["книга"],
+                tags=["case"],
+                state=VocabularyItemState(state="review", repetition_count=1, due_at=now),
+            ),
+            created_at=now,
+        ),
+        VocabularySelectionSource(
+            item=VocabularyItem(
+                id="vocab_plain",
+                target_language="uk",
+                prompt="and",
+                accepted_answers=["і"],
+                tags=[],
+                state=VocabularyItemState(state="new", due_at=now),
+            ),
+            created_at=now,
+        ),
+    ]
+    items, reasons, reserved = select_vocabulary_queue(
+        selection_candidates(
+            sources, now=now, active_weak_tags=signals, explicit_filter_active=False
+        ),
+        effective_count=2,
+        active_weak_tags=signals,
+    )
+    assert [item.id for item in items] == ["vocab_case", "vocab_plain"]
+    assert [reason.model_dump(mode="json", exclude_none=True) for reason in reasons] == [
+        {
+            "item_id": "vocab_case",
+            "rank": 1,
+            "bucket": "due_today",
+            "reasons": ["due", "weak_tag_match"],
+            "matched_weak_tags": ["case"],
+            "due_at": "2026-05-21T12:00:00Z",
+        },
+        {
+            "item_id": "vocab_plain",
+            "rank": 2,
+            "bucket": "new_fill",
+            "reasons": ["new_card_fill"],
+            "matched_weak_tags": [],
+        },
+    ]
+    assert reserved is False

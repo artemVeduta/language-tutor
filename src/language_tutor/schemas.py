@@ -172,14 +172,65 @@ class VocabularyItem(TutorModel):
     state: VocabularyItemState = Field(default_factory=VocabularyItemState)
 
 
+class WeakTagSourceCounts(TutorModel):
+    mistake_events: int = Field(default=0, ge=0)
+    low_quality_reviews: int = Field(default=0, ge=0)
+
+
+class WeakTagSignal(TutorModel):
+    tag: str
+    session_count: int = Field(ge=2)
+    latest_seen_at: datetime
+    priority_rank: int = Field(ge=1)
+    source_counts: WeakTagSourceCounts = Field(default_factory=WeakTagSourceCounts)
+
+
+class SelectionReason(TutorModel):
+    item_id: str
+    rank: int = Field(ge=1)
+    bucket: Literal["overdue_due", "due_today", "new_fill"]
+    reasons: list[
+        Literal[
+            "overdue",
+            "due",
+            "weak_tag_match",
+            "explicit_filter_match",
+            "reserved_non_weak_due",
+            "new_card_fill",
+        ]
+    ]
+    matched_weak_tags: list[str] = Field(default_factory=list)
+    due_at: datetime | None = None
+
+
+class SelectionPolicy(TutorModel):
+    due_first: bool = True
+    weak_tag_limit: int = 5
+    recent_session_limit: int = 10
+    reserved_non_weak_due_slot: bool = False
+    intensity: ReviewIntensity = ReviewIntensity.NORMAL
+
+
+def empty_weak_tag_signals() -> list[WeakTagSignal]:
+    return []
+
+
+def empty_selection_reasons() -> list[SelectionReason]:
+    return []
+
+
 class VocabularySessionPlan(TutorModel):
     items: list[VocabularyItem]
     requested_count: int
+    effective_count: int | None = None
     starter_content_required: bool = False
     filter: list[str] = Field(default_factory=list)
     matching_count: int | None = None
     due_matching_count: int | None = None
     empty_reason: Literal["no_matching_cards", "matching_cards_not_due"] | None = None
+    active_weak_tags: list[WeakTagSignal] = Field(default_factory=empty_weak_tag_signals)
+    selection_reasons: list[SelectionReason] = Field(default_factory=empty_selection_reasons)
+    selection_policy: SelectionPolicy = Field(default_factory=SelectionPolicy)
 
 
 def _clean_string(value: str, field_name: str) -> str:
@@ -378,6 +429,18 @@ class VocabularyReviewHistory(TutorModel):
     attempts: list[VocabularyReviewAttempt] = Field(default_factory=empty_review_attempts)
 
 
+class WeakTagSourceEvent(TutorModel):
+    session_id: str
+    tag: str
+    source: Literal["mistake_events", "low_quality_reviews"]
+    observed_at: datetime
+
+
+class VocabularySelectionSource(TutorModel):
+    item: VocabularyItem
+    created_at: datetime
+
+
 class WritingPromptResult(TutorModel):
     prompt_id: str
     prompt: str
@@ -464,6 +527,8 @@ def export_json_schemas(output_dir: Path) -> None:
         "vocabulary_card_definition.schema.json": VocabularyCardDefinition,
         "vocabulary_import_summary.schema.json": SeedImportResult,
         "vocabulary_session_plan.schema.json": VocabularySessionPlan,
+        "weak_tag_signal.schema.json": WeakTagSignal,
+        "selection_reason.schema.json": SelectionReason,
         "vocabulary_review_history.schema.json": VocabularyReviewHistory,
     }
     for filename, model in mapping.items():

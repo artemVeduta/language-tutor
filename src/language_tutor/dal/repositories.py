@@ -19,6 +19,8 @@ from language_tutor.schemas import (
     VocabularyReview,
     VocabularyReviewAttempt,
     VocabularyReviewHistory,
+    VocabularySelectionSource,
+    WeakTagSourceEvent,
 )
 from language_tutor.vocab import (
     dedupe_key_for_item,
@@ -152,6 +154,79 @@ class TutorRepository:
             if datetime.fromisoformat(str(row["due_at"])) <= now:
                 due.append(row)
         return [self._row_to_vocab(row) for row in due[:limit]], len(matching), len(due)
+
+    def vocabulary_selection_candidates(
+        self, normalized_tags: list[str] | None = None
+    ) -> list[VocabularySelectionSource]:
+        rows = self.conn.execute("SELECT * FROM vocabulary_items ORDER BY created_at, id").fetchall()
+        requested = set(normalized_tags or [])
+        candidates: list[VocabularySelectionSource] = []
+        for row in rows:
+            item = self._row_to_vocab(row)
+            item_tags = {normalize_tag(tag) for tag in item.tags}
+            if requested and not requested.intersection(item_tags):
+                continue
+            candidates.append(
+                VocabularySelectionSource(
+                    item=item,
+                    created_at=datetime.fromisoformat(str(row["created_at"])),
+                )
+            )
+        return candidates
+
+    def recent_analyzed_session_ids(self, limit: int = 10) -> list[str]:
+        rows = self.conn.execute(
+            """
+            SELECT session_id
+            FROM session_summaries
+            ORDER BY created_at DESC, session_id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+        return [str(row["session_id"]) for row in rows]
+
+    def weak_tag_source_events(self, session_ids: list[str]) -> list[WeakTagSourceEvent]:
+        if not session_ids:
+            return []
+        placeholders = ",".join("?" for _ in session_ids)
+        mistake_rows = self.conn.execute(
+            f"""
+            SELECT session_id, tag, created_at
+            FROM mistake_events
+            WHERE session_id IN ({placeholders})
+            """,
+            session_ids,
+        ).fetchall()
+        review_rows = self.conn.execute(
+            f"""
+            SELECT vr.session_id, vi.tags_json, vr.reviewed_at
+            FROM vocabulary_reviews vr
+            JOIN vocabulary_items vi ON vi.id = vr.vocabulary_item_id
+            WHERE vr.session_id IN ({placeholders}) AND vr.quality < 3
+            """,
+            session_ids,
+        ).fetchall()
+        events = [
+            WeakTagSourceEvent(
+                session_id=str(row["session_id"]),
+                tag=str(row["tag"]),
+                source="mistake_events",
+                observed_at=datetime.fromisoformat(str(row["created_at"])),
+            )
+            for row in mistake_rows
+        ]
+        for row in review_rows:
+            for tag in json.loads(str(row["tags_json"])):
+                events.append(
+                    WeakTagSourceEvent(
+                        session_id=str(row["session_id"]),
+                        tag=str(tag),
+                        source="low_quality_reviews",
+                        observed_at=datetime.fromisoformat(str(row["reviewed_at"])),
+                    )
+                )
+        return events
 
     def get_vocabulary_item(self, item_id: str) -> VocabularyItem:
         row = self.conn.execute(
@@ -460,11 +535,21 @@ class TutorRepository:
         return int(row["count"])
 
     def weak_tags(self, limit: int = 5) -> list[str]:
-        rows = self.conn.execute(
-            "SELECT tag, COUNT(*) AS count FROM mistake_events GROUP BY tag ORDER BY count DESC, tag LIMIT ?",
-            (limit,),
-        ).fetchall()
-        return [str(row["tag"]) for row in rows]
+        session_ids = self.recent_analyzed_session_ids(10)
+        events = self.weak_tag_source_events(session_ids)
+        if not events:
+            rows = self.conn.execute(
+                "SELECT tag, COUNT(*) AS count FROM mistake_events GROUP BY tag ORDER BY count DESC, tag LIMIT ?",
+                (limit,),
+            ).fetchall()
+            return [str(row["tag"]) for row in rows]
+        counts: dict[str, set[str]] = {}
+        for event in events:
+            tag = normalize_tag(event.tag)
+            if tag:
+                counts.setdefault(tag, set()).add(event.session_id)
+        ranked = sorted(counts.items(), key=lambda item: (-len(item[1]), item[0]))
+        return [tag for tag, _ in ranked[:limit]]
 
     def maturity_counts(self) -> dict[str, int]:
         rows = self.conn.execute(

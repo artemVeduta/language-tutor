@@ -8,6 +8,15 @@
 
 ## Critical Pitfalls
 
+### Smarter Engine Pitfalls
+
+- Keep SM-2 independent from `review_intensity`; intensity only changes queue
+  size.
+- Apply explicit tag filters before weak-tag annotation. Weak targeting must not
+  reintroduce filtered-out cards.
+- Keep weak summaries learner-safe: top 5 tags, safe counts, no raw answers,
+  full feedback prose, or complete event logs.
+
 ### Pitfall 1: LLM-as-judge hallucinates corrections on morphology-rich L2
 
 **What goes wrong:**

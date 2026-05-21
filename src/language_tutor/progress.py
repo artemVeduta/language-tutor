@@ -4,6 +4,7 @@ from datetime import UTC, date, datetime, timedelta
 
 from language_tutor.dal.repositories import TutorRepository
 from language_tutor.schemas import LearnerPreferences, ProgressReport
+from language_tutor.vocab import derive_active_weak_tag_signals
 
 
 def compute_streak(dates: list[str], grace_days: int) -> int:
@@ -29,7 +30,7 @@ def progress_report(repo: TutorRepository, preferences: LearnerPreferences) -> P
     month_prefix = now.strftime("%Y-%m-01")
     cost, cost_status = repo.month_cost(month_prefix)
     due = repo.due_count(now)
-    weak = repo.weak_tags()
+    weak = [signal.tag for signal in derive_active_weak_tag_signals(repo)]
     return ProgressReport(
         streak_days=compute_streak(repo.answer_dates(), preferences.streak_grace_days),
         due_count=due,

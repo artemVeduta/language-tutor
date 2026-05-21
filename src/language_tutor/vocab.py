@@ -3,9 +3,10 @@ from __future__ import annotations
 import json
 import re
 import unicodedata
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 from language_tutor.errors import TutorError
 from language_tutor.feedback import vocabulary_feedback
@@ -14,6 +15,8 @@ from language_tutor.schemas import (
     SeedImportEntryResult,
     SeedImportRequest,
     SeedImportResult,
+    SelectionPolicy,
+    SelectionReason,
     VocabularyAnswerInput,
     VocabularyAnswerResult,
     VocabularyCardAddResult,
@@ -22,7 +25,11 @@ from language_tutor.schemas import (
     VocabularyItem,
     VocabularyReviewHistory,
     VocabularyReviewHistoryRequest,
+    VocabularySelectionSource,
     VocabularySessionPlan,
+    WeakTagSignal,
+    WeakTagSourceCounts,
+    WeakTagSourceEvent,
 )
 from language_tutor.srs import quality_for_verdict, schedule_review
 
@@ -32,9 +39,22 @@ if TYPE_CHECKING:
 
 APOSTROPHE_VARIANTS = str.maketrans({"’": "'", "‘": "'", "ʼ": "'", "＇": "'"})
 CLOZE_MARKER = "{{answer}}"
+SelectionReasonLabel = Literal[
+    "overdue",
+    "due",
+    "weak_tag_match",
+    "explicit_filter_match",
+    "reserved_non_weak_due",
+    "new_card_fill",
+]
 
 
 def queue_size(preferences: LearnerPreferences) -> int:
+    multiplier = {"light": 0.5, "normal": 1.0, "heavy": 1.5}[str(preferences.review_intensity)]
+    return min(60, max(1, round(preferences.session_length * multiplier)))
+
+
+def requested_queue_size(preferences: LearnerPreferences) -> int:
     multiplier = {"light": 0.5, "normal": 1.0, "heavy": 1.5}[str(preferences.review_intensity)]
     return max(1, round(preferences.session_length * multiplier))
 
@@ -100,6 +120,187 @@ def normalized_tag_filter(tags: list[str]) -> list[str]:
     return normalized
 
 
+def active_weak_tag_signals(
+    events: list[WeakTagSourceEvent], *, limit: int = 5
+) -> list[WeakTagSignal]:
+    session_tags: dict[str, set[str]] = {}
+    latest: dict[str, datetime] = {}
+    source_counts: dict[str, WeakTagSourceCounts] = {}
+    for event in events:
+        tag = normalize_tag(event.tag)
+        if not tag:
+            continue
+        session_tags.setdefault(tag, set()).add(event.session_id)
+        latest[tag] = max(latest.get(tag, event.observed_at), event.observed_at)
+        counts = source_counts.setdefault(tag, WeakTagSourceCounts())
+        if event.source == "mistake_events":
+            counts.mistake_events += 1
+        else:
+            counts.low_quality_reviews += 1
+
+    active = [
+        (tag, sessions)
+        for tag, sessions in session_tags.items()
+        if len(sessions) >= 2
+    ]
+    active.sort(key=lambda item: (-len(item[1]), -latest[item[0]].timestamp(), item[0]))
+    return [
+        WeakTagSignal(
+            tag=tag,
+            session_count=len(sessions),
+            latest_seen_at=latest[tag],
+            priority_rank=index,
+            source_counts=source_counts[tag],
+        )
+        for index, (tag, sessions) in enumerate(active[:limit], start=1)
+    ]
+
+
+def derive_active_weak_tag_signals(
+    repo: TutorRepository, *, recent_session_limit: int = 10, weak_tag_limit: int = 5
+) -> list[WeakTagSignal]:
+    session_ids = repo.recent_analyzed_session_ids(recent_session_limit)
+    return active_weak_tag_signals(
+        repo.weak_tag_source_events(session_ids),
+        limit=weak_tag_limit,
+    )
+
+
+@dataclass(frozen=True)
+class SelectionCandidate:
+    source: VocabularySelectionSource
+    normalized_tags: tuple[str, ...]
+    is_new: bool
+    is_due: bool
+    is_overdue: bool
+    matched_weak_tags: tuple[str, ...]
+    matches_explicit_filter: bool
+
+    @property
+    def item(self) -> VocabularyItem:
+        return self.source.item
+
+    @property
+    def due_at(self) -> datetime:
+        return self.item.state.due_at
+
+    @property
+    def created_at(self) -> datetime:
+        return self.source.created_at
+
+
+def selection_candidates(
+    sources: list[VocabularySelectionSource],
+    *,
+    now: datetime,
+    active_weak_tags: list[WeakTagSignal],
+    explicit_filter_active: bool,
+) -> list[SelectionCandidate]:
+    weak_order = {signal.tag: signal.priority_rank for signal in active_weak_tags}
+    today = now.astimezone(UTC).date()
+    candidates: list[SelectionCandidate] = []
+    for source in sources:
+        tags = tuple(dict.fromkeys(normalize_tag(tag) for tag in source.item.tags if normalize_tag(tag)))
+        state = source.item.state
+        due_at = state.due_at.astimezone(UTC)
+        is_new = state.state == "new"
+        is_due = not is_new and due_at <= now
+        matched = tuple(sorted((tag for tag in tags if tag in weak_order), key=weak_order.__getitem__))
+        candidates.append(
+            SelectionCandidate(
+                source=source,
+                normalized_tags=tags,
+                is_new=is_new,
+                is_due=is_due,
+                is_overdue=is_due and due_at.date() < today,
+                matched_weak_tags=matched,
+                matches_explicit_filter=explicit_filter_active,
+            )
+        )
+    return candidates
+
+
+def _due_tie_key(candidate: SelectionCandidate) -> tuple[datetime, datetime, str, str]:
+    return (
+        candidate.due_at,
+        candidate.created_at,
+        normalize_text(candidate.item.prompt),
+        candidate.item.id,
+    )
+
+
+def _new_tie_key(candidate: SelectionCandidate) -> tuple[datetime, str, str]:
+    return (candidate.created_at, normalize_text(candidate.item.prompt), candidate.item.id)
+
+
+def _weak_rank(candidate: SelectionCandidate, weak_order: dict[str, int]) -> int:
+    if not candidate.matched_weak_tags:
+        return 1_000_000
+    return min(weak_order[tag] for tag in candidate.matched_weak_tags)
+
+
+def select_vocabulary_queue(
+    candidates: list[SelectionCandidate],
+    *,
+    effective_count: int,
+    active_weak_tags: list[WeakTagSignal],
+) -> tuple[list[VocabularyItem], list[SelectionReason], bool]:
+    weak_order = {signal.tag: signal.priority_rank for signal in active_weak_tags}
+    overdue = sorted((c for c in candidates if c.is_overdue), key=_due_tie_key)
+    due_today = sorted(
+        (c for c in candidates if c.is_due and not c.is_overdue),
+        key=lambda c: (_weak_rank(c, weak_order), *_due_tie_key(c)),
+    )
+    due_pool = overdue + due_today
+    selected: list[SelectionCandidate] = due_pool[:effective_count]
+    reserved = False
+    due_capacity = min(effective_count, len(due_pool))
+    if due_capacity >= 2 and all(candidate.matched_weak_tags for candidate in selected):
+        non_weak_due = sorted((c for c in due_pool if not c.matched_weak_tags), key=_due_tie_key)
+        if non_weak_due:
+            replacement = non_weak_due[0]
+            if replacement not in selected:
+                selected = selected[: due_capacity - 1] + [replacement]
+            reserved = True
+
+    if len(selected) < effective_count:
+        selected_ids = {candidate.item.id for candidate in selected}
+        new_cards = sorted(
+            (c for c in candidates if c.is_new and c.item.id not in selected_ids),
+            key=lambda c: (_weak_rank(c, weak_order), *_new_tie_key(c)),
+        )
+        selected.extend(new_cards[: effective_count - len(selected)])
+
+    reasons: list[SelectionReason] = []
+    for rank, candidate in enumerate(selected, start=1):
+        if candidate.is_overdue:
+            bucket = "overdue_due"
+            reason_labels: list[SelectionReasonLabel] = ["overdue"]
+        elif candidate.is_due:
+            bucket = "due_today"
+            reason_labels = ["due"]
+        else:
+            bucket = "new_fill"
+            reason_labels = ["new_card_fill"]
+        if candidate.matches_explicit_filter:
+            reason_labels.append("explicit_filter_match")
+        if candidate.matched_weak_tags:
+            reason_labels.append("weak_tag_match")
+        if reserved and candidate.is_due and not candidate.matched_weak_tags:
+            reason_labels.append("reserved_non_weak_due")
+        reasons.append(
+            SelectionReason(
+                item_id=candidate.item.id,
+                rank=rank,
+                bucket=bucket,
+                reasons=reason_labels,
+                matched_weak_tags=list(candidate.matched_weak_tags),
+                due_at=candidate.due_at if candidate.is_due else None,
+            )
+        )
+    return [candidate.item for candidate in selected], reasons, reserved
+
+
 def cloze_prompt(prompt: str) -> str:
     return prompt.replace(CLOZE_MARKER, "____")
 
@@ -137,33 +338,49 @@ def start_vocab(
     preferences: LearnerPreferences,
     request: VocabularyDrillRequest | None = None,
 ) -> VocabularySessionPlan:
-    limit = request.requested_count if request and request.requested_count else queue_size(preferences)
+    requested_count = (
+        request.requested_count if request and request.requested_count else requested_queue_size(preferences)
+    )
+    effective_count = min(60, max(1, requested_count))
     now = datetime.now(UTC)
     filter_tags = normalized_tag_filter(request.tags) if request and request.tags is not None else []
-    if filter_tags:
-        items, matching_count, due_matching_count = repo.due_vocabulary_by_tags(
-            limit, now, filter_tags
-        )
-        empty_reason = None
-        if not items:
-            empty_reason = "no_matching_cards" if matching_count == 0 else "matching_cards_not_due"
-        return VocabularySessionPlan(
-            items=[presentation_item(item) for item in items],
-            requested_count=limit,
-            filter=filter_tags,
-            matching_count=matching_count,
-            due_matching_count=due_matching_count,
-            empty_reason=empty_reason,
-        )
-
-    items = repo.due_vocabulary(limit, now)
-    if not items:
+    sources = repo.vocabulary_selection_candidates(filter_tags or None)
+    if not sources and not filter_tags:
         repo.seed_default_vocabulary(target_language)
-        items = repo.due_vocabulary(limit, datetime.now(UTC))
+        sources = repo.vocabulary_selection_candidates(None)
+
+    active_signals = derive_active_weak_tag_signals(repo)
+    candidates = selection_candidates(
+        sources,
+        now=now,
+        active_weak_tags=active_signals,
+        explicit_filter_active=bool(filter_tags),
+    )
+    items, reasons, reserved_non_weak = select_vocabulary_queue(
+        candidates,
+        effective_count=effective_count,
+        active_weak_tags=active_signals,
+    )
+    matching_count = len(sources) if filter_tags else None
+    due_matching_count = sum(candidate.is_due for candidate in candidates) if filter_tags else None
+    empty_reason = None
+    if filter_tags and not items:
+        empty_reason = "no_matching_cards" if matching_count == 0 else "matching_cards_not_due"
     return VocabularySessionPlan(
         items=[presentation_item(item) for item in items],
-        requested_count=limit,
+        requested_count=requested_count,
+        effective_count=effective_count,
         starter_content_required=not bool(items),
+        filter=filter_tags,
+        matching_count=matching_count,
+        due_matching_count=due_matching_count,
+        empty_reason=empty_reason,
+        active_weak_tags=active_signals,
+        selection_reasons=reasons,
+        selection_policy=SelectionPolicy(
+            reserved_non_weak_due_slot=reserved_non_weak,
+            intensity=preferences.review_intensity,
+        ),
     )
 
 
