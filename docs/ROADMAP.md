@@ -26,7 +26,8 @@ Check a phase when its exit gate is met. (Granular item boxes live in each phase
 - [x] **Phase 5** — Text Modalities
 - [x] **Phase 6** — Host-Capability Layer + Adapter Framework
 - [x] **Phase 6.x** — Adapter Rollout (hermes / openclaw / claude / codex; antigravity excluded)
-- [ ] **Phase 7** — Audio Modalities
+- [ ] **Phase 7** — Hook-Free Incremental Lifecycle (fix)
+- [ ] **Phase 8** — Audio Modalities
 
 ## Sequencing Decision
 
@@ -192,7 +193,48 @@ install/distribution path shipped.
 Maps to `REQUIREMENTS.md` HOST-01 (codex), HOST-02 (openclaw), HOST-03 (hermes);
 HOST-04 (antigravity) is out of scope.
 
-### Phase 7 — Audio Modalities *(needs research)*
+### Phase 7 — Hook-Free Incremental Lifecycle *(fix)*
+Corrects the Phase 6/6.x lifecycle model. Source: spec
+`006-agent-adapter-setup/HANDOFF-incremental-lifecycle-no-hooks.md`. Drops
+host-specific hooks entirely; tutor correctness comes from first-message boot
+plus incremental DB persistence. No new modality, no host dependency beyond the
+shared contracts. Enforces Constitution **Principle IX — Hook-Free Incremental
+Lifecycle** (v1.2.0).
+
+Why: Codex has no documented true `SessionEnd` (`Stop` is turn-scoped); hooks can
+be disabled/uninstalled and behave differently per host. One no-hook lifecycle is
+simpler and gives stronger data safety than shutdown hooks.
+
+- [x] Add `sessions` + `checkpoints` models, schemas, and migrations.
+- [x] Repository methods: `open_session`, `touch_session`, `record_checkpoint`,
+  `recent_sessions`, and `close_session` (explicit manual close only).
+- [x] `session-start` CLI mints `session_id` and returns it alongside boot
+  context; existing `boot-context` stays unchanged for backward compatibility.
+- [x] Skills/adapters call `session-start` on first tutor interaction; the
+  agent threads the returned `session_id` into every later call. Checkpoint
+  writes on every lesson/exercise/prompt presentation; existing answer-event
+  persistence is anchored to the active `session_id`.
+- [x] Capability profiles for claude/codex/openclaw/hermes set
+  `lifecycle_start=first_message`, `lifecycle_end=not_available`,
+  `persistence_mode=incremental_checkpoint`,
+  `boot_context_trigger=first_tutor_message`, plus `session_id_source`.
+- [x] Removed `hooks/` (deleted) and dropped hook lifecycle assertions from
+  capability/conformance/packaging surface.
+- [x] CLI write paths commit durably (`open_session`, `touch_session`,
+  `record_checkpoint`, `close_session` each open their own transaction).
+- [x] `session-close` is the only path that flips `status=closed` / sets
+  `closed_at`. `session-end` is retained as a maintenance command.
+
+**Exit gate:** no host setup profile claims hook lifecycle as target architecture;
+no host package requires hooks for correctness; conformance verifies first-message
+boot + checkpoint persistence for all hosts; mid-lesson app close leaves data
+through the last checkpoint intact (new session on next boot, prior session read
+as stale history); packaging-privacy tests confirm checkpoint/session files
+package no user-owned data; pytest, pyright, ruff green. Migration updates
+`README.md`, Phase 6 lifecycle wording, host-setup profiles, manual-install
+reports, and adapter/packaging tests listed in the HANDOFF.
+
+### Phase 8 — Audio Modalities *(needs research)*
 Rides the Phase 6 capability layer and whichever adapters declared audio support
 (e.g. desktop apps, or Telegram-fronted openclaw/hermess — confirmed per adapter
 in Phase 6.x, not assumed here).
@@ -209,7 +251,9 @@ quality.
 
 - Phases 2, 3, 4 are independent core deepening — reorderable.
 - Phase 5 depends on nothing new.
-- Phase 6 (capability layer) gates Phase 6.x (adapters) gates Phase 7 (audio).
+- Phase 6 (capability layer) gates Phase 6.x (adapters) gates Phase 7
+  (hook-free lifecycle fix) gates Phase 7 (audio).
+- Phase 7 fixes the 6/6.x lifecycle before audio rides the same boot/persist path.
 - Audio is last by construction: it needs the capability layer, which is only
   worth abstracting once a second adapter exists to validate it.
 

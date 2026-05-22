@@ -10,6 +10,7 @@ from language_tutor.schemas import (
     BootTrigger,
     LearnerPreferences,
     LearnerProfile,
+    PriorSessionEntry,
     TriggerType,
 )
 from language_tutor.vocab import derive_active_weak_tag_signals
@@ -18,50 +19,41 @@ from language_tutor.vocab import derive_active_weak_tag_signals
 def select_boot_trigger(boot_context_trigger: str) -> BootContextTrigger:
     """Deterministically map a host's declared boot trigger to a lifecycle path.
 
-    Hook-capable hosts (Claude SessionStart, Codex plugin hook) use a hook
-    trigger. Non-hook hosts must use an explicit command, first message, or
-    host-specific manual trigger. Core boot-context rendering stays host-blind.
+    Spec 007: hook boot triggers are no longer a valid target. All hosts share
+    the no-hook lifecycle and boot via the first tutor-skill invocation, which
+    runs ``tutor session-start --json``.
     """
-    hook_triggers = {
-        BootTrigger.SESSION_START_HOOK.value: "SessionStart",
-        BootTrigger.CODEX_PLUGIN_HOOK.value: "CodexPluginStart",
-    }
-    if boot_context_trigger in hook_triggers:
+    if boot_context_trigger == BootTrigger.FIRST_TUTOR_MESSAGE.value:
         return BootContextTrigger(
-            trigger_type=TriggerType.HOOK,
-            host_event_name=hook_triggers[boot_context_trigger],
-            command=None,
-            input_contract="host hook payload (JSON)",
-            output_contract="BootContext or HostSetupFailure",
-            fallback=TriggerType.EXPLICIT_COMMAND,
+            trigger_type=TriggerType.FIRST_MESSAGE,
+            command="tutor session-start --json",
+            input_contract="first tutor-skill invocation",
+            output_contract="BootResult or HostSetupFailure",
+            fallback=TriggerType.MANUAL,
         )
     if boot_context_trigger == BootTrigger.EXPLICIT_TUTOR_COMMAND.value:
         return BootContextTrigger(
             trigger_type=TriggerType.EXPLICIT_COMMAND,
-            command="tutor boot --json",
+            command="tutor session-start --json",
             input_contract="profile+preferences (JSON)",
-            output_contract="BootContext or HostSetupFailure",
+            output_contract="BootResult or HostSetupFailure",
             fallback=TriggerType.FIRST_MESSAGE,
-        )
-    if boot_context_trigger == BootTrigger.FIRST_TUTOR_MESSAGE.value:
-        return BootContextTrigger(
-            trigger_type=TriggerType.FIRST_MESSAGE,
-            command="tutor boot --json",
-            input_contract="first learner message",
-            output_contract="BootContext or HostSetupFailure",
-            fallback=TriggerType.MANUAL,
         )
     return BootContextTrigger(
         trigger_type=TriggerType.MANUAL,
-        command="tutor boot --json",
+        command="tutor session-start --json",
         input_contract="manual invocation",
-        output_contract="BootContext or HostSetupFailure",
+        output_contract="BootResult or HostSetupFailure",
         fallback=None,
     )
 
 
 def build_boot_context(
-    repo: TutorRepository, profile: LearnerProfile, preferences: LearnerPreferences
+    repo: TutorRepository,
+    profile: LearnerProfile,
+    preferences: LearnerPreferences,
+    *,
+    prior_sessions: list[PriorSessionEntry] | None = None,
 ) -> BootContext:
     now = datetime.now(UTC).replace(microsecond=0)
     due = repo.due_count(now)
@@ -103,7 +95,11 @@ def build_boot_context(
         ),
     ]
     return BootContext(
-        profile=profile, preferences=preferences, sections=sections, generated_at=now
+        profile=profile,
+        preferences=preferences,
+        sections=sections,
+        generated_at=now,
+        prior_sessions=list(prior_sessions or []),
     )
 
 

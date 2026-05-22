@@ -1,5 +1,14 @@
 # Host Setup Profile: Codex
 
+> **Lifecycle superseded by spec 007** (Hook-Free Incremental Lifecycle —
+> Constitution Principle IX). The Codex capability profile now declares
+> `lifecycle_start=first_message`, `lifecycle_end=not_available`,
+> `boot_context_trigger=first_tutor_message`, and
+> `persistence_mode=incremental_checkpoint`. The Codex plugin does **not**
+> require `[features].plugin_hooks` to be enabled — boot happens on the first
+> tutor message via `tutor session-start --json`. The plugin-hooks mentions
+> below are retained as historical context only.
+
 **Host ID**: `codex`
 **Schema Version**: `1`
 **Owner Subagent**: `codex-adapter-subagent`

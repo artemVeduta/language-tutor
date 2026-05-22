@@ -20,12 +20,13 @@ def test_hermes_capability() -> None:
     assert profile.lifecycle_end == LifecycleEnd.NOT_AVAILABLE.value
 
 
-def test_hermes_uses_explicit_boot_trigger() -> None:
+def test_hermes_uses_first_message_boot_trigger() -> None:
+    """spec 007 FR-009/FR-010: Hermes shares the no-hook lifecycle."""
     profile = hermes.capability_profile()
-    assert profile.lifecycle_start == LifecycleStart.EXPLICIT_COMMAND.value
-    assert profile.boot_context_trigger == BootTrigger.EXPLICIT_TUTOR_COMMAND.value
+    assert profile.lifecycle_start == LifecycleStart.FIRST_MESSAGE.value
+    assert profile.boot_context_trigger == BootTrigger.FIRST_TUTOR_MESSAGE.value
     trigger = select_boot_trigger(profile.boot_context_trigger)
-    assert trigger.trigger_type == TriggerType.EXPLICIT_COMMAND.value
+    assert trigger.trigger_type == TriggerType.FIRST_MESSAGE.value
     assert trigger.command
 
 

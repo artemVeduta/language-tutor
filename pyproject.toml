@@ -32,7 +32,6 @@ tutor = "language_tutor.cli:main"
 include = [
   "/src",
   "/bin",
-  "/hooks",
   "/skills",
   "/agents",
   "/data/defaults",

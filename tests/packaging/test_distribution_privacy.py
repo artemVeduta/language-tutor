@@ -69,7 +69,15 @@ def test_setup_package_accepts_full_exclusions() -> None:
         host=HostId.CLAUDE,
         root_path=".claude-plugin",
         manifest_paths=[".claude-plugin/plugin.json"],
-        excluded_paths=["secrets", "memories", "sessions", "logs", "local", "*.sqlite"],
+        excluded_paths=[
+            "secrets",
+            "memories",
+            "sessions",
+            "checkpoints",
+            "logs",
+            "local",
+            "*.sqlite",
+        ],
         verification_command="claude plugin validate",
     )
     assert package.host == HostId.CLAUDE.value

@@ -1,5 +1,12 @@
 # Dogfood Report: Agent Adapter Setup
 
+> **Spec 007 note:** any lifecycle assertions in this report that depend on
+> SessionStart / SessionEnd / `session_start_hook` / `codex_plugin_hook` are
+> historical. The shipped lifecycle for all four hosts is now first-message
+> boot via `tutor session-start --json` with incremental checkpoint
+> persistence (no host hooks installed). See
+> `specs/007-hookfree-incremental-lifecycle/`.
+
 Date: 2026-05-22
 Scope: Hermes, OpenClaw, Claude, Codex tutor launch + six representative text flows.
 

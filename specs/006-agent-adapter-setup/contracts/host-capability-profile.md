@@ -1,5 +1,14 @@
 # Contract: Host Capability Profile
 
+> **Superseded on the lifecycle surface by spec 007 (Hook-Free Incremental
+> Lifecycle, Constitution Principle IX).** All four host profiles MUST declare
+> `lifecycle_start=first_message`, `lifecycle_end=not_available`,
+> `boot_context_trigger=first_tutor_message`,
+> `persistence_mode=incremental_checkpoint`, and a valid `session_id_source`.
+> Hook boot triggers (`session_start_hook`, `codex_plugin_hook`) and
+> `lifecycle_start=hook` are rejected by the `AdapterCapabilityProfile`
+> validator. The mentions below are retained as historical context only.
+
 ## Purpose
 
 Declare what a host can support before tutor flows depend on it. This contract keeps host mechanics out of pedagogy, feedback, progress, and persistence.

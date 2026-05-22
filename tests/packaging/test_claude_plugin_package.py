@@ -5,7 +5,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-# Existing Claude baseline components that must remain present (regression guard).
+# Claude baseline components that must remain present (regression guard).
+# hooks/ was removed in spec 007 (FR-011): no-hook lifecycle for all hosts.
 REQUIRED = (
     ".claude-plugin/plugin.json",
     "skills/tutor-setup/SKILL.md",
@@ -14,7 +15,6 @@ REQUIRED = (
     "skills/tutor-progress/SKILL.md",
     "skills/tutor-reading/SKILL.md",
     "skills/tutor-lesson/SKILL.md",
-    "hooks/hooks.json",
     "agents/tutor-judge.md",
     "bin/tutor",
 )
@@ -31,9 +31,9 @@ def test_claude_manifest_is_valid_json_with_name() -> None:
     assert "version" in manifest
 
 
-def test_claude_hooks_declare_session_start() -> None:
-    hooks = json.loads((REPO_ROOT / "hooks/hooks.json").read_text(encoding="utf-8"))
-    assert "SessionStart" in hooks["hooks"]
+def test_claude_package_has_no_hook_directory() -> None:
+    """spec 007 FR-011: hooks/ is removed; no-hook lifecycle is the only target."""
+    assert not (REPO_ROOT / "hooks").exists()
 
 
 def test_claude_manifest_excludes_user_state() -> None:

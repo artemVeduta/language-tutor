@@ -1,5 +1,11 @@
 # Manual Provider Install Report: Codex
 
+> **Spec 007 note:** any plugin-hooks lifecycle assertions in this report
+> predate the hook-free lifecycle. The Codex plugin does not require
+> `[features].plugin_hooks` — boot happens on the first tutor message via
+> `tutor session-start --json`. See
+> `specs/007-hookfree-incremental-lifecycle/` for the current contract.
+
 ## Environment
 - Host: Codex
 - Host version: codex-cli 0.130.0

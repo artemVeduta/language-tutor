@@ -1,5 +1,10 @@
 # Manual Provider Install Report: Claude
 
+> **Spec 007 note:** the SessionStart/SessionEnd hook references in this report
+> predate the hook-free lifecycle. The shipped plugin no longer installs hooks;
+> boot happens on the first tutor message via `tutor session-start --json`. See
+> `specs/007-hookfree-incremental-lifecycle/` for the current contract.
+
 ## Environment
 - Host: Claude Code
 - Host version: claude CLI v2.1.148

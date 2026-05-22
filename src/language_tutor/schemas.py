@@ -64,6 +64,47 @@ class ErrorTag(StrEnum):
     UNCATEGORIZED = "uncategorized"
 
 
+class SessionStatus(StrEnum):
+    """Stored session status. ``stale``/``abandoned`` are derived labels only."""
+
+    OPEN = "open"
+    CLOSED = "closed"
+
+
+class PersistenceMode(StrEnum):
+    INCREMENTAL_CHECKPOINT = "incremental_checkpoint"
+
+
+class SessionIdSource(StrEnum):
+    HOST_CONVERSATION = "host_conversation"
+    TUTOR_GENERATED = "tutor_generated"
+
+
+class CheckpointStepKind(StrEnum):
+    STARTED = "started"
+    PROMPT_SHOWN = "prompt_shown"
+    FEEDBACK_SHOWN = "feedback_shown"
+    PROGRESS_SHOWN = "progress_shown"
+
+
+class SessionLabel(StrEnum):
+    """Read-time derived session label. Never stored (FR-018)."""
+
+    OPEN = "open"
+    STALE = "stale"
+    ABANDONED = "abandoned"
+    CLOSED = "closed"
+
+
+class CheckpointModality(StrEnum):
+    LESSON = "lesson"
+    READING = "reading"
+    TRANSCRIPT = "transcript"
+    VOCAB = "vocab"
+    WRITING = "writing"
+    PROGRESS = "progress"
+
+
 class LearnerProfile(TutorModel):
     schema_version: int = 1
     native_language: str
@@ -142,12 +183,26 @@ class BootSection(TutorModel):
     lines: list[str] = Field(default_factory=list)
 
 
+class PriorSessionEntry(TutorModel):
+    """N most-recent prior session entry surfaced in the boot context history."""
+
+    session_id: str = Field(pattern=r"^sess_[A-Za-z0-9]+$")
+    label: SessionLabel
+    last_seen_at: datetime
+    summary: str | None = None
+
+
+def empty_prior_sessions() -> list[PriorSessionEntry]:
+    return []
+
+
 class BootContext(TutorModel):
     profile: LearnerProfile
     preferences: LearnerPreferences
     sections: list[BootSection]
     generated_at: datetime = Field(default_factory=utc_now)
     max_rendered_chars: int = 6000
+    prior_sessions: list[PriorSessionEntry] = Field(default_factory=empty_prior_sessions)
 
 
 class VocabularyItemState(TutorModel):
@@ -987,6 +1042,7 @@ PRIVACY_EXCLUDED_PATTERNS: tuple[str, ...] = (
     "secrets",
     "memories",
     "sessions",
+    "checkpoints",
     "*.sqlite",
     "*.sqlite3",
     "*.db",
@@ -1062,6 +1118,8 @@ class AdapterCapabilityProfile(TutorModel):
     lifecycle_start: LifecycleStart
     lifecycle_end: LifecycleEnd
     boot_context_trigger: BootTrigger
+    persistence_mode: PersistenceMode = PersistenceMode.INCREMENTAL_CHECKPOINT
+    session_id_source: SessionIdSource = SessionIdSource.TUTOR_GENERATED
     setup_entry_point: str
     update_behavior: str
     side_effectful_capabilities: list[str] = Field(default_factory=list)
@@ -1073,17 +1131,12 @@ class AdapterCapabilityProfile(TutorModel):
         if self.text_support == CapabilitySupport.UNSUPPORTED.value:
             raise ValueError("text_support=unsupported cannot pass spec 006")
         if self.lifecycle_start == LifecycleStart.HOOK.value:
-            if self.boot_context_trigger not in (
-                BootTrigger.SESSION_START_HOOK.value,
-                BootTrigger.CODEX_PLUGIN_HOOK.value,
-            ):
-                raise ValueError("hook lifecycle must use a hook boot trigger")
-        else:
-            if self.boot_context_trigger in (
-                BootTrigger.SESSION_START_HOOK.value,
-                BootTrigger.CODEX_PLUGIN_HOOK.value,
-            ):
-                raise ValueError("non-hook lifecycle must declare a non-hook boot trigger")
+            raise ValueError("hook lifecycle is no longer a valid target (spec 007 FR-010)")
+        if self.boot_context_trigger in (
+            BootTrigger.SESSION_START_HOOK.value,
+            BootTrigger.CODEX_PLUGIN_HOOK.value,
+        ):
+            raise ValueError("hook boot triggers are no longer a valid target (spec 007 FR-011)")
         return self
 
 
@@ -1117,7 +1170,9 @@ class SetupPackage(TutorModel):
 
     @model_validator(mode="after")
     def excludes_user_owned(self) -> SetupPackage:
-        required = {"secrets", "memories", "sessions", "logs", "local"}
+        # ``checkpoints`` added by spec 007 (FR-014, SC-004): per-step incremental
+        # state must stay learner-local and never ship in a host package.
+        required = {"secrets", "memories", "sessions", "checkpoints", "logs", "local"}
         joined = " ".join(self.excluded_paths).lower()
         missing = [token for token in required if token not in joined]
         if missing:
@@ -1190,6 +1245,76 @@ class HostSetupFailure(TutorModel):
         if not value.strip():
             raise ValueError("must be non-empty")
         return value
+
+
+# ---------------------------------------------------------------------------
+# Hook-free incremental lifecycle (spec 007)
+# ---------------------------------------------------------------------------
+
+
+class SafeStepState(TutorModel):
+    """Bounded safe step metadata for a checkpoint. NOT a catch-all dict."""
+
+    prompt_ref: str | None = None
+    step_index: int | None = Field(default=None, ge=0)
+    total_steps: int | None = Field(default=None, ge=0)
+    modality_hint: str | None = None
+    labels: list[str] = Field(default_factory=list[str], max_length=16)
+
+
+class Session(TutorModel):
+    """Stored tutor session (FR-001, FR-004, FR-007).
+
+    Status is only ``open`` or ``closed``; ``stale``/``abandoned`` are derived
+    at read time and never persisted (FR-018).
+    """
+
+    id: str = Field(pattern=r"^sess_[A-Za-z0-9]+$")
+    host: HostId
+    host_conversation_id: str | None = None
+    status: SessionStatus
+    started_at: datetime
+    last_seen_at: datetime
+    closed_at: datetime | None = None
+
+    @model_validator(mode="after")
+    def closed_at_matches_status(self) -> Session:
+        if self.status == SessionStatus.CLOSED.value:
+            if self.closed_at is None:
+                raise ValueError("closed sessions require closed_at")
+        else:
+            if self.closed_at is not None:
+                raise ValueError("open sessions must not have closed_at")
+        if self.started_at > self.last_seen_at:
+            raise ValueError("started_at must be <= last_seen_at")
+        return self
+
+
+class Checkpoint(TutorModel):
+    """Durable per-step checkpoint anchored to an open session (FR-002, FR-005)."""
+
+    id: str = Field(pattern=r"^ckpt_[A-Za-z0-9]+$")
+    session_id: str = Field(pattern=r"^sess_[A-Za-z0-9]+$")
+    modality: CheckpointModality
+    step_kind: CheckpointStepKind
+    prompt_ref: str | None = None
+    state: SafeStepState
+    summary: str = Field(max_length=280)
+    created_at: datetime
+
+
+class SessionView(TutorModel):
+    """Read-time view: stored Session plus a derived label (FR-018)."""
+
+    session: Session
+    label: SessionLabel
+
+
+class BootResult(TutorModel):
+    """Output of ``session-start``: minted session id plus extended boot context."""
+
+    session_id: str = Field(pattern=r"^sess_[A-Za-z0-9]+$")
+    context: BootContext
 
 
 def export_json_schemas(output_dir: Path) -> None:

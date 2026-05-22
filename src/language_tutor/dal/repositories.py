@@ -10,10 +10,17 @@ from typing import Literal, cast
 from language_tutor.dal.sqlite_store import transaction
 from language_tutor.schemas import (
     AnswerEvent,
+    Checkpoint,
+    CheckpointModality,
+    CheckpointStepKind,
     CostEventInput,
     ErrorSpan,
     FeedbackEnvelope,
+    HostId,
+    SafeStepState,
+    Session,
     SessionAnalysis,
+    SessionStatus,
     VocabularyAnswerResult,
     VocabularyItem,
     VocabularyItemState,
@@ -651,6 +658,163 @@ class TutorRepository:
                 ),
             )
         return summary_id, analysis.next_focus
+
+    # ------------------------------------------------------------------
+    # Hook-free incremental lifecycle (spec 007). Durable commit per write
+    # (FR-013): each method opens its own transaction.
+    # ------------------------------------------------------------------
+
+    def open_session(
+        self,
+        host: HostId,
+        host_conversation_id: str | None,
+        now: datetime,
+    ) -> Session:
+        session = Session(
+            id=new_id("sess"),
+            host=host,
+            host_conversation_id=host_conversation_id,
+            status=SessionStatus.OPEN,
+            started_at=now,
+            last_seen_at=now,
+            closed_at=None,
+        )
+        with transaction(self.conn):
+            self.conn.execute(
+                """
+                INSERT INTO sessions(
+                  id, host, host_conversation_id, status,
+                  started_at, last_seen_at, closed_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    session.id,
+                    str(session.host),
+                    session.host_conversation_id,
+                    str(session.status),
+                    session.started_at.isoformat(),
+                    session.last_seen_at.isoformat(),
+                    None,
+                ),
+            )
+        return session
+
+    def touch_session(self, session_id: str, now: datetime) -> None:
+        with transaction(self.conn):
+            cursor = self.conn.execute(
+                "UPDATE sessions SET last_seen_at = ? WHERE id = ?",
+                (now.isoformat(), session_id),
+            )
+            if cursor.rowcount == 0:
+                raise KeyError(session_id)
+
+    def record_checkpoint(
+        self,
+        session_id: str,
+        modality: CheckpointModality,
+        step_kind: CheckpointStepKind,
+        prompt_ref: str | None,
+        state: SafeStepState,
+        summary: str,
+        now: datetime,
+    ) -> Checkpoint:
+        checkpoint = Checkpoint(
+            id=new_id("ckpt"),
+            session_id=session_id,
+            modality=modality,
+            step_kind=step_kind,
+            prompt_ref=prompt_ref,
+            state=state,
+            summary=summary,
+            created_at=now,
+        )
+        with transaction(self.conn):
+            row = self.conn.execute(
+                "SELECT id FROM sessions WHERE id = ?", (session_id,)
+            ).fetchone()
+            if row is None:
+                raise KeyError(session_id)
+            self.conn.execute(
+                """
+                INSERT INTO checkpoints(
+                  id, session_id, modality, step_kind, prompt_ref,
+                  state_json, summary, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    checkpoint.id,
+                    checkpoint.session_id,
+                    str(checkpoint.modality),
+                    str(checkpoint.step_kind),
+                    checkpoint.prompt_ref,
+                    state.model_dump_json(),
+                    checkpoint.summary,
+                    checkpoint.created_at.isoformat(),
+                ),
+            )
+            self.conn.execute(
+                "UPDATE sessions SET last_seen_at = ? WHERE id = ?",
+                (now.isoformat(), session_id),
+            )
+        return checkpoint
+
+    def recent_sessions(self, limit: int) -> list[Session]:
+        rows = self.conn.execute(
+            """
+            SELECT id, host, host_conversation_id, status,
+                   started_at, last_seen_at, closed_at
+            FROM sessions
+            ORDER BY last_seen_at DESC, id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+        return [
+            Session(
+                id=str(row["id"]),
+                host=HostId(str(row["host"])),
+                host_conversation_id=row["host_conversation_id"],
+                status=SessionStatus(str(row["status"])),
+                started_at=datetime.fromisoformat(str(row["started_at"])),
+                last_seen_at=datetime.fromisoformat(str(row["last_seen_at"])),
+                closed_at=(
+                    datetime.fromisoformat(str(row["closed_at"]))
+                    if row["closed_at"] is not None
+                    else None
+                ),
+            )
+            for row in rows
+        ]
+
+    def close_session(self, session_id: str, now: datetime) -> Session:
+        with transaction(self.conn):
+            cursor = self.conn.execute(
+                """
+                UPDATE sessions
+                SET status = 'closed', closed_at = ?, last_seen_at = ?
+                WHERE id = ? AND status = 'open'
+                """,
+                (now.isoformat(), now.isoformat(), session_id),
+            )
+            if cursor.rowcount == 0:
+                raise KeyError(session_id)
+            row = self.conn.execute(
+                """
+                SELECT id, host, host_conversation_id, status,
+                       started_at, last_seen_at, closed_at
+                FROM sessions WHERE id = ?
+                """,
+                (session_id,),
+            ).fetchone()
+        return Session(
+            id=str(row["id"]),
+            host=HostId(str(row["host"])),
+            host_conversation_id=row["host_conversation_id"],
+            status=SessionStatus(str(row["status"])),
+            started_at=datetime.fromisoformat(str(row["started_at"])),
+            last_seen_at=datetime.fromisoformat(str(row["last_seen_at"])),
+            closed_at=datetime.fromisoformat(str(row["closed_at"])),
+        )
 
     def latest_summary(self) -> str | None:
         row = self.conn.execute(

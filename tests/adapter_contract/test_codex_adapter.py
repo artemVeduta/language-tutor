@@ -28,12 +28,13 @@ def test_codex_capability() -> None:
     assert profile.lifecycle_end == LifecycleEnd.NOT_AVAILABLE.value
 
 
-def test_codex_lifecycle_is_plugin_hook() -> None:
+def test_codex_lifecycle_is_first_message() -> None:
+    """spec 007 FR-009/FR-010: Codex shares the no-hook lifecycle."""
     profile = codex.capability_profile()
-    assert profile.lifecycle_start == LifecycleStart.HOOK.value
-    assert profile.boot_context_trigger == BootTrigger.CODEX_PLUGIN_HOOK.value
+    assert profile.lifecycle_start == LifecycleStart.FIRST_MESSAGE.value
+    assert profile.boot_context_trigger == BootTrigger.FIRST_TUTOR_MESSAGE.value
     trigger = select_boot_trigger(profile.boot_context_trigger)
-    assert trigger.trigger_type == TriggerType.HOOK.value
+    assert trigger.trigger_type == TriggerType.FIRST_MESSAGE.value
 
 
 def test_codex_hooks_disabled_by_default() -> None:

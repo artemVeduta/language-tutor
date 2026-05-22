@@ -55,7 +55,7 @@ rtk claude plugin validate <plugin-root> --strict
 rtk claude --plugin-dir <plugin-root>
 ```
 
-Inside Claude, run `/reload-plugins`, verify tutor skills/agents/hooks, then run reading, lesson, transcript, vocab, writing, and progress flows.
+Inside Claude, run `/reload-plugins`, verify tutor skills/agents are loaded, then run reading, lesson, transcript, vocab, writing, and progress flows. The plugin does **not** install any hooks — boot happens on the first tutor message via `tutor session-start --json` (spec 007 hook-free lifecycle).
 
 ### Codex
 
@@ -65,7 +65,6 @@ Codex setup uses `.codex-plugin/plugin.json` and a local or repo-scoped marketpl
 2. Restart Codex.
 3. Install or enable the plugin from that marketplace.
 4. Verify tutor skills are visible.
-5. Keep hooks disabled unless `[features].plugin_hooks = true` is intentionally enabled.
-6. Run reading, lesson, transcript, vocab, writing, and progress flows.
+5. Run reading, lesson, transcript, vocab, writing, and progress flows. The Codex plugin does **not** require any hook to be enabled — boot happens on the first tutor message via `tutor session-start --json` (spec 007 hook-free lifecycle).
 
 Expected: Codex loads the cached plugin copy and keeps workspace/user data boundaries intact.

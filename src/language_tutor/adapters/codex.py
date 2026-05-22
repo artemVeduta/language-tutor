@@ -1,9 +1,9 @@
 """Codex host adapter.
 
-Codex distributes as a local-marketplace plugin and can use a plugin hook for
-startup when ``[features].plugin_hooks`` is intentionally enabled. Hooks stay
-opt-in; setup is package-only. This module exposes the host capability profile
-and leaves pedagogy, feedback, progress, and learner state to the tutor core.
+Codex distributes as a local-marketplace plugin and boots the tutor on the
+first tutor-skill invocation (no plugin hook required). Setup is package-only.
+This module exposes the host capability profile and leaves pedagogy, feedback,
+progress, and learner state to the tutor core.
 """
 
 from __future__ import annotations

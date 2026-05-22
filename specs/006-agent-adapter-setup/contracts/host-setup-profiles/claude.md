@@ -1,5 +1,15 @@
 # Host Setup Profile: Claude
 
+> **Lifecycle superseded by spec 007** (Hook-Free Incremental Lifecycle —
+> Constitution Principle IX). The capability profile for `claude` now declares
+> `lifecycle_start=first_message`, `lifecycle_end=not_available`,
+> `boot_context_trigger=first_tutor_message`, and
+> `persistence_mode=incremental_checkpoint`. The plugin ships **no hooks**;
+> boot happens on the first tutor message via `tutor session-start --json`.
+> The mentions of `SessionStart`/`SessionEnd` hooks and `hooks/hooks.json`
+> below are retained as historical context only and no longer reflect the
+> shipped package surface.
+
 **Host ID**: `claude`
 **Schema Version**: `1`
 **Owner Subagent**: `claude-adapter-subagent`

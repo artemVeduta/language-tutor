@@ -25,27 +25,28 @@ def test_explicit_command_trigger_requires_command() -> None:
         )
 
 
-def test_session_start_hook_maps_to_hook_trigger() -> None:
+def test_session_start_hook_no_longer_maps_to_hook_trigger() -> None:
+    """spec 007 FR-011: hook trigger branches are removed; legacy values
+    fall through to the MANUAL fallback rather than re-introducing hooks."""
     trigger = select_boot_trigger(BootTrigger.SESSION_START_HOOK.value)
-    assert trigger.trigger_type == TriggerType.HOOK.value
-    assert trigger.host_event_name == "SessionStart"
+    assert trigger.trigger_type == TriggerType.MANUAL.value
 
 
-def test_codex_plugin_hook_maps_to_hook_trigger() -> None:
+def test_codex_plugin_hook_no_longer_maps_to_hook_trigger() -> None:
     trigger = select_boot_trigger(BootTrigger.CODEX_PLUGIN_HOOK.value)
-    assert trigger.trigger_type == TriggerType.HOOK.value
-    assert trigger.host_event_name == "CodexPluginStart"
+    assert trigger.trigger_type == TriggerType.MANUAL.value
 
 
 def test_explicit_tutor_command_maps_to_explicit_trigger() -> None:
     trigger = select_boot_trigger(BootTrigger.EXPLICIT_TUTOR_COMMAND.value)
     assert trigger.trigger_type == TriggerType.EXPLICIT_COMMAND.value
-    assert trigger.command
+    assert trigger.command == "tutor session-start --json"
 
 
 def test_first_message_maps_to_first_message_trigger() -> None:
     trigger = select_boot_trigger(BootTrigger.FIRST_TUTOR_MESSAGE.value)
     assert trigger.trigger_type == TriggerType.FIRST_MESSAGE.value
+    assert trigger.command == "tutor session-start --json"
 
 
 def test_host_specific_maps_to_manual_trigger() -> None:

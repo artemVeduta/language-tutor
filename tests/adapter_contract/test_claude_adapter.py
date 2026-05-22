@@ -23,18 +23,20 @@ def test_claude_capability() -> None:
     assert profile.audio_support == "unsupported"
 
 
-def test_claude_lifecycle_is_hook() -> None:
+def test_claude_lifecycle_is_first_message() -> None:
+    """spec 007 FR-009/FR-010: Claude shares the no-hook lifecycle."""
     profile = claude.capability_profile()
-    assert profile.lifecycle_start == LifecycleStart.HOOK.value
-    assert profile.boot_context_trigger == BootTrigger.SESSION_START_HOOK.value
+    assert profile.lifecycle_start == LifecycleStart.FIRST_MESSAGE.value
+    assert profile.boot_context_trigger == BootTrigger.FIRST_TUTOR_MESSAGE.value
     trigger = select_boot_trigger(profile.boot_context_trigger)
-    assert trigger.trigger_type == TriggerType.HOOK.value
-    assert trigger.host_event_name == "SessionStart"
+    assert trigger.trigger_type == TriggerType.FIRST_MESSAGE.value
+    assert trigger.command == "tutor session-start --json"
 
 
 def test_claude_baseline_preserved() -> None:
-    for rel in (".claude-plugin/plugin.json", "hooks/hooks.json", "bin/tutor"):
+    for rel in (".claude-plugin/plugin.json", "bin/tutor"):
         assert (REPO_ROOT / rel).exists()
+    assert not (REPO_ROOT / "hooks").exists(), "hooks/ removed in spec 007"
 
 
 def test_claude_conformance_passes() -> None:

@@ -25,9 +25,9 @@ def _base(**overrides: Any) -> dict[str, Any]:
         "host": HostId.HERMES,
         "display_name": "Hermes",
         "text_support": CapabilitySupport.SUPPORTED,
-        "lifecycle_start": LifecycleStart.EXPLICIT_COMMAND,
+        "lifecycle_start": LifecycleStart.FIRST_MESSAGE,
         "lifecycle_end": LifecycleEnd.NOT_AVAILABLE,
-        "boot_context_trigger": BootTrigger.EXPLICIT_TUTOR_COMMAND,
+        "boot_context_trigger": BootTrigger.FIRST_TUTOR_MESSAGE,
         "setup_entry_point": "hermes profile install",
         "update_behavior": "hermes profile update",
     }
@@ -46,23 +46,24 @@ def test_audio_and_image_locked_unsupported() -> None:
     assert profile.image_support == "unsupported"
 
 
-def test_hook_lifecycle_requires_hook_boot_trigger() -> None:
+def test_hook_lifecycle_rejected_for_all_hosts() -> None:
+    """spec 007 FR-010: hook lifecycle is no longer a valid target."""
+    with pytest.raises(ValidationError):
+        AdapterCapabilityProfile(**_base(lifecycle_start=LifecycleStart.HOOK))
+
+
+def test_session_start_hook_trigger_rejected() -> None:
+    """spec 007 FR-011: hook boot triggers are no longer a valid target."""
     with pytest.raises(ValidationError):
         AdapterCapabilityProfile(
-            **_base(
-                lifecycle_start=LifecycleStart.HOOK,
-                boot_context_trigger=BootTrigger.EXPLICIT_TUTOR_COMMAND,
-            )
+            **_base(boot_context_trigger=BootTrigger.SESSION_START_HOOK)
         )
 
 
-def test_non_hook_lifecycle_requires_non_hook_trigger() -> None:
+def test_codex_plugin_hook_trigger_rejected() -> None:
     with pytest.raises(ValidationError):
         AdapterCapabilityProfile(
-            **_base(
-                lifecycle_start=LifecycleStart.EXPLICIT_COMMAND,
-                boot_context_trigger=BootTrigger.SESSION_START_HOOK,
-            )
+            **_base(boot_context_trigger=BootTrigger.CODEX_PLUGIN_HOOK)
         )
 
 

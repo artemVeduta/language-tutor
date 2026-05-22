@@ -93,7 +93,7 @@ def test_vocab_depth_migration_backfills_metadata_and_preserves_reviews(tmp_path
         assert int(review_count["count"]) == 1
         assert int(mistake_count["count"]) == 1
         assert int(summary_count["count"]) == 1
-        assert int(migration_count["count"]) == 3
+        assert int(migration_count["count"]) == 4
     finally:
         migrated.close()
 
@@ -146,7 +146,7 @@ def test_progress_index_migration_order_and_indexes(tmp_path) -> None:  # type: 
         indexes = {
             row["name"] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='index'")
         }
-        assert versions == [1, 2, 3]
+        assert versions == [1, 2, 3, 4]
         assert {
             "idx_progress_sessions_created",
             "idx_progress_reviews_session_time",
