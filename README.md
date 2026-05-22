@@ -21,3 +21,51 @@ rtk tutor progress --json
 ```
 
 Learner profile and preferences are editable YAML. Transactional learning state stays in local SQLite. No telemetry, auth, cloud sync, or remote storage is used.
+
+## Agent Host Setup
+
+Spec 006 plans source-backed setup paths for Hermes, OpenClaw, Claude, and Codex. Host package roots are finalized by the owning implementation subagents; Antigravity is out of scope.
+
+### Hermes
+
+```bash
+rtk hermes profile install <local-hermes-profile-path> --name language-tutor-test --alias
+rtk hermes profile info language-tutor-test
+rtk hermes profile update language-tutor-test
+rtk hermes profile delete language-tutor-test
+```
+
+Expected: Hermes installs a profile distribution with `distribution.yaml`, tutor prompt/config/skills as needed, and user-owned `.env`, memories, sessions, state DBs, logs, caches, and `local/` untouched.
+
+### OpenClaw
+
+```bash
+rtk pnpm test -- <openclaw-plugin-root>
+rtk pnpm check
+rtk clawhub package publish <org>/<plugin> --dry-run
+rtk openclaw plugins install <package-name>
+```
+
+Expected: OpenClaw recognizes `package.json`, `openclaw.plugin.json`, the TypeScript ESM entry point, focused SDK imports, and optional side-effectful tools only after user allowlist.
+
+### Claude
+
+```bash
+rtk claude plugin validate <plugin-root> --strict
+rtk claude --plugin-dir <plugin-root>
+```
+
+Inside Claude, run `/reload-plugins`, verify tutor skills/agents/hooks, then run reading, lesson, transcript, vocab, writing, and progress flows.
+
+### Codex
+
+Codex setup uses `.codex-plugin/plugin.json` and a local or repo-scoped marketplace entry. The current official Codex build docs do not document a standalone validator, so verification is manual:
+
+1. Add or update the marketplace entry for the local plugin.
+2. Restart Codex.
+3. Install or enable the plugin from that marketplace.
+4. Verify tutor skills are visible.
+5. Keep hooks disabled unless `[features].plugin_hooks = true` is intentionally enabled.
+6. Run reading, lesson, transcript, vocab, writing, and progress flows.
+
+Expected: Codex loads the cached plugin copy and keeps workspace/user data boundaries intact.
