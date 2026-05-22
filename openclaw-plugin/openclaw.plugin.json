@@ -1,0 +1,35 @@
+{
+  "$schema": "https://docs.openclaw.ai/plugins/manifest.schema.json",
+  "name": "language-tutor",
+  "displayName": "Language Tutor",
+  "version": "0.1.0",
+  "description": "Text-only language tutor adapter for OpenClaw. Builds boot context on the first tutor message and exposes core text-modality tutor tools.",
+  "entry": "dist/index.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "capabilities": {
+    "text": "supported",
+    "audio": "unsupported",
+    "image": "unsupported"
+  },
+  "lifecycle": {
+    "start": "first_message",
+    "end": "not_available",
+    "bootContextTrigger": "first_tutor_message"
+  },
+  "tools": [
+    {
+      "name": "language_tutor.boot_context",
+      "optional": false
+    },
+    {
+      "name": "language_tutor.text_exercise",
+      "optional": false
+    },
+    {
+      "name": "language_tutor.run_cli",
+      "optional": true
+    }
+  ]
+}

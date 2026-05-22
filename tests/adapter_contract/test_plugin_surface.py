@@ -16,7 +16,6 @@ def test_plugin_surface_files_exist() -> None:
         "skills/tutor-progress/SKILL.md",
         "skills/tutor-reading/SKILL.md",
         "skills/tutor-lesson/SKILL.md",
-        "hooks/hooks.json",
         "agents/tutor-judge.md",
         "bin/tutor",
     ]:

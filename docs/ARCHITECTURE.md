@@ -1251,3 +1251,34 @@ architecture layers or new persistence:
 
 *Architecture research for: agentic-CLI plugin AI language tutor (Claude Code v1)*
 *Researched: 2026-05-19*
+
+## Phase 6 Addendum — Agent Adapter Setup (2026-05-22)
+
+Spec 006 adds a host-adapter layer above the existing local-first core without
+touching pedagogy, scheduling, feedback semantics, progress calculation, or DAL
+ownership.
+
+- **Capability/lifecycle contracts** (`src/language_tutor/schemas.py`):
+  `HostSetupTarget`, `OfficialSourceEvidence`, `HostSetupProfileContract`,
+  `AdapterCapabilityProfile`, `BootContextTrigger`, `SetupPackage`,
+  `ConformanceRun`, `ManualProviderInstallReport`, `HostSetupFailure`, plus
+  JSON-schema mirrors under `schemas/`.
+- **Supported-host registry** (`src/language_tutor/adapters/base.py`): single
+  source of truth for the four approved hosts (Hermes, OpenClaw, Claude, Codex),
+  their approved official source URLs, setup models, and contract paths.
+  Antigravity is intentionally absent and rejected by the `HostId` enum.
+- **Capability defaults** (`src/language_tutor/adapters/registry.py`) with thin
+  per-host adapter modules (`hermes.py`, `openclaw.py`, `claude.py`, `codex.py`)
+  that delegate to the registry — composition over inheritance.
+- **Boot routing** (`src/language_tutor/boot_context.py::select_boot_trigger`):
+  deterministic mapping from a host's declared trigger to hook / explicit-command
+  / first-message / manual lifecycle paths. Core boot-context rendering stays
+  host-blind.
+- **Conformance runner** (`base.py::run_conformance`): host-blind, derives the six
+  representative text-flow outcomes from the capability profile.
+- **Host CLI group** (`tutor host targets|capability|boot-trigger`) emits the
+  registry, capability profiles, and selected boot triggers as JSON.
+- **Distribution surfaces**: `hermes-profile/`, `openclaw-plugin/`,
+  `.claude-plugin/` (baseline), `.codex-plugin/` + `.agents/plugins/`. Privacy
+  exclusions (secrets, memories, sessions, SQLite, logs, caches, local overrides)
+  are enforced by packaging tests.

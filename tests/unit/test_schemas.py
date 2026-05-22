@@ -242,3 +242,92 @@ def test_progress_schema_contracts() -> None:
         values_count=3,
     )
     assert trend.sparkline == "+++"
+
+
+# ---------------------------------------------------------------------------
+# Host adapter setup contracts (spec 006)
+# ---------------------------------------------------------------------------
+
+
+def test_host_setup_target_rejects_unapproved_source() -> None:
+    from language_tutor.schemas import HostId, HostSetupTarget, SetupModel
+
+    with pytest.raises(ValidationError):
+        HostSetupTarget(
+            id=HostId.CLAUDE,
+            display_name="Claude",
+            official_source_url="https://example.com/not-approved",
+            setup_model=SetupModel.PLUGIN_PACKAGE,
+            primary_subagent="claude-subagent",
+            contract_path="specs/006-agent-adapter-setup/contracts/host-setup-profiles/claude.md",
+        )
+
+
+def test_host_setup_target_rejects_wrong_contract_path() -> None:
+    from language_tutor.schemas import APPROVED_HOST_SOURCES, HostId, HostSetupTarget, SetupModel
+
+    with pytest.raises(ValidationError):
+        HostSetupTarget(
+            id=HostId.CLAUDE,
+            display_name="Claude",
+            official_source_url=APPROVED_HOST_SOURCES[HostId.CLAUDE.value],
+            setup_model=SetupModel.PLUGIN_PACKAGE,
+            primary_subagent="claude-subagent",
+            contract_path="wrong/path.md",
+        )
+
+
+def test_host_id_accepts_only_four_targets() -> None:
+    from language_tutor.schemas import HostId
+
+    assert {h.value for h in HostId} == {"hermes", "openclaw", "claude", "codex"}
+    with pytest.raises(ValueError):
+        HostId("antigravity")
+
+
+def test_official_source_evidence_requires_sections_and_facts() -> None:
+    from language_tutor.schemas import OfficialSourceEvidence
+
+    with pytest.raises(ValidationError):
+        OfficialSourceEvidence(
+            source_url="https://docs.claude.com",
+            retrieved_on="2026-05-22",
+            source_sections=[],
+            facts_used=["install via plugin dir"],
+        )
+
+
+def test_host_setup_failure_is_non_empty_and_data_safe() -> None:
+    from language_tutor.schemas import FailureCategory, FailurePhase, HostId, HostSetupFailure
+
+    failure = HostSetupFailure(
+        host=HostId.HERMES,
+        phase=FailurePhase.INSTALL,
+        category=FailureCategory.MISSING_PREREQUISITE,
+        message="Hermes CLI not found on PATH.",
+        remediation="Install the hermes CLI, then retry.",
+        data_safety="No learner data modified.",
+    )
+    assert failure.host == HostId.HERMES.value
+    with pytest.raises(ValidationError):
+        HostSetupFailure(
+            host=HostId.HERMES,
+            phase=FailurePhase.INSTALL,
+            category=FailureCategory.UNKNOWN,
+            message="   ",
+            remediation="x",
+            data_safety="y",
+        )
+
+
+def test_host_json_schema_export(tmp_path: Path) -> None:
+    export_json_schemas(tmp_path)
+    for name in (
+        "host_capability_profile.schema.json",
+        "host_setup_profile.schema.json",
+        "lifecycle_trigger.schema.json",
+        "conformance_run.schema.json",
+        "manual_provider_install_report.schema.json",
+    ):
+        assert (tmp_path / name).exists()
+        json.loads((tmp_path / name).read_text(encoding="utf-8"))

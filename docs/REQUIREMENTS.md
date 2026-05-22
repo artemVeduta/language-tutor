@@ -158,3 +158,15 @@ Which phases cover which requirements. See
 ---
 *Requirements defined: 2026-05-19*
 *Last updated: 2026-05-19 after initial definition*
+
+## Phase 6 — Agent Adapter Setup (2026-05-22)
+
+- Support exactly four host setup targets: Hermes, OpenClaw, Claude, Codex. No
+  Antigravity deliverables.
+- Each host setup behavior must cite one approved official source URL.
+- Each host implementation is owned by exactly one primary subagent.
+- Every host declares a capability profile (text support, lifecycle, boot
+  trigger) and supports or gates the six representative text flows.
+- Host packages exclude all user-owned data; learner state stays in local
+  SQLite/YAML.
+- Manual provider install reports are required before feature readiness.

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/session.schema.json",
+  "title": "Session",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "host", "status", "started_at", "last_seen_at"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^sess_[A-Za-z0-9]+$" },
+    "host": { "enum": ["claude", "codex", "openclaw", "hermes"] },
+    "host_conversation_id": { "type": ["string", "null"] },
+    "status": { "enum": ["open", "closed"] },
+    "started_at": { "type": "string", "format": "date-time" },
+    "last_seen_at": { "type": "string", "format": "date-time" },
+    "closed_at": { "type": ["string", "null"], "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "closed" } } },
+      "then": { "required": ["closed_at"], "properties": { "closed_at": { "type": "string" } } },
+      "else": { "properties": { "closed_at": { "type": "null" } } }
+    }
+  ]
+}

@@ -12,3 +12,9 @@ Run only `bin/tutor` for stateful work:
 - Show boot context after setup: `bin/tutor boot-context --json`
 
 Do not read YAML or SQLite directly.
+
+## Payload schemas (build every request against these)
+
+- `setup read`: no input → emits current `profile` + `preferences`.
+- `setup write` input: `{"profile":{"native_language":str,"target_language":str, ...},"preferences"?:{...}}`. Required: `profile.native_language`, `profile.target_language`. Run `setup read` first to see the current shape before writing.
+- `boot-context`: no input → render with `bin/tutor render boot-context --json '<output>'`.

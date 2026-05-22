@@ -1,11 +1,13 @@
 <!-- SPECKIT START -->
 For additional context about technologies, project structure, shell commands,
 and design decisions, read `docs/ROADMAP.md` for current phase scope and
-`specs/005-text-modalities/plan.md` for the current implementation
-plan. Use `specs/004-richer-feedback-progress/plan.md` as the prior feedback/progress
-baseline and `specs/003-smarter-engine/plan.md` as the prior engine baseline. Enforce
-`.specify/memory/constitution.md` for architecture, scope, data ownership,
-testing, and review gates.
+`specs/007-hookfree-incremental-lifecycle/plan.md` for the current
+implementation plan. Use `specs/006-agent-adapter-setup/plan.md` as the prior
+agent-adapter baseline, `specs/005-text-modalities/plan.md` as the prior text-flow baseline,
+`specs/004-richer-feedback-progress/plan.md` as the prior feedback/progress
+baseline, and `specs/003-smarter-engine/plan.md` as the prior engine baseline.
+Enforce `.specify/memory/constitution.md` for architecture, scope, data
+ownership, testing, and review gates.
 <!-- SPECKIT END -->
 
 **Documentation**

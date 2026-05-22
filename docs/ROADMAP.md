@@ -1,11 +1,11 @@
 # language-tutor — Capability-Expansion Roadmap
 
 **Date:** 2026-05-21 (updated 2026-05-22)
-**Status:** Phase 3 implemented in draft PR #5; Phase 5 (text modalities) implemented on
-branch `005-text-modalities` — reading comprehension, guided micro-lessons, and
-transcript drills as text-only CLI/skill flows with no new persistence and
-`FeedbackEnvelope` unchanged. Scope guardrails: no audio, image, dashboard, host adapter,
-or new scheduler.
+**Status:** Phase 6 (agent adapter setup) implemented on branch
+`006-agent-adapter-setup` — source-backed host setup for Hermes, OpenClaw, Claude,
+and Codex with shared capability/lifecycle/conformance contracts; automated gates,
+pyright, and ruff green. Antigravity excluded. Phase 5 (text modalities) shipped on
+`005-text-modalities`; Phase 3 in draft PR #5.
 **Baseline:** Phase 1 = spec `001-build-language-tutor` (full v1) — treated as **complete** (98/98 tasks, 28 tests passing, layered Python package + 4 skills + Claude adapter shipped).
 
 ## Goal
@@ -24,9 +24,10 @@ Check a phase when its exit gate is met. (Granular item boxes live in each phase
 - [x] **Phase 3** — Smarter Engine
 - [x] **Phase 4** — Richer Feedback & Progress
 - [x] **Phase 5** — Text Modalities
-- [ ] **Phase 6** — Host-Capability Layer + Adapter Framework
-- [ ] **Phase 6.x** — Adapter Rollout (openclaw / hermess / codex / antigravity)
-- [ ] **Phase 7** — Audio Modalities
+- [x] **Phase 6** — Host-Capability Layer + Adapter Framework
+- [x] **Phase 6.x** — Adapter Rollout (hermes / openclaw / claude / codex; antigravity excluded)
+- [ ] **Phase 7** — Hook-Free Incremental Lifecycle (fix)
+- [ ] **Phase 8** — Audio Modalities
 
 ## Sequencing Decision
 
@@ -163,48 +164,77 @@ new persistence path; **skill-suite coherence audit passes** (existing
 tutor-vocab/writing/progress/setup and Speckit skills re-checked for trigger
 overlap and convention sync); two new skills live and dogfoodable.
 
-### Phase 6 — Host-Capability Layer + Adapter Framework
-Architecture only — no new host lands in this phase.
-
+### Phase 6 — Host-Capability Layer + Adapter Framework ✅ *(implemented via spec `006-agent-adapter-setup`)*
 Two axes of capability, not one:
 
-- [ ] **I/O modality:** capability descriptor on the adapter Protocol
-  (`supports: text | audio | image`, plus per-host I/O quirks).
-- [ ] **Lifecycle availability:** the existing `supports_lifecycle(event_name)`
-  seam formalized — not every host has Claude's SessionStart/SessionEnd hooks.
-  Hosts lacking hook-driven boot must declare it; core must build/persist boot
-  context through an alternate trigger (e.g. first-message, explicit command)
-  without assuming a hook fired. This is the real risk in Phase 6, above I/O.
-- [ ] Skills gate behavior on declared capabilities; pedagogy stays host-blind.
-- [ ] Generalize the adapter-contract test suite into a reusable **conformance
-  kit** every adapter must pass (covers both axes).
+- [x] **I/O modality:** `AdapterCapabilityProfile` declares `text_support` (+ audio/image locked unsupported for this spec) plus per-host quirks.
+- [x] **Lifecycle availability:** `lifecycle_start`/`lifecycle_end` + `boot_context_trigger` formalized; `boot_context.select_boot_trigger` builds boot context through hook / explicit-command / first-message / manual triggers without assuming a hook fired.
+- [x] Capability profiles gate flows; pedagogy stays host-blind (`run_conformance`).
+- [x] Adapter-contract suite generalized into a reusable conformance kit (`tests/adapter_contract/test_conformance_kit.py`, `tests/integration/test_host_text_flows.py`).
 
-**Exit gate:** the existing Claude adapter is re-expressed through the
-capability layer (both axes) with zero pedagogy change; conformance kit green;
-boot context provably builds on a host with no SessionStart hook (simulated).
+**Exit gate:** MET — Claude re-expressed through the capability layer with zero
+pedagogy change; conformance kit green; boot context builds on non-hook hosts
+(Hermes explicit-command, OpenClaw first-message) verified by tests.
 
-### Phase 6.x — Adapter Rollout
-Four new adapters (Claude already shipped in Phase 1). Each is an independent
-slice that passes the conformance kit; ship/dogfood per adapter — no big-bang.
-**Order decided at phase entry** (not fixed here).
+### Phase 6.x — Adapter Rollout ✅ *(implemented via spec `006-agent-adapter-setup`)*
+Each host is an independent sub-agent-owned slice that passes the conformance
+kit. Antigravity is **excluded** (dropped from scope by spec 006).
 
-- [ ] **openclaw**
-- [ ] **hermess** — Nous Research Hermes agent. Profile-distributions doc feeds
-  how the learner profile maps to host:
-  https://hermes-agent.nousresearch.com/docs/user-guide/profile-distributions
-- [ ] **codex** — via Codex CLI / desktop app.
-- [ ] **antigravity** — via Antigravity CLI.
+- [x] **claude** — existing plugin baseline, re-expressed + modernized (`plugin validate --strict` passes).
+- [x] **openclaw** — Node/TS ESM plugin package (`openclaw-plugin/`).
+- [x] **hermes** — git-backed profile distribution (`hermes-profile/`).
+- [x] **codex** — local-marketplace plugin (`.codex-plugin/` + `.agents/plugins/`).
+- [x] ~~**antigravity**~~ — excluded; rejected at the `HostId` schema layer.
 
-**Exit gate (per adapter):** passes the full lifecycle conformance kit; declares
-its real capabilities (both axes); the same pedagogy runs unchanged; **ships a
-working per-host install/distribution path** (the Claude marketplace path does
-not apply to other hosts — hermess profile-distributions, codex plugin format,
-etc.) verified on a fresh environment, mirroring spec-001 `DIST-01/02` per host.
+**Exit gate (per adapter):** automated conformance + packaging-privacy gates
+green; capabilities declared (both axes); pedagogy unchanged; per-host
+install/distribution path shipped.
 
-Maps to `REQUIREMENTS.md` HOST-01 (codex), HOST-02 (openclaw), HOST-03
-(hermess), HOST-04 (antigravity).
+Maps to `REQUIREMENTS.md` HOST-01 (codex), HOST-02 (openclaw), HOST-03 (hermes);
+HOST-04 (antigravity) is out of scope.
 
-### Phase 7 — Audio Modalities *(needs research)*
+### Phase 7 — Hook-Free Incremental Lifecycle *(fix)*
+Corrects the Phase 6/6.x lifecycle model. Source: spec
+`006-agent-adapter-setup/HANDOFF-incremental-lifecycle-no-hooks.md`. Drops
+host-specific hooks entirely; tutor correctness comes from first-message boot
+plus incremental DB persistence. No new modality, no host dependency beyond the
+shared contracts. Enforces Constitution **Principle IX — Hook-Free Incremental
+Lifecycle** (v1.2.0).
+
+Why: Codex has no documented true `SessionEnd` (`Stop` is turn-scoped); hooks can
+be disabled/uninstalled and behave differently per host. One no-hook lifecycle is
+simpler and gives stronger data safety than shutdown hooks.
+
+- [x] Add `sessions` + `checkpoints` models, schemas, and migrations.
+- [x] Repository methods: `open_session`, `touch_session`, `record_checkpoint`,
+  `recent_sessions`, and `close_session` (explicit manual close only).
+- [x] `session-start` CLI mints `session_id` and returns it alongside boot
+  context; existing `boot-context` stays unchanged for backward compatibility.
+- [x] Skills/adapters call `session-start` on first tutor interaction; the
+  agent threads the returned `session_id` into every later call. Checkpoint
+  writes on every lesson/exercise/prompt presentation; existing answer-event
+  persistence is anchored to the active `session_id`.
+- [x] Capability profiles for claude/codex/openclaw/hermes set
+  `lifecycle_start=first_message`, `lifecycle_end=not_available`,
+  `persistence_mode=incremental_checkpoint`,
+  `boot_context_trigger=first_tutor_message`, plus `session_id_source`.
+- [x] Removed `hooks/` (deleted) and dropped hook lifecycle assertions from
+  capability/conformance/packaging surface.
+- [x] CLI write paths commit durably (`open_session`, `touch_session`,
+  `record_checkpoint`, `close_session` each open their own transaction).
+- [x] `session-close` is the only path that flips `status=closed` / sets
+  `closed_at`. `session-end` is retained as a maintenance command.
+
+**Exit gate:** no host setup profile claims hook lifecycle as target architecture;
+no host package requires hooks for correctness; conformance verifies first-message
+boot + checkpoint persistence for all hosts; mid-lesson app close leaves data
+through the last checkpoint intact (new session on next boot, prior session read
+as stale history); packaging-privacy tests confirm checkpoint/session files
+package no user-owned data; pytest, pyright, ruff green. Migration updates
+`README.md`, Phase 6 lifecycle wording, host-setup profiles, manual-install
+reports, and adapter/packaging tests listed in the HANDOFF.
+
+### Phase 8 — Audio Modalities *(needs research)*
 Rides the Phase 6 capability layer and whichever adapters declared audio support
 (e.g. desktop apps, or Telegram-fronted openclaw/hermess — confirmed per adapter
 in Phase 6.x, not assumed here).
@@ -221,7 +251,9 @@ quality.
 
 - Phases 2, 3, 4 are independent core deepening — reorderable.
 - Phase 5 depends on nothing new.
-- Phase 6 (capability layer) gates Phase 6.x (adapters) gates Phase 7 (audio).
+- Phase 6 (capability layer) gates Phase 6.x (adapters) gates Phase 7
+  (hook-free lifecycle fix) gates Phase 7 (audio).
+- Phase 7 fixes the 6/6.x lifecycle before audio rides the same boot/persist path.
 - Audio is last by construction: it needs the capability layer, which is only
   worth abstracting once a second adapter exists to validate it.
 
@@ -229,3 +261,13 @@ quality.
 
 Each phase runs its own spec → plan → implementation cycle. This document is the
 coarse roadmap; per-phase detail is produced when the phase starts.
+
+## Phase 6 Status — Agent Adapter Setup (2026-05-22)
+
+Implemented: source-backed host setup for Hermes, OpenClaw, Claude, and Codex.
+Shared capability/lifecycle/conformance contracts, host CLI group, per-host
+distribution surfaces, subagent + manual install reports, and main-agent review.
+Automated gates (schema, packaging privacy, adapter conformance, host text flows)
+pass; pyright and ruff clean. Manual provider verification is BLOCKED where host
+CLIs are unavailable locally (`hermes`, `clawhub`) — see
+`specs/006-agent-adapter-setup/manual-install-reports/`. Antigravity excluded.

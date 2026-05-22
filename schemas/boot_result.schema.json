@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/boot_result.schema.json",
+  "title": "BootResult",
+  "description": "Output of `session-start`. Backward-compatible: existing boot-context consumers keep using the bare BootContext via the unchanged `boot-context` command.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["session_id", "context"],
+  "properties": {
+    "session_id": { "type": "string", "pattern": "^sess_[A-Za-z0-9]+$" },
+    "context": {
+      "type": "object",
+      "description": "Existing BootContext shape, extended with a prior-session history block.",
+      "required": ["sections"],
+      "properties": {
+        "sections": { "type": "array", "items": { "type": "object" } },
+        "prior_sessions": {
+          "type": "array",
+          "maxItems": 3,
+          "description": "N most-recent prior sessions by last_seen_at, most-recent-first, with read-time label. Trimmed to token budget.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["session_id", "label", "last_seen_at"],
+            "properties": {
+              "session_id": { "type": "string" },
+              "label": { "enum": ["open", "stale", "abandoned", "closed"] },
+              "last_seen_at": { "type": "string", "format": "date-time" },
+              "summary": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

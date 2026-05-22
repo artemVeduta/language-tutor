@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
 
@@ -15,17 +16,21 @@ from language_tutor.errors import TutorError, fail_json
 from language_tutor.feedback import render_feedback
 from language_tutor.health import doctor
 from language_tutor.lessons import record_lesson, start_lesson
-from language_tutor.lifecycle import end_session
+from language_tutor.lifecycle import end_session, start_session
 from language_tutor.progress import progress_report
 from language_tutor.progress_rendering import render_progress_markdown
 from language_tutor.reading import record_reading, start_reading
 from language_tutor.schemas import (
     BootContext,
+    CheckpointModality,
+    CheckpointStepKind,
     FeedbackEnvelope,
+    HostId,
     LearnerPreferences,
     LearnerProfile,
     ProgressReport,
     ProgressReportRequest,
+    SafeStepState,
     SeedImportRequest,
     SessionEndInput,
     TextModalityRecordInput,
@@ -315,6 +320,17 @@ def vocab_answer(json_output: bool, payload: str) -> None:
     except (TutorError, ValidationError, KeyError) as exc:
         if isinstance(exc, TutorError):
             fail_json(exc)
+        if isinstance(exc, ValidationError):
+            fields = ", ".join(
+                ".".join(str(part) for part in error["loc"]) for error in exc.errors()
+            )
+            fail_json(
+                TutorError(
+                    "vocab_answer_failed",
+                    "Vocabulary answer payload failed validation.",
+                    f"Fix these payload fields: {fields}.",
+                )
+            )
         fail_json(
             TutorError(
                 "vocab_answer_failed",
@@ -425,6 +441,49 @@ def progress_cmd(json_output: bool, payload: str | None) -> None:
         )
 
 
+@main.command("session-close")
+@click.option("--json-output", "--json", "json_output", is_flag=True)
+@click.argument("payload", required=True)
+def session_close_cmd(json_output: bool, payload: str) -> None:
+    """Manually close a session: mark ``status=closed``, set ``closed_at``,
+    flush summary + costs + next focus. Never called automatically (FR-007)."""
+    del json_output
+    try:
+        data = parse_payload(payload)
+        sid = data.get("session_id")
+        if not isinstance(sid, str) or not sid:
+            raise TutorError(
+                "invalid_session_close",
+                "session_id is required.",
+                "Pass the session_id returned by session-start.",
+            )
+        end_input = SessionEndInput.model_validate(data)
+        repo, conn = open_repo()
+        try:
+            try:
+                repo.close_session(sid, now=_utc_now())
+            except KeyError as exc:
+                raise TutorError(
+                    "session_not_closable",
+                    f"Session {sid} is not open (missing or already closed).",
+                    "Call session-close on an open session_id.",
+                ) from exc
+            result = end_session(repo, end_input)
+        finally:
+            conn.close()
+        emit(result)
+    except (TutorError, ValidationError) as exc:
+        if isinstance(exc, TutorError):
+            fail_json(exc)
+        fail_json(
+            TutorError(
+                "invalid_session_close",
+                "Session-close payload failed validation.",
+                "Pass session_id, analysis, costs.",
+            )
+        )
+
+
 @main.command("session-end")
 @click.option("--json-output", "--json", "json_output", is_flag=True)
 @click.argument("payload", required=False)
@@ -449,6 +508,151 @@ def session_end_cmd(json_output: bool, payload: str | None) -> None:
         )
 
 
+def _utc_now() -> datetime:
+    return datetime.now(UTC).replace(microsecond=0)
+
+
+@main.command("session-start")
+@click.option("--json-output", "--json", "json_output", is_flag=True)
+@click.argument("payload", required=True)
+def session_start_cmd(json_output: bool, payload: str) -> None:
+    """Mint a tutor session id and return boot context + prior-session history."""
+    del json_output
+    try:
+        data = parse_payload(payload)
+        host_value = data.get("host")
+        if not isinstance(host_value, str):
+            raise TutorError(
+                "invalid_session_start",
+                "host is required.",
+                'Pass {"host":"claude|codex|openclaw|hermes"}.',
+            )
+        try:
+            host = HostId(host_value)
+        except ValueError as exc:
+            raise TutorError(
+                "unsupported_host",
+                f"Host '{host_value}' is not supported.",
+                "Use one of: hermes, openclaw, claude, codex.",
+            ) from exc
+        host_conversation_id = data.get("host_conversation_id")
+        if host_conversation_id is not None and not isinstance(host_conversation_id, str):
+            raise TutorError(
+                "invalid_session_start",
+                "host_conversation_id must be a string when provided.",
+                "Omit it or pass a string.",
+            )
+        state = read_setup(resolve_paths())
+        repo, conn = open_repo()
+        try:
+            result = start_session(
+                repo,
+                profile=state.profile,
+                preferences=state.preferences,
+                host=host,
+                host_conversation_id=host_conversation_id,
+                now=_utc_now(),
+            )
+        finally:
+            conn.close()
+        emit(result)
+    except (TutorError, ValidationError) as exc:
+        if isinstance(exc, TutorError):
+            fail_json(exc)
+        fail_json(
+            TutorError(
+                "invalid_session_start",
+                "Session-start payload failed validation.",
+                'Pass {"host":"claude|codex|openclaw|hermes"} (host required).',
+            )
+        )
+
+
+@main.command("checkpoint")
+@click.option("--json-output", "--json", "json_output", is_flag=True)
+@click.argument("payload", required=True)
+def checkpoint_cmd(json_output: bool, payload: str) -> None:
+    """Record a durable per-step checkpoint under the active session."""
+    del json_output
+    try:
+        data = parse_payload(payload)
+        session_id = data.get("session_id")
+        if not isinstance(session_id, str) or not session_id:
+            raise TutorError(
+                "invalid_checkpoint",
+                "session_id is required.",
+                "Pass the session_id returned by session-start.",
+            )
+        modality_value = data.get("modality")
+        step_kind_value = data.get("step_kind")
+        if not isinstance(modality_value, str) or not isinstance(step_kind_value, str):
+            raise TutorError(
+                "invalid_checkpoint",
+                "modality and step_kind are required.",
+                "Pass modality and step_kind as strings.",
+            )
+        try:
+            modality = CheckpointModality(modality_value)
+            step_kind = CheckpointStepKind(step_kind_value)
+        except ValueError as exc:
+            raise TutorError(
+                "invalid_checkpoint",
+                "modality or step_kind is not a known value.",
+                "Use a documented modality and step_kind.",
+            ) from exc
+        prompt_ref_value = data.get("prompt_ref")
+        prompt_ref = prompt_ref_value if isinstance(prompt_ref_value, str) else None
+        state_payload: dict[str, Any] = {}
+        raw_state = data.get("state")
+        if raw_state is not None:
+            if not isinstance(raw_state, dict):
+                raise TutorError(
+                    "invalid_checkpoint",
+                    "state must be an object.",
+                    "Pass safe step metadata only (prompt_ref, step_index, total_steps, labels).",
+                )
+            state_payload = cast(dict[str, Any], raw_state)
+        state = SafeStepState.model_validate(state_payload)
+        summary = data.get("summary", "")
+        if not isinstance(summary, str):
+            raise TutorError(
+                "invalid_checkpoint",
+                "summary must be a string.",
+                "Pass a short rolling summary string.",
+            )
+        repo, conn = open_repo()
+        try:
+            try:
+                checkpoint = repo.record_checkpoint(
+                    session_id=session_id,
+                    modality=modality,
+                    step_kind=step_kind,
+                    prompt_ref=prompt_ref,
+                    state=state,
+                    summary=summary,
+                    now=_utc_now(),
+                )
+            except KeyError as exc:
+                raise TutorError(
+                    "session_not_found",
+                    f"Session {session_id} does not exist.",
+                    "Call session-start first and thread its session_id.",
+                ) from exc
+        finally:
+            conn.close()
+        emit(checkpoint)
+    except (TutorError, ValidationError) as exc:
+        if isinstance(exc, TutorError):
+            fail_json(exc)
+        fail_json(
+            TutorError(
+                "invalid_checkpoint",
+                "Checkpoint payload failed validation.",
+                "Pass session_id, modality, step_kind, state, summary.",
+            )
+        )
+
+
 def _emit_text_modality_start(
     payload: str | None,
     start_fn: Any,
@@ -460,11 +664,14 @@ def _emit_text_modality_start(
     except (TutorError, ValidationError) as exc:
         if isinstance(exc, TutorError):
             fail_json(exc)
+        fields = ", ".join(
+            ".".join(str(part) for part in error["loc"]) for error in exc.errors()
+        )
         fail_json(
             TutorError(
                 invalid_code,
                 "Generated exercise candidate failed validation.",
-                "Regenerate the candidate with required fields and a valid modality.",
+                f"Regenerate the candidate; fix these fields: {fields}.",
             )
         )
 
@@ -530,6 +737,64 @@ def lesson_start(json_output: bool, payload: str) -> None:
 def lesson_record(json_output: bool, payload: str) -> None:
     del json_output
     _emit_text_modality_record(payload, record_lesson)
+
+
+@main.group()
+def host() -> None:
+    """Host adapter capability, boot trigger, profile, and conformance checks."""
+
+
+@host.command("targets")
+@click.option("--json-output", "--json", "json_output", is_flag=True)
+def host_targets(json_output: bool) -> None:
+    """List the supported host setup targets."""
+    del json_output
+    from language_tutor.adapters.base import supported_host_targets
+
+    targets = supported_host_targets()
+    emit({"targets": [t.model_dump(mode="json") for t in targets.values()]})
+
+
+@host.command("capability")
+@click.argument("host_id", required=True)
+@click.option("--json-output", "--json", "json_output", is_flag=True)
+def host_capability(host_id: str, json_output: bool) -> None:
+    """Emit the declared capability profile for a host."""
+    del json_output
+    from language_tutor.adapters.base import is_supported_host
+    from language_tutor.adapters.registry import capability_profile_for
+
+    if not is_supported_host(host_id):
+        fail_json(
+            TutorError(
+                "unsupported_host",
+                f"Host '{host_id}' is not a supported setup target.",
+                "Use one of: hermes, openclaw, claude, codex.",
+            )
+        )
+    emit(capability_profile_for(host_id))
+
+
+@host.command("boot-trigger")
+@click.argument("host_id", required=True)
+@click.option("--json-output", "--json", "json_output", is_flag=True)
+def host_boot_trigger(host_id: str, json_output: bool) -> None:
+    """Emit the deterministic boot trigger selected for a host."""
+    del json_output
+    from language_tutor.adapters.base import is_supported_host
+    from language_tutor.adapters.registry import capability_profile_for
+    from language_tutor.boot_context import select_boot_trigger
+
+    if not is_supported_host(host_id):
+        fail_json(
+            TutorError(
+                "unsupported_host",
+                f"Host '{host_id}' is not a supported setup target.",
+                "Use one of: hermes, openclaw, claude, codex.",
+            )
+        )
+    profile = capability_profile_for(host_id)
+    emit(select_boot_trigger(profile.boot_context_trigger))
 
 
 if __name__ == "__main__":

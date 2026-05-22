@@ -305,3 +305,15 @@ Plugin users do not install the Python package directly — the plugin marketpla
 ---
 *Stack research for: AI language tutor delivered as a Claude Code plugin with portable Python core*
 *Researched: 2026-05-19*
+
+## Phase 6 Addendum — Host Tooling (2026-05-22)
+
+Host-specific verification uses official host tools where available:
+
+- **Hermes**: `hermes profile install|info|update|delete` (git-backed profile distribution).
+- **OpenClaw**: Node >=22, TypeScript ESM, `pnpm`, ClawHub (`clawhub package publish --dry-run`).
+- **Claude**: `claude plugin validate --strict`, `claude --plugin-dir`, `/reload-plugins`.
+- **Codex**: local/repo marketplace install + restart (no standalone validator documented).
+
+No new Python runtime dependency is added for the host-capability layer; it builds
+on existing Pydantic v2 + Click + stdlib.

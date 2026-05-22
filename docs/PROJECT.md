@@ -95,3 +95,11 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 *Last updated: 2026-05-19 after initialization*
+
+## Phase 6 — Agent Adapter Setup (2026-05-22)
+
+Distributes the tutor to Hermes, OpenClaw, Claude, and Codex via host-specific
+package/profile surfaces while keeping pedagogy and learner data host-independent.
+Key decision: capability declarations are centralized in
+`src/language_tutor/adapters/registry.py`; host adapter modules are thin
+delegators. Antigravity is excluded by decision and at the schema layer.

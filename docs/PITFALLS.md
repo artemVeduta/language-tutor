@@ -637,3 +637,22 @@ Phase 1 lands SQLite migrations as a stub ("just run `init.sql`"). Phase 3 needs
 ---
 *Pitfalls research for: AI language tutor as Claude Code plugin (Python core, YAML+SQLite, SM-2, LLM-as-judge, Slavic L2 dogfood)*
 *Researched: 2026-05-19*
+
+## Phase 6 Addendum — Agent Adapter Pitfalls (2026-05-22)
+
+- **Case-insensitive filesystems**: `claude.md` host profile collides with the
+  harness's `CLAUDE.md` instructions discovery on macOS — the profile is read as
+  project instructions. The on-disk name is correct (`claude.md`); this is a host
+  quirk, not a defect.
+- **Hook assumptions**: do not assume every host has a SessionStart hook. Hermes
+  (explicit command) and OpenClaw (first message) declare non-hook triggers; the
+  capability schema rejects a hook lifecycle paired with a non-hook trigger and
+  vice versa.
+- **Privacy leakage**: host packages must never carry secrets, memories,
+  sessions, SQLite state, logs, caches, or local overrides. Enforced by
+  `tests/packaging/test_distribution_privacy.py`.
+- **Manual-tool availability**: Hermes (`hermes`) and ClawHub (`clawhub`) CLIs may
+  be absent locally; manual provider verification is then BLOCKED, not skipped
+  silently — record it in the manual install report.
+- **Codex hooks**: keep `plugin_hooks` disabled by default; enabling is opt-in via
+  `[features].plugin_hooks = true`.

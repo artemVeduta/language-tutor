@@ -59,3 +59,47 @@ def _table_names() -> set[str]:
         }
     finally:
         conn.close()
+
+
+# --- US3/US4: host packages never carry user-owned data -------------------
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+PACKAGE_ROOTS = (
+    ".claude-plugin",
+    ".codex-plugin",
+    ".agents/plugins",
+    "openclaw-plugin",
+    "hermes-profile",
+)
+
+
+def test_host_packages_carry_no_user_owned_state() -> None:
+    offenders: list[str] = []
+    forbidden_suffix = (".env", ".sqlite", ".sqlite3", ".db", ".db-wal", ".db-shm", ".log")
+    forbidden_dirs = {"memories", "sessions", "logs", "caches", "local"}
+    for rel in PACKAGE_ROOTS:
+        root = REPO_ROOT / rel
+        if not root.exists():
+            continue
+        for path in root.rglob("*"):
+            if "node_modules" in path.parts or "__pycache__" in path.parts:
+                continue
+            if path.is_file() and path.suffix in forbidden_suffix:
+                offenders.append(str(path.relative_to(REPO_ROOT)))
+            if path.is_dir() and path.name in forbidden_dirs:
+                offenders.append(str(path.relative_to(REPO_ROOT)))
+    assert offenders == [], f"user-owned state found in host packages: {offenders}"
+
+
+def test_host_profiles_declare_user_owned_boundaries() -> None:
+    from language_tutor.adapters.base import load_host_setup_profile
+
+    profile_dir = REPO_ROOT / "specs/006-agent-adapter-setup/contracts/host-setup-profiles"
+    for host in ("hermes", "openclaw", "claude", "codex"):
+        path = profile_dir / f"{host}.md"
+        if not path.exists():
+            continue
+        contract = load_host_setup_profile(str(path))
+        joined = " ".join(contract.user_owned_boundaries).lower()
+        for token in ("secrets", "memories", "sessions"):
+            assert token in joined, f"{host} profile boundary missing {token}"

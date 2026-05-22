@@ -134,3 +134,10 @@ Frozen Slavic-aware `ErrorTag` enum; `tutor-judge` agent returning schema-valida
 ---
 *Research completed: 2026-05-19*
 *Ready for roadmap: yes*
+
+## Phase 6 — Agent Adapter Setup (2026-05-22)
+
+Adds source-backed, privacy-preserving host setup for Hermes, OpenClaw, Claude,
+and Codex with shared capability/lifecycle/conformance contracts. Tutor core
+(pedagogy, feedback, progress, DAL) is unchanged and host-independent. Antigravity
+out of scope.

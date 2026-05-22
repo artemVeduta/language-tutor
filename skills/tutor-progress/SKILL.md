@@ -6,14 +6,28 @@ description: Use when learner wants progress, exportable progress reports, next 
 Use this when learner wants progress, next focus, due counts, weak patterns,
 local status, cost status, or a markdown/JSON progress export.
 
-Run only `bin/tutor`:
+Run only `bin/tutor`. No SessionStart/SessionEnd hooks; the agent owns lifecycle.
 
-- JSON progress: `bin/tutor progress --json`
-- JSON progress with options: `bin/tutor progress --json '{"window_size":10,"generated_at":"2026-05-21T12:00:00Z"}'`
-- Direct markdown export: `bin/tutor progress --json '{"format":"markdown"}'`
-- Render existing progress JSON: `bin/tutor render progress-report --json '<ProgressReport JSON>'`
-- `bin/tutor session-end --json '<payload>'`
-- `bin/tutor doctor --json`
+**Lifecycle (do in this order):**
+
+1. **First stateful step of the conversation:** if no `session_id` is known, run
+   `bin/tutor session-start --json '{"host":"<host>"}'` BEFORE any other
+   `bin/tutor` call (including `progress`). Capture `session_id` from the
+   response and thread it into every later call this conversation.
+2. **Run progress:** `bin/tutor progress --json` (does not require `session_id`).
+   Options: `bin/tutor progress --json '{"window_size":10,"generated_at":"..."}'`;
+   markdown export: `bin/tutor progress --json '{"format":"markdown"}'`;
+   render existing JSON: `bin/tutor render progress-report --json '<ProgressReport JSON>'`.
+3. **Immediately after `progress --json` returns and BEFORE showing the report
+   to the learner**, call:
+   `bin/tutor checkpoint --json '{"session_id":"sess_...","modality":"progress","step_kind":"progress_shown","summary":"<short>"}'`.
+   Only then present the report.
+4. **Do NOT call session-close or session-end at the end of normal flows.**
+   `bin/tutor session-close --json '{"session_id":"sess_...","analysis":{...},"costs":{...}}'`
+   and the legacy `bin/tutor session-end --json '<payload>'` run ONLY when the
+   learner explicitly asks to wrap up the session. Both payloads MUST embed the
+   active `session_id`. No automatic close, no close after the last report.
+5. Diagnostics (no session_id needed): `bin/tutor doctor --json`.
 
 Do not hand-format progress markdown, recompute scoring, invent examples, or read
 raw storage. The CLI owns pedagogy, scoring, aggregation, validation, and rendering.
@@ -25,3 +39,13 @@ mistake spans, prompts, full feedback prose, event logs, host metadata, or local
 paths.
 Never include learner-specific examples unless CLI output contains sanitized
 aggregate examples explicitly intended for export.
+
+## Payload schemas (build every request against these)
+
+Read the referenced `schemas/*.schema.json` before constructing the payload; do not guess fields.
+
+- `session-start` input: `{"host":"claude|codex|openclaw|hermes","host_conversation_id"?:str}` → output `schemas/boot_result.schema.json`.
+- `progress` input → `schemas/progress_request.schema.json` → output `schemas/progress_report.schema.json` (markdown export: `schemas/progress_markdown_export.schema.json`).
+- `checkpoint` input → `schemas/checkpoint.schema.json`. Required: `session_id`, `modality` (`progress`), `step_kind` (`progress_shown`), `summary`. `state` (optional) takes `prompt_ref`, `step_index`, `total_steps`, `modality_hint`, `labels` (≤16).
+- `render progress-report` input → `schemas/progress_report.schema.json`.
+- `session-close` / `session-end` input (`SessionEndInput`): `{"session_id":"sess_...","analysis"?:{...},"costs"?:[...]}`; `analysis` → `schemas/session_analysis.schema.json`. Explicit learner request only.

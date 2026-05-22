@@ -1,0 +1,49 @@
+# Hermes profile distribution manifest for the language-tutor agent.
+# Distribution metadata and defaults only. Contains NO learner-owned data.
+# Installed/updated via `hermes profile install` / `hermes profile update`.
+schema_version: 1
+name: language-tutor
+display_name: Language Tutor
+version: 0.1.0
+description: >-
+  Source-backed language-learning tutor profile for Hermes. Provides
+  text-only reading, lesson, transcript, vocab, writing, and progress
+  flows backed by the host-independent tutor core. No audio or image
+  capabilities.
+license: see repository
+source_url: https://github.com/synesthesias/hermes
+
+# Whole-agent package contents (git-backed distribution).
+profile:
+  prompt: SOUL.md
+  config: config.yaml
+  # Tutor skills are reused from the repository root `skills/` surface; this
+  # distribution does not ship its own skills/ tree.
+  skills: ../skills
+
+# Environment variables the operator must supply locally before launch.
+# Declared here for documentation only; values are never bundled. The actual
+# secrets live in the operator's own untracked .env (NOT shipped).
+env_requires:
+  - name: ANTHROPIC_API_KEY
+    required: true
+    description: API key for the tutor model provider. Operator-supplied; never bundled.
+
+# Hard exclusions: data that must never be packaged, copied, or published.
+exclude:
+  - ".env"
+  - "*.env"
+  - secrets
+  - memories
+  - sessions
+  - "*.sqlite"
+  - "*.sqlite3"
+  - "*.db"
+  - "*.db-wal"
+  - "*.db-shm"
+  - logs
+  - "*.log"
+  - caches
+  - "*.cache"
+  - local
+  - local_overrides

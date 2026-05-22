@@ -1,0 +1,37 @@
+# Hermes profile configuration defaults for the language-tutor agent.
+# Defaults only. No learner data, no secrets, no machine-local state.
+schema_version: 1
+
+# Capability declaration mirrors src/language_tutor/adapters/registry.py
+# (HostId.HERMES). Source of truth stays in the registry; this is a
+# documentation echo for operators inspecting the distribution.
+capabilities:
+  text_support: supported
+  audio_support: unsupported
+  image_support: unsupported
+  lifecycle_start: explicit_command
+  lifecycle_end: not_available
+  boot_context_trigger: explicit_tutor_command
+
+# Tutor flows exposed by this profile. All text-only.
+flows:
+  - reading
+  - lesson
+  - transcript
+  - vocab
+  - writing
+  - progress
+
+# Hermes profile lifecycle commands (documentation for operators).
+commands:
+  install: hermes profile install
+  update: hermes profile update
+  inspect: hermes profile info language-tutor
+  list: hermes profile list
+  remove: hermes profile delete language-tutor
+
+# Operator-supplied environment is read from the operator's own untracked
+# .env at runtime. This distribution ships no values.
+env:
+  source: operator_local_env
+  bundled_values: false

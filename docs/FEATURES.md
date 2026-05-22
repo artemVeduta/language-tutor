@@ -341,3 +341,16 @@ refusal. Rendered exercise ≤ 1200 chars; rendered feedback ≤ 900 chars.
 ---
 *Feature research for: agentic-CLI AI language tutor (vocab + writing MVP, Slavic dogfood)*
 *Researched: 2026-05-19*
+
+## Phase 6 Addendum — Agent Adapter Setup (2026-05-22)
+
+- Source-backed host setup for Hermes, OpenClaw, Claude, and Codex; one setup
+  profile contract and one capability profile per host.
+- Host capability reporting and deterministic boot-trigger selection for hosts
+  without Claude-style SessionStart hooks (explicit command / first message).
+- Shared conformance kit covering reading, lesson, transcript, vocab, writing,
+  and progress flows across all four hosts.
+- Manual provider install reports per host (`manual-install-reports/`) plus
+  per-host subagent reports and a main-agent changed-file review.
+- Antigravity, audio, image, dashboards, cloud sync, new persistence, bundled
+  curricula, and scheduler changes remain out of scope.
