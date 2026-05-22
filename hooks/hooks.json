@@ -1,6 +1,10 @@
 {
   "hooks": {
-    "SessionStart": [{"command": "hooks/session-start.sh"}],
-    "SessionEnd": [{"command": "hooks/session-end.sh"}]
+    "SessionStart": [
+      {"hooks": [{"type": "command", "command": "hooks/session-start.sh"}]}
+    ],
+    "SessionEnd": [
+      {"hooks": [{"type": "command", "command": "hooks/session-end.sh"}]}
+    ]
   }
 }

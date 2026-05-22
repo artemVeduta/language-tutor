@@ -858,6 +858,340 @@ class DoctorReport(TutorModel):
     learner_data_changed: bool = False
 
 
+# ---------------------------------------------------------------------------
+# Host adapter setup contracts (spec 006)
+# ---------------------------------------------------------------------------
+
+
+class HostId(StrEnum):
+    HERMES = "hermes"
+    OPENCLAW = "openclaw"
+    CLAUDE = "claude"
+    CODEX = "codex"
+
+
+class SetupModel(StrEnum):
+    PROFILE_DISTRIBUTION = "profile_distribution"
+    PLUGIN_PACKAGE = "plugin_package"
+    LOCAL_MARKETPLACE_PLUGIN = "local_marketplace_plugin"
+
+
+class TargetStatus(StrEnum):
+    PLANNED = "planned"
+    IN_PROGRESS = "in_progress"
+    BLOCKED = "blocked"
+    VERIFIED = "verified"
+    SKIPPED = "skipped"
+
+
+class SourceRisk(StrEnum):
+    STABLE = "stable"
+    CHANGED = "changed"
+    UNREACHABLE = "unreachable"
+    AMBIGUOUS = "ambiguous"
+
+
+class CapabilitySupport(StrEnum):
+    SUPPORTED = "supported"
+    UNSUPPORTED = "unsupported"
+    PARTIAL = "partial"
+
+
+class LifecycleStart(StrEnum):
+    HOOK = "hook"
+    EXPLICIT_COMMAND = "explicit_command"
+    FIRST_MESSAGE = "first_message"
+    MANUAL = "manual"
+    NOT_AVAILABLE = "not_available"
+
+
+class LifecycleEnd(StrEnum):
+    HOOK = "hook"
+    EXPLICIT_COMMAND = "explicit_command"
+    MANUAL = "manual"
+    NOT_AVAILABLE = "not_available"
+
+
+class BootTrigger(StrEnum):
+    SESSION_START_HOOK = "session_start_hook"
+    CODEX_PLUGIN_HOOK = "codex_plugin_hook"
+    EXPLICIT_TUTOR_COMMAND = "explicit_tutor_command"
+    FIRST_TUTOR_MESSAGE = "first_tutor_message"
+    HOST_SPECIFIC = "host_specific"
+
+
+class TriggerType(StrEnum):
+    HOOK = "hook"
+    EXPLICIT_COMMAND = "explicit_command"
+    FIRST_MESSAGE = "first_message"
+    MANUAL = "manual"
+
+
+class RepresentativeFlow(StrEnum):
+    READING = "reading"
+    LESSON = "lesson"
+    TRANSCRIPT = "transcript"
+    VOCAB = "vocab"
+    WRITING = "writing"
+    PROGRESS = "progress"
+
+
+class FlowResult(StrEnum):
+    PASS = "pass"
+    FAIL = "fail"
+    SKIPPED = "skipped"
+
+
+class Decision(StrEnum):
+    PASS = "pass"
+    FAIL = "fail"
+    BLOCKED = "blocked"
+
+
+class FailurePhase(StrEnum):
+    INSTALL = "install"
+    LAUNCH = "launch"
+    CAPABILITY_CHECK = "capability_check"
+    BOOT = "boot"
+    FLOW = "flow"
+    UPDATE = "update"
+    INSPECT = "inspect"
+    REMOVE = "remove"
+
+
+class FailureCategory(StrEnum):
+    MISSING_PREREQUISITE = "missing_prerequisite"
+    INVALID_CONFIGURATION = "invalid_configuration"
+    UNSUPPORTED_CAPABILITY = "unsupported_capability"
+    PERMISSION_REQUIRED = "permission_required"
+    SOURCE_CHANGED = "source_changed"
+    UNKNOWN = "unknown"
+
+
+# Approved official setup-documentation source per host. Single source of truth
+# for source-backed setup scope (US1).
+APPROVED_HOST_SOURCES: dict[str, str] = {
+    HostId.HERMES.value: "https://github.com/synesthesias/hermes",
+    HostId.OPENCLAW.value: "https://docs.openclaw.ai/plugins",
+    HostId.CLAUDE.value: "https://docs.claude.com/en/docs/claude-code/plugins",
+    HostId.CODEX.value: "https://developers.openai.com/codex/plugins",
+}
+
+# All six Phase 5 representative text flows that every host must support or gate.
+REPRESENTATIVE_FLOWS: tuple[str, ...] = tuple(flow.value for flow in RepresentativeFlow)
+
+# User-owned path patterns that must never appear in a host distribution package.
+PRIVACY_EXCLUDED_PATTERNS: tuple[str, ...] = (
+    ".env",
+    "*.env",
+    "secrets",
+    "memories",
+    "sessions",
+    "*.sqlite",
+    "*.sqlite3",
+    "*.db",
+    "*.db-wal",
+    "*.db-shm",
+    "*.log",
+    "logs",
+    "*.cache",
+    "caches",
+    "local",
+    "*.local",
+    "local_overrides",
+)
+
+
+class OfficialSourceEvidence(TutorModel):
+    source_url: str
+    retrieved_on: str
+    source_sections: list[str] = Field(min_length=1)
+    facts_used: list[str] = Field(min_length=1)
+    unsupported_assumptions: list[str] = Field(default_factory=list)
+    source_risk: SourceRisk = SourceRisk.STABLE
+
+
+class HostSetupTarget(TutorModel):
+    id: HostId
+    display_name: str
+    official_source_url: str
+    setup_model: SetupModel
+    primary_subagent: str
+    contract_path: str
+    status: TargetStatus = TargetStatus.PLANNED
+
+    @model_validator(mode="after")
+    def source_must_be_approved(self) -> HostSetupTarget:
+        approved = APPROVED_HOST_SOURCES[self.id]
+        if self.official_source_url != approved:
+            raise ValueError(
+                f"official_source_url for {self.id} must be the approved source {approved}"
+            )
+        expected = f"specs/006-agent-adapter-setup/contracts/host-setup-profiles/{self.id}.md"
+        if self.contract_path != expected:
+            raise ValueError(f"contract_path for {self.id} must be {expected}")
+        return self
+
+
+class HostSetupProfileContract(TutorModel):
+    host: HostId
+    schema_version: int = 1
+    official_sources: list[OfficialSourceEvidence] = Field(min_length=1)
+    package_model: SetupModel
+    package_files: list[str] = Field(min_length=1)
+    prerequisites: list[str] = Field(default_factory=list)
+    install_flow: list[str] = Field(min_length=1)
+    launch_flow: list[str] = Field(min_length=1)
+    inspect_flow: list[str] = Field(min_length=1)
+    update_or_reload_flow: list[str] = Field(min_length=1)
+    remove_flow: list[str] = Field(default_factory=list)
+    required_user_values: list[str] = Field(default_factory=list)
+    user_owned_boundaries: list[str] = Field(min_length=1)
+    capability_profile_path: str
+    verification_expectations: list[str] = Field(min_length=1)
+    known_limitations: list[str] = Field(default_factory=list)
+
+
+class AdapterCapabilityProfile(TutorModel):
+    schema_version: int = 1
+    host: HostId
+    display_name: str
+    text_support: CapabilitySupport
+    audio_support: Literal["unsupported"] = "unsupported"
+    image_support: Literal["unsupported"] = "unsupported"
+    lifecycle_start: LifecycleStart
+    lifecycle_end: LifecycleEnd
+    boot_context_trigger: BootTrigger
+    setup_entry_point: str
+    update_behavior: str
+    side_effectful_capabilities: list[str] = Field(default_factory=list)
+    unsupported_capabilities: list[str] = Field(default_factory=list)
+    flow_gates: list[RepresentativeFlow] = Field(default_factory=list[RepresentativeFlow])
+
+    @model_validator(mode="after")
+    def validate_capability_rules(self) -> AdapterCapabilityProfile:
+        if self.text_support == CapabilitySupport.UNSUPPORTED.value:
+            raise ValueError("text_support=unsupported cannot pass spec 006")
+        if self.lifecycle_start == LifecycleStart.HOOK.value:
+            if self.boot_context_trigger not in (
+                BootTrigger.SESSION_START_HOOK.value,
+                BootTrigger.CODEX_PLUGIN_HOOK.value,
+            ):
+                raise ValueError("hook lifecycle must use a hook boot trigger")
+        else:
+            if self.boot_context_trigger in (
+                BootTrigger.SESSION_START_HOOK.value,
+                BootTrigger.CODEX_PLUGIN_HOOK.value,
+            ):
+                raise ValueError("non-hook lifecycle must declare a non-hook boot trigger")
+        return self
+
+
+class BootContextTrigger(TutorModel):
+    trigger_type: TriggerType
+    host_event_name: str | None = None
+    command: str | None = None
+    input_contract: str
+    output_contract: str
+    fallback: TriggerType | None = None
+
+    @model_validator(mode="after")
+    def explicit_requires_command(self) -> BootContextTrigger:
+        if self.trigger_type == TriggerType.EXPLICIT_COMMAND.value and not self.command:
+            raise ValueError("explicit_command trigger requires a command")
+        if self.trigger_type == TriggerType.HOOK.value and not self.host_event_name:
+            raise ValueError("hook trigger requires a host_event_name")
+        return self
+
+
+class SetupPackage(TutorModel):
+    host: HostId
+    root_path: str
+    manifest_paths: list[str] = Field(min_length=1)
+    skill_paths: list[str] = Field(default_factory=list)
+    hook_paths: list[str] = Field(default_factory=list)
+    binary_paths: list[str] = Field(default_factory=list)
+    config_defaults: list[str] = Field(default_factory=list)
+    excluded_paths: list[str] = Field(min_length=1)
+    verification_command: str
+
+    @model_validator(mode="after")
+    def excludes_user_owned(self) -> SetupPackage:
+        required = {"secrets", "memories", "sessions", "logs", "local"}
+        joined = " ".join(self.excluded_paths).lower()
+        missing = [token for token in required if token not in joined]
+        if missing:
+            raise ValueError(f"excluded_paths missing user-owned patterns: {missing}")
+        return self
+
+
+class ConformanceRun(TutorModel):
+    schema_version: int = 1
+    host: HostId
+    capability_profile: str
+    flows: dict[RepresentativeFlow, FlowResult]
+    boot_context_result: FlowResult
+    feedback_contract_result: FlowResult
+    progress_contract_result: FlowResult
+    error_behavior_result: FlowResult
+    data_ownership_result: FlowResult
+    skipped_flows: list[RepresentativeFlow] = Field(default_factory=list[RepresentativeFlow])
+    decision: Decision
+
+    @model_validator(mode="after")
+    def all_flows_present(self) -> ConformanceRun:
+        present = {str(flow) for flow in self.flows}
+        missing = [f for f in REPRESENTATIVE_FLOWS if f not in present]
+        if missing:
+            raise ValueError(f"conformance run missing flows: {missing}")
+        skipped = {str(f) for f in self.skipped_flows}
+        for flow, result in self.flows.items():
+            if str(result) == FlowResult.SKIPPED.value and str(flow) not in skipped:
+                raise ValueError(f"flow {flow} skipped without capability gate")
+        return self
+
+
+class ManualProviderInstallReport(TutorModel):
+    schema_version: int = 1
+    host: HostId
+    performed_on: str
+    host_version: str | None = None
+    package_ref: str
+    install_result: str
+    launch_result: str
+    capability_check_result: str
+    representative_flow_results: dict[RepresentativeFlow, str]
+    update_or_reload_result: str
+    inspect_result: str
+    remove_result: str
+    user_data_preservation: str
+    blockers: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def all_flows_reported(self) -> ManualProviderInstallReport:
+        present = {str(flow) for flow in self.representative_flow_results}
+        missing = [f for f in REPRESENTATIVE_FLOWS if f not in present]
+        if missing:
+            raise ValueError(f"manual report missing flow results: {missing}")
+        return self
+
+
+class HostSetupFailure(TutorModel):
+    host: HostId
+    phase: FailurePhase
+    category: FailureCategory
+    message: str
+    remediation: str
+    data_safety: str
+
+    @field_validator("message", "remediation", "data_safety")
+    @classmethod
+    def non_empty_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("must be non-empty")
+        return value
+
+
 def export_json_schemas(output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     mapping: dict[str, type[BaseModel]] = {
@@ -881,6 +1215,11 @@ def export_json_schemas(output_dir: Path) -> None:
         "lesson_exercise.schema.json": ValidatedTextExercise,
         "lesson_result.schema.json": TextModalityResult,
         "transcript_drill.schema.json": ValidatedTextExercise,
+        "host_capability_profile.schema.json": AdapterCapabilityProfile,
+        "host_setup_profile.schema.json": HostSetupProfileContract,
+        "lifecycle_trigger.schema.json": BootContextTrigger,
+        "conformance_run.schema.json": ConformanceRun,
+        "manual_provider_install_report.schema.json": ManualProviderInstallReport,
     }
     for filename, model in mapping.items():
         (output_dir / filename).write_text(

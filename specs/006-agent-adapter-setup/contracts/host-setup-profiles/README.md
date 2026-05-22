@@ -100,6 +100,10 @@ Record documented limitations, missing source details, capability-gated skips, o
 
 ## Acceptance Rules
 
+- Each host profile file (`hermes.md`, `openclaw.md`, `claude.md`, `codex.md`) is
+  owned by exactly one primary implementation sub-agent. A sub-agent may create or
+  edit only its assigned host file plus the agreed shared-contract files; it may not
+  touch another host's profile.
 - Every included host has one profile file.
 - Every setup behavior is source-backed or explicitly out of scope.
 - Every profile names package-owned and user-owned boundaries.

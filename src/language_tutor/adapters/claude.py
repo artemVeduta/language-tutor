@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+from language_tutor.adapters.registry import capability_profile_for
+from language_tutor.schemas import AdapterCapabilityProfile, HostId
+
+
+def capability_profile() -> AdapterCapabilityProfile:
+    """Claude capability profile. Hook-driven; preserves existing baseline."""
+    return capability_profile_for(HostId.CLAUDE.value)
+
 
 def normalize_hook_payload(payload: dict[str, object]) -> dict[str, object]:
     return dict(payload)

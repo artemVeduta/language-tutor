@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime, timedelta
 
+from freezegun import freeze_time
+
 from language_tutor.dal.repositories import TutorRepository, new_id
 from language_tutor.feedback import vocabulary_feedback
 from language_tutor.schemas import ErrorSpan, FeedbackEnvelope, VocabularyItem
@@ -39,6 +41,7 @@ def seed_completed_session(
     repo.conn.commit()
 
 
+@freeze_time(BASE_TIME)
 def seed_vocab_review(
     repo: TutorRepository,
     *,
@@ -69,6 +72,7 @@ def seed_vocab_review(
     )
 
 
+@freeze_time(BASE_TIME)
 def seed_writing_mistake(
     repo: TutorRepository,
     *,

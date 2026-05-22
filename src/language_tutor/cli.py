@@ -532,5 +532,63 @@ def lesson_record(json_output: bool, payload: str) -> None:
     _emit_text_modality_record(payload, record_lesson)
 
 
+@main.group()
+def host() -> None:
+    """Host adapter capability, boot trigger, profile, and conformance checks."""
+
+
+@host.command("targets")
+@click.option("--json-output", "--json", "json_output", is_flag=True)
+def host_targets(json_output: bool) -> None:
+    """List the supported host setup targets."""
+    del json_output
+    from language_tutor.adapters.base import supported_host_targets
+
+    targets = supported_host_targets()
+    emit({"targets": [t.model_dump(mode="json") for t in targets.values()]})
+
+
+@host.command("capability")
+@click.argument("host_id", required=True)
+@click.option("--json-output", "--json", "json_output", is_flag=True)
+def host_capability(host_id: str, json_output: bool) -> None:
+    """Emit the declared capability profile for a host."""
+    del json_output
+    from language_tutor.adapters.base import is_supported_host
+    from language_tutor.adapters.registry import capability_profile_for
+
+    if not is_supported_host(host_id):
+        fail_json(
+            TutorError(
+                "unsupported_host",
+                f"Host '{host_id}' is not a supported setup target.",
+                "Use one of: hermes, openclaw, claude, codex.",
+            )
+        )
+    emit(capability_profile_for(host_id))
+
+
+@host.command("boot-trigger")
+@click.argument("host_id", required=True)
+@click.option("--json-output", "--json", "json_output", is_flag=True)
+def host_boot_trigger(host_id: str, json_output: bool) -> None:
+    """Emit the deterministic boot trigger selected for a host."""
+    del json_output
+    from language_tutor.adapters.base import is_supported_host
+    from language_tutor.adapters.registry import capability_profile_for
+    from language_tutor.boot_context import select_boot_trigger
+
+    if not is_supported_host(host_id):
+        fail_json(
+            TutorError(
+                "unsupported_host",
+                f"Host '{host_id}' is not a supported setup target.",
+                "Use one of: hermes, openclaw, claude, codex.",
+            )
+        )
+    profile = capability_profile_for(host_id)
+    emit(select_boot_trigger(profile.boot_context_trigger))
+
+
 if __name__ == "__main__":
     main()

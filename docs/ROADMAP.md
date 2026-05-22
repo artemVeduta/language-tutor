@@ -229,3 +229,13 @@ quality.
 
 Each phase runs its own spec → plan → implementation cycle. This document is the
 coarse roadmap; per-phase detail is produced when the phase starts.
+
+## Phase 6 Status — Agent Adapter Setup (2026-05-22)
+
+Implemented: source-backed host setup for Hermes, OpenClaw, Claude, and Codex.
+Shared capability/lifecycle/conformance contracts, host CLI group, per-host
+distribution surfaces, subagent + manual install reports, and main-agent review.
+Automated gates (schema, packaging privacy, adapter conformance, host text flows)
+pass; pyright and ruff clean. Manual provider verification is BLOCKED where host
+CLIs are unavailable locally (`hermes`, `clawhub`) — see
+`specs/006-agent-adapter-setup/manual-install-reports/`. Antigravity excluded.

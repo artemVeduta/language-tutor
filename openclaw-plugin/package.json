@@ -1,0 +1,33 @@
+{
+  "name": "@language-tutor/openclaw-plugin",
+  "version": "0.1.0",
+  "description": "OpenClaw host plugin for the language-tutor text-modality adapter.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "openclaw.plugin.json"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc --noEmit -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "openclaw": ">=1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

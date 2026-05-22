@@ -1,3 +1,8 @@
+---
+name: tutor-judge
+description: Grades a learner answer and returns only a FeedbackEnvelope JSON object using the supplied allowed_error_tags.
+---
+
 # tutor-judge
 
 Return only a `FeedbackEnvelope` JSON object. No prose outside JSON.

@@ -24,7 +24,7 @@ Learner profile and preferences are editable YAML. Transactional learning state 
 
 ## Agent Host Setup
 
-Spec 006 plans source-backed setup paths for Hermes, OpenClaw, Claude, and Codex. Host package roots are finalized by the owning implementation subagents; Antigravity is out of scope.
+Spec 006 implements source-backed setup paths for Hermes, OpenClaw, Claude, and Codex. Each host slice is owned by one implementation subagent and ships in its own root: `hermes-profile/`, `openclaw-plugin/`, `.claude-plugin/` (existing baseline), and `.codex-plugin/` + `.agents/plugins/marketplace.json`. Capability profiles and boot triggers are inspectable via `tutor host capability <host>` and `tutor host boot-trigger <host>`. **Antigravity is fully out of scope** — no Antigravity profile, adapter, package, or doc artifact exists, and `HostId` rejects it at the schema layer (`tests/packaging/test_host_setup_profiles.py::test_no_antigravity_artifacts`).
 
 ### Hermes
 

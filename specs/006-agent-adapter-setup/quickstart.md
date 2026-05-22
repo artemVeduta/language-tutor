@@ -36,13 +36,20 @@ specs/006-agent-adapter-setup/contracts/host-setup-profiles/codex.md
 
 Expected: every profile cites official source sections, package files, install/update/inspect/remove flow, user-owned data boundaries, capability profile, and verification expectations.
 
-## 4. Verify shared contracts
+## 4. Verify shared contracts and source scope
 
 ```bash
 rtk uv run pytest tests/unit/test_schemas.py tests/adapter_contract/test_host_capability_profile.py tests/adapter_contract/test_lifecycle_contract.py tests/packaging/test_host_setup_profiles.py
 ```
 
 Expected: host/capability/profile schemas reject missing official sources, Antigravity targets, missing lifecycle alternatives, and missing user-owned data boundaries.
+
+Source-scope checks specifically confirm:
+
+- Only `hermes`, `openclaw`, `claude`, and `codex` are accepted setup targets.
+- Each target cites exactly one approved official source URL.
+- No Antigravity profile, adapter, doc, report, or package artifact exists
+  (`test_no_antigravity_artifacts`).
 
 ## 5. Run conformance kit
 
