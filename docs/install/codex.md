@@ -20,12 +20,15 @@ tutor doctor --json
 ## Step 1 — Guided wiring via `tutor init`
 
 ```bash
-tutor init --provider codex --yes
+tutor init
 ```
 
-Writes a managed plugin registration at `~/.codex/plugins/lingo-loop/plugin.json`
-(copy of the bundled `.codex-plugin/plugin.json`) and verifies the result.
-Rerun any time to repair drift. Use `--dry-run --json` to preview.
+Select **Codex** in the keyboard menu. Arrow keys move, Space toggles, and Enter
+continues/applies; no provider id typing is required. This writes a managed
+plugin registration at `~/.codex/plugins/lingo-loop/plugin.json` (copy of the
+bundled `.codex-plugin/plugin.json`) and verifies the result. Rerun any time to
+repair drift. Automation form: `tutor init --provider codex --yes`. Use
+`--dry-run --json` to preview.
 
 ## Manual fallback — install the Codex plugin from a clone
 

@@ -30,6 +30,8 @@ from language_tutor.schemas import (
     LearnerProfile,
     ProgressReport,
     ProgressReportRequest,
+    ProviderState,
+    ProviderStatus,
     SafeStepState,
     SeedImportRequest,
     SessionEndInput,
@@ -78,6 +80,145 @@ def open_repo() -> tuple[TutorRepository, Any]:
     paths = resolve_paths()
     conn = connect(paths.database_path)
     return TutorRepository(conn), conn
+
+
+def _read_menu_key() -> str:
+    key = click.getchar()
+    if key in ("\n", "\r"):
+        return "enter"
+    if key == " ":
+        return "toggle"
+    if key in ("\x1b[A", "\x00H"):
+        return "up"
+    if key in ("\x1b[B", "\x00P"):
+        return "down"
+    if key in ("\x1b[C", "\x00M"):
+        return "right"
+    if key in ("\x1b[D", "\x00K"):
+        return "left"
+    if key == "\x1b":
+        try:
+            second = click.getchar()
+            if second == "[":
+                third = click.getchar()
+                return {"A": "up", "B": "down", "C": "right", "D": "left"}.get(
+                    third, "escape"
+                )
+        except EOFError:
+            return "escape"
+        return "escape"
+    if key == "\x03":
+        raise KeyboardInterrupt
+    return "other"
+
+
+def _is_selectable_provider(status: ProviderStatus) -> bool:
+    return status.state not in {ProviderState.BLOCKED, ProviderState.UNKNOWN}
+
+
+def _provider_state_text(status: ProviderStatus) -> str:
+    return str(status.state)
+
+
+def _selectable_cursor(statuses: list[ProviderStatus], start: int, step: int) -> int:
+    if not statuses:
+        return 0
+    index = start
+    for _ in statuses:
+        index = (index + step) % len(statuses)
+        if _is_selectable_provider(statuses[index]):
+            return index
+    return start
+
+
+def _provider_status_hint(status: ProviderStatus) -> str:
+    if status.repair_hint:
+        return status.repair_hint
+    if status.config_root:
+        return status.config_root
+    if status.cli_path:
+        return status.cli_path
+    return status.docs_url
+
+
+def _render_provider_menu(
+    statuses: list[ProviderStatus], selected: set[HostId], cursor: int
+) -> None:
+    click.echo("\nInstall providers")
+    click.echo("  Arrow keys move, Space toggles, Enter continues.")
+    for idx, status in enumerate(statuses):
+        selectable = _is_selectable_provider(status)
+        pointer = ">" if idx == cursor and selectable else " "
+        checkbox = "x" if status.host in selected else " "
+        disabled = " (blocked)" if not selectable else ""
+        hint = _provider_status_hint(status)
+        click.echo(
+            f"  {pointer} [{checkbox}] {status.display_name:<14} {_provider_state_text(status):<12} {hint}{disabled}"
+        )
+
+
+def _choose_providers(statuses: list[ProviderStatus]) -> list[HostId]:
+    selectable = [s for s in statuses if _is_selectable_provider(s)]
+    if not selectable:
+        raise TutorError(
+            "no_providers_available",
+            "No supported host CLIs detected on PATH.",
+            "Install at least one of: claude, codex, hermes, openclaw, then rerun.",
+        )
+
+    cursor = next(i for i, s in enumerate(statuses) if _is_selectable_provider(s))
+    selected = {
+        s.host
+        for s in statuses
+        if s.state in {ProviderState.INSTALLED, ProviderState.NEEDS_REPAIR}
+    }
+    if not selected:
+        selected.add(statuses[cursor].host)
+
+    click.echo("Lingo Loop setup")
+    click.echo("\nDetected providers")
+    for status in statuses:
+        marker = "x" if status.state == ProviderState.INSTALLED else " "
+        click.echo(
+            f"  [{marker}] {status.display_name:<14} {_provider_state_text(status):<12} "
+            f"{_provider_status_hint(status)}"
+        )
+
+    while True:
+        _render_provider_menu(statuses, selected, cursor)
+        key = _read_menu_key()
+        if key == "up":
+            cursor = _selectable_cursor(statuses, cursor, -1)
+        elif key == "down":
+            cursor = _selectable_cursor(statuses, cursor, 1)
+        elif key == "toggle":
+            host = statuses[cursor].host
+            if host in selected:
+                selected.remove(host)
+            else:
+                selected.add(host)
+        elif key == "enter":
+            if selected:
+                return [s.host for s in statuses if s.host in selected]
+            click.echo("Select at least one provider.")
+        elif key == "escape":
+            raise TutorError("init_aborted", "Provider selection aborted.", "Rerun tutor init.")
+
+
+def _confirm_plan_apply() -> bool:
+    selected = False
+    while True:
+        click.echo("\nApply install plan?")
+        click.echo(f"  {'>' if not selected else ' '} No")
+        click.echo(f"  {'>' if selected else ' '} Apply")
+        click.echo("  Arrow keys move, Enter chooses.")
+        key = _read_menu_key()
+        if key in {"up", "down", "left", "right", "toggle"}:
+            selected = not selected
+        elif key == "enter":
+            return selected
+        elif key == "escape":
+            return False
 
 
 @click.group()
@@ -817,16 +958,18 @@ def init_cmd(
     from language_tutor.installer.registry import SUPPORTED_PROVIDER_IDS, build_installer
     from language_tutor.installer.seams import is_tty
     from language_tutor.installer.service import build_plan, run_init
-    from language_tutor.schemas import (
-        InitRequest,
-        ProviderActionStage,
-        ProviderState,
-    )
+    from language_tutor.schemas import InitRequest, ProviderActionStage
 
     try:
         ctx = InstallerContext.real(bundled_assets_root())
         selected_ids = [HostId(p) for p in providers]
-        non_interactive = not is_tty() or yes or providers
+        non_interactive = not is_tty() or yes or providers or json_output
+        if json_output and not dry_run and not yes:
+            raise TutorError(
+                "init_json_write_requires_yes",
+                "tutor init refuses to write from --json mode without --yes.",
+                "Pass --yes for writes, or add --dry-run to inspect the plan.",
+            )
         if not is_tty() and not (providers and yes) and not dry_run:
             raise TutorError(
                 "init_non_interactive_unsafe",
@@ -835,33 +978,11 @@ def init_cmd(
             )
 
         if not selected_ids and not non_interactive:
-            from language_tutor.schemas import ProviderStatus
-
             statuses: list[ProviderStatus] = []
             for host in SUPPORTED_PROVIDER_IDS:
                 installer = build_installer(host, ctx)
                 statuses.append(installer.detect())
-            click.echo("Lingo Loop setup\n")
-            click.echo("Detected providers:")
-            choices: list[str] = []
-            for s in statuses:
-                marker = "x" if s.state == ProviderState.INSTALLED else " "
-                hint = s.repair_hint or str(s.state)
-                click.echo(f"  [{marker}] {s.display_name:<14} {str(s.state):<14} {hint}")
-                if s.state != ProviderState.BLOCKED:
-                    choices.append(str(s.host))
-            if not choices:
-                raise TutorError(
-                    "no_providers_available",
-                    "No host CLIs detected on PATH.",
-                    "Install at least one of: claude, codex, hermes, openclaw, then rerun.",
-                )
-            picked = click.prompt(
-                "\nProviders to install (comma-separated)",
-                default=",".join(choices[:1]),
-                show_default=True,
-            )
-            selected_ids = [HostId(p.strip()) for p in picked.split(",") if p.strip()]
+            selected_ids = _choose_providers(statuses)
 
         if not selected_ids:
             selected_ids = list(SUPPORTED_PROVIDER_IDS)
@@ -880,7 +1001,7 @@ def init_cmd(
                 click.echo(f"  {pp.status.display_name} [{pp.status.state}]")
                 for action in pp.actions:
                     click.echo(f"    - {action.kind}: {action.description}")
-            if not dry_run and not yes and not click.confirm("\nApply?", default=False):
+            if not dry_run and not yes and not _confirm_plan_apply():
                 click.echo("Aborted.")
                 return
 

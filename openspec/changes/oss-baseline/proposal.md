@@ -6,7 +6,7 @@ Proposed — 2026-05-24
 ## Summary
 Prepare the `language-tutor` repository for public open-source release on GitHub by adding the legal, contributor, and discoverability artifacts that signal a serious OSS project, and by restructuring the README so a non-developer language learner can install and run the tutor inside their AI host without reading source code.
 
-This change is mostly **docs and config**, but now also bundles **PyPI publish automation** (tag-triggered workflow via Trusted Publishing / OIDC), **five release-management skills** (`pre-release-checks`, `release-cut`, `release-tag`, `hotfix`, `feature-flow`) under `.claude/skills/`, and a narrow **interactive provider installer** (`tutor init`) for Claude, Codex, Hermes, and OpenClaw. The previously planned standalone `publish-pypi` and `interactive-installer` changes are folded into this distribution baseline so a first-time user gets one clear path from install to host wiring.
+This change is mostly **docs and config**, but now also bundles **PyPI publish automation** (tag-triggered workflow via Trusted Publishing / OIDC), **five release-management skills** (`pre-release-checks`, `release-cut`, `release-tag`, `hotfix`, `feature-flow`) under `.claude/skills/`, and a narrow **interactive provider installer** (`tutor init`) for Claude, Codex, Hermes, and OpenClaw. The installer uses a keyboard-driven terminal selector so first-time users choose providers without typing provider names or comma-separated lists. The previously planned standalone `publish-pypi` and `interactive-installer` changes are folded into this distribution baseline so a first-time user gets one clear path from install to host wiring.
 
 ## Motivation
 The repository currently has functioning code, OpenSpec process, and per-host plugin manifests, but is missing every conventional OSS signal: no `LICENSE`, no `CONTRIBUTING.md`, no `SECURITY.md`, no `CODE_OF_CONDUCT.md`, no `.github/` (CI badges, issue/PR templates, dependabot), and the README is internally framed ("Spec 006 implements…") rather than user-framed.
@@ -24,7 +24,7 @@ Without these artifacts:
 3. Provide contributor infrastructure (CONTRIBUTING, CoC, SECURITY, issue/PR templates, CI on PRs).
 4. Establish per-host install documentation (`docs/install/<host>.md`) that honestly states the Python prerequisite and gives copy-paste install + verify + uninstall + troubleshooting blocks.
 5. Fix existing OSS-correctness bugs (license field mismatches, wrong `source_url`).
-6. Provide a provider-aware first-run installer: user installs the package, runs `tutor init`, sees detected hosts, selects one or more providers, and gets install/verify/repair output without reading source.
+6. Provide a provider-aware first-run installer: user installs the package, runs `tutor init`, sees detected hosts, selects one or more providers through arrow/space/enter controls, and gets install/verify/repair output without reading source or typing provider ids.
 
 ## Non-goals
 - Installing host CLIs themselves (Claude Code, Codex, Hermes, OpenClaw) — the installer detects them and prints repair guidance.
@@ -123,10 +123,10 @@ uv tool install lingo-loop
 tutor init
 ```
 
-`tutor init` detects supported hosts, presents provider choices, installs only the selected host package/profile wiring, and runs a provider-specific verify step. It MUST be safe to rerun: existing installs are reported as `installed`, missing pieces as `needs-repair`, and unsupported hosts as `blocked` with a concrete next step.
+`tutor init` detects supported hosts, presents provider choices as a terminal-native checkbox menu, installs only the selected host package/profile wiring, and runs a provider-specific verify step. It MUST be safe to rerun: existing installs are reported as `installed`, missing pieces as `needs-repair`, and unsupported hosts as `blocked` with a concrete next step.
 
 Required modes:
-- Interactive: `tutor init` shows a menu with Claude, Codex, Hermes, and OpenClaw.
+- Interactive: `tutor init` shows a keyboard-driven menu with Claude, Codex, Hermes, and OpenClaw; arrow keys move, Space toggles, and Enter continues/applies.
 - Non-interactive: `tutor init --provider claude --provider codex --yes`.
 - Audit-only: `tutor init --dry-run --json` returns planned actions without writing files.
 - Repair: rerunning the same command repairs missing managed files and never overwrites learner profile/history.
@@ -232,4 +232,4 @@ Boundary rules:
 - TestPyPI dry-run with `v0.1.0-rc.1` (or later rc) tag succeeds end-to-end before any production tag is cut.
 - All five skills exist under `.claude/skills/<name>/SKILL.md`, each authored via subagent + `writing-skills` helper.
 - `RELEASING.md` references the automated flow as primary and keeps the manual flow under §Break-glass.
-- `tutor init` supports interactive provider selection plus `--provider`, `--yes`, `--dry-run`, and `--json`; it installs/verifies selected host wiring idempotently for Claude, Codex, Hermes, and OpenClaw.
+- `tutor init` supports keyboard-only interactive provider selection plus `--provider`, `--yes`, `--dry-run`, and `--json`; it installs/verifies selected host wiring idempotently for Claude, Codex, Hermes, and OpenClaw.

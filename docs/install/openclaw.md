@@ -20,14 +20,17 @@ tutor doctor --json
 ## Step 1 — Guided wiring via `tutor init`
 
 ```bash
-tutor init --provider openclaw --yes
+tutor init
 ```
 
-Writes a managed plugin registration at
+Select **OpenClaw** in the keyboard menu. Arrow keys move, Space toggles, and
+Enter continues/applies; no provider id typing is required. This writes a
+managed plugin registration at
 `~/.openclaw/plugins/lingo-loop/package.json` (copy of the bundled
 `openclaw-plugin/package.json`) and verifies the result. After it succeeds,
 run `openclaw plugins install lingo-loop` so OpenClaw picks up the plugin.
-Rerun `tutor init` any time to repair drift. Use `--dry-run --json` to preview.
+Rerun `tutor init` any time to repair drift. Automation form: `tutor init
+--provider openclaw --yes`. Use `--dry-run --json` to preview.
 
 ## Manual fallback — install the OpenClaw plugin from a clone
 

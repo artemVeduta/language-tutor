@@ -25,7 +25,10 @@ _BUILDERS: dict[HostId, Callable[[InstallerContext], ProviderInstaller]] = {
     HostId.OPENCLAW: OpenClawInstaller,
 }
 
-SUPPORTED_PROVIDER_IDS: tuple[HostId, ...] = tuple(supported_host_targets().keys())
+_DISPLAY_ORDER = (HostId.CLAUDE, HostId.CODEX, HostId.HERMES, HostId.OPENCLAW)
+SUPPORTED_PROVIDER_IDS: tuple[HostId, ...] = tuple(
+    host for host in _DISPLAY_ORDER if host in supported_host_targets()
+)
 
 
 def build_installer(host: HostId, ctx: InstallerContext) -> ProviderInstaller:

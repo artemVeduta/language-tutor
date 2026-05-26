@@ -151,10 +151,11 @@ Sequence: do tasks in numbered order within each section. Sections can be parall
 - [x] 11.2 Add a provider-installer Protocol and registry that derives supported providers from `language_tutor.adapters.base.supported_host_targets()` (Claude, Codex, Hermes, OpenClaw only; antigravity remains rejected).
 - [x] 11.3 Implement provider detection with fakeable filesystem/command-runner seams: CLI presence, conventional config roots, existing managed files, blocked/unknown states.
 - [x] 11.4 Implement provider planning/apply/verify modules for Claude, Codex, Hermes, and OpenClaw using the host setup profiles as source of truth; all writes are idempotent and limited to managed plugin/profile files.
-- [x] 11.5 Add `tutor init` CLI with Click prompts and status output; support `--provider <id>` repeated, `--yes`, `--dry-run`, and `--json`.
+- [x] 11.5 Add `tutor init` CLI with Click status output; support `--provider <id>` repeated, `--yes`, `--dry-run`, and `--json`.
+- [x] 11.5a Add a keyboard-driven terminal selector for interactive setup: arrow keys move, Space toggles providers, Enter continues/applies, and no typed provider ids or `y`/`n` confirmation are required.
 - [x] 11.6 Add non-interactive safety: if stdin is not a TTY and writes are required, fail unless `--provider` and `--yes` are supplied.
 - [x] 11.7 Add privacy guard tests proving `tutor init` never writes learner profile YAML, SQLite history, sessions, checkpoints, memories, logs, or secrets.
-- [x] 11.8 Add CLI tests for interactive defaults, selected providers, multi-provider install, dry-run JSON, blocked host, invalid provider, and second-run idempotence.
+- [x] 11.8 Add CLI tests for interactive defaults, keyboard menu provider selection, selected providers, multi-provider install, dry-run JSON, blocked host, invalid provider, and second-run idempotence.
 - [x] 11.9 Update README and `docs/install/{claude,codex,hermes,openclaw}.md` so the primary install path is package install → `tutor init`, with manual host commands retained as fallback.
 - [x] 11.10 Run `ruff check .`, `pyright`, and `pytest` after installer implementation.
 - [x] 11.11 Run `openspec validate oss-baseline --strict`; fix any errors.

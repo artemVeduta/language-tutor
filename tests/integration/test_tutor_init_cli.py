@@ -86,6 +86,31 @@ def test_init_dry_run_json_emits_init_result(
     assert not (fake_home / ".claude" / "plugins" / "lingo-loop" / "plugin.json").exists()
 
 
+def test_init_dry_run_json_without_provider_does_not_prompt(
+    fake_clis: dict[str, str], fake_home: Path, tty_stdin: None
+) -> None:
+    del fake_clis, fake_home, tty_stdin
+    runner = CliRunner()
+    result = runner.invoke(main, ["init", "--dry-run", "--json"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert [r["host"] for r in payload["results"]] == [
+        "claude",
+        "codex",
+        "hermes",
+        "openclaw",
+    ]
+    assert "Detected providers" not in result.output
+
+
+def test_init_json_write_requires_yes(fake_clis: dict[str, str], fake_home: Path) -> None:
+    del fake_clis, fake_home
+    runner = CliRunner()
+    result = runner.invoke(main, ["init", "--provider", "claude", "--json"])
+    assert result.exit_code != 0
+    assert "init_json_write_requires_yes" in result.output
+
+
 def test_init_writes_managed_file_and_is_idempotent(
     fake_clis: dict[str, str], fake_home: Path, no_tty: None
 ) -> None:
@@ -157,9 +182,23 @@ def test_init_interactive_default_lists_providers(
 ) -> None:
     del fake_clis, tty_stdin
     runner = CliRunner()
-    result = runner.invoke(main, ["init"], input="claude\nn\n")
+    result = runner.invoke(main, ["init"], input="\n\n")
     assert result.exit_code == 0, result.output
     assert "Detected providers" in result.output
+    assert "Install providers" in result.output
+    assert "Arrow keys move" in result.output
     assert "Claude" in result.output
     assert "Aborted." in result.output
     assert not (fake_home / ".claude" / "plugins" / "lingo-loop" / "plugin.json").exists()
+
+
+def test_init_interactive_keyboard_menu_applies_selection(
+    fake_clis: dict[str, str], fake_home: Path, tty_stdin: None
+) -> None:
+    del fake_clis, tty_stdin
+    runner = CliRunner()
+    result = runner.invoke(main, ["init"], input="\x1b[B \n\x1b[B\n")
+    assert result.exit_code == 0, result.output
+    assert "Result:" in result.output
+    assert (fake_home / ".claude" / "plugins" / "lingo-loop" / "plugin.json").exists()
+    assert (fake_home / ".codex" / "plugins" / "lingo-loop" / "plugin.json").exists()

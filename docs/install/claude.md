@@ -22,14 +22,16 @@ tutor doctor --json
 ## Step 1 — Guided wiring via `tutor init`
 
 ```bash
-tutor init --provider claude --yes
+tutor init
 ```
 
-This writes a managed plugin registration file at
+Select **Claude Code** in the keyboard menu. Arrow keys move, Space toggles, and
+Enter continues/applies; no provider id typing is required. This writes a
+managed plugin registration file at
 `~/.claude/plugins/lingo-loop/plugin.json` (copy of the bundled manifest) and
 verifies the result. Rerun any time to repair drift; learner profile, history,
-and secrets are never touched. Pass `--dry-run --json` to preview without
-writing.
+and secrets are never touched. Automation form: `tutor init --provider claude
+--yes`. Pass `--dry-run --json` to preview without writing.
 
 ## Manual fallback — load the plugin directly
 

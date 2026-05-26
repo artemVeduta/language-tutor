@@ -43,9 +43,10 @@ tutor setup write --json '{"profile":{"native_language":"en","target_language":"
 # 4. Inside Claude, run /reload-plugins, then ask: "start a reading session"
 ```
 
-`tutor init` detects Claude, Codex, Hermes, and OpenClaw and installs the
-managed plugin/profile files for the providers you select. Rerun any time to
-repair drift — it never touches your learner profile, history, or secrets.
+`tutor init` detects Claude, Codex, Hermes, and OpenClaw and shows a keyboard
+menu: arrow keys move, Space toggles providers, and Enter continues/applies.
+Rerun any time to repair drift — it never touches your learner profile, history,
+or secrets.
 Non-interactive form: `tutor init --provider claude --yes` (also `--dry-run`,
 `--json`).
 

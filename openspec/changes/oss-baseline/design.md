@@ -1,7 +1,7 @@
 # Design: oss-baseline
 
 ## Context
-This change is the foundation layer of the OSS-release sequence. It is primarily legal artifacts, contributor docs, README restructure, GitHub scaffolding, release automation, and manifest correctness fixes. It also includes one narrow user-facing distribution behavior: `tutor init`, an interactive provider installer that wires the already-supported host packages/profiles for Claude, Codex, Hermes, and OpenClaw. Pedagogy, persistence, SRS, feedback, and tutor skills remain unchanged.
+This change is the foundation layer of the OSS-release sequence. It is primarily legal artifacts, contributor docs, README restructure, GitHub scaffolding, release automation, and manifest correctness fixes. It also includes one narrow user-facing distribution behavior: `tutor init`, an interactive provider installer that wires the already-supported host packages/profiles for Claude, Codex, Hermes, and OpenClaw through a keyboard-driven terminal selector. Pedagogy, persistence, SRS, feedback, and tutor skills remain unchanged.
 
 The repository today has a working Python CLI (`tutor`), four host plugin/profile packages (Claude, Codex, Hermes, OpenClaw), and an internal-facing README that assumes the reader is a contributor running `rtk`-prefixed proxy commands. We are flipping the framing to public end-user language learners while keeping the maintainer-facing material (`AGENTS.md`, `CLAUDE.md`, `CLAUDE.copy.md`, internal spec numbers) intact for ongoing development.
 
@@ -369,7 +369,7 @@ Why this order:
 - **rename-lingo-loop second**: module `language_tutor` → `lingo_loop`, CLI entry-point, plugin manifest `name`. Sequenced before any production PyPI tag so the first published artifact ships under the final module name. Pre-release `-rc.N` tags in this change publish to TestPyPI only (no production name burn).
 - **release candidate third**: after the rename lands, `v0.1.0-rc.1` proves TestPyPI publishing and the end-to-end `uv tool install lingo-loop && tutor init` path before production.
 
-This change explicitly does NOT ship unrelated features just because the installer exists. `tutor init` wires provider packages/profiles only; it does not install host CLIs, manage API keys, change lesson behavior, or create a GUI.
+This change explicitly does NOT ship unrelated features just because the installer exists. `tutor init` wires provider packages/profiles only; it does not install host CLIs, manage API keys, change lesson behavior, or create a desktop/web GUI. The only graphical behavior is a terminal-native selector for setup.
 
 ---
 
@@ -379,7 +379,7 @@ This change explicitly does NOT ship unrelated features just because the install
 - All six license declarations agree on `MIT`.
 - README first 30 lines contain no `rtk`, no "Spec", no internal subagent names.
 - `docs/install/{claude,codex,hermes,openclaw}.md` exist with the agreed template, all sections present (placeholders allowed for assets only).
-- `tutor init` exists, lists Claude/Codex/Hermes/OpenClaw, supports interactive selection, supports `--provider`, `--yes`, `--dry-run`, and `--json`, and is idempotent across reruns.
+- `tutor init` exists, lists Claude/Codex/Hermes/OpenClaw, supports keyboard-only interactive selection, supports `--provider`, `--yes`, `--dry-run`, and `--json`, and is idempotent across reruns.
 - `.github/workflows/ci.yml` runs on PR open and exits 0 on a clean main.
 - `CONTRIBUTING.md` (including DCO sign-off section), `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md` exist.
 - `hermes-profile/distribution.yaml` `source_url` points to `https://github.com/artemVeduta/lingo-loop`.
@@ -621,18 +621,32 @@ Detected providers
   [ ] OpenClaw     not found    install OpenClaw first
 
 Install providers:
-  > Claude Code
-    Codex
-    Hermes
-    OpenClaw
+  Arrow keys move, Space toggles, Enter continues.
+  > [x] Claude Code  installed    ~/.claude
+    [x] Codex        detected     ~/.codex
+    [ ] Hermes       blocked      install Hermes first
+    [ ] OpenClaw     blocked      install OpenClaw first
 
 Plan
   Claude Code: install plugin package, verify tutor doctor
 
-Apply? [y/N]
+Apply install plan?
+  > No
+    Apply
 ```
 
 The command name stays `tutor init` because `tutor` is the current installed console script and maps to user intent better than the distribution name. If `rename-lingo-loop` later adds a `lingo-loop` console alias, it can point to the same command; this change does not require the alias.
+
+### Terminal interaction model
+
+The interactive path is a terminal-native graphical selector, not a typed form:
+
+- Provider names are never typed in interactive mode.
+- Arrow keys move the cursor, Space toggles a provider, and Enter continues.
+- The apply/abort choice uses the same menu pattern; it does not require typing `y` or `n`.
+- Installed and repairable providers are preselected; if none exist, the first available provider is preselected so Enter alone has a useful default.
+- Blocked and unknown providers are visible with repair guidance but cannot be selected from the menu.
+- Search/filtering is deferred until the provider list grows beyond the four supported hosts; adding `questionary` or `textual` for four rows is not justified.
 
 ### Flow shape
 
@@ -697,13 +711,13 @@ Keep the source of truth DRY:
 
 | Mode | Command | Purpose |
 |---|---|---|
-| Interactive | `tutor init` | Detect providers, menu-select, confirm before write. |
+| Interactive | `tutor init` | Detect providers, keyboard menu-select, confirm before write. |
 | Single provider | `tutor init --provider claude` | Install/repair one provider. |
 | Multi-provider | `tutor init --provider claude --provider codex` | Install/repair selected providers. |
 | CI/headless | `tutor init --provider codex --yes --json` | No prompts; machine-readable result. |
 | Audit only | `tutor init --dry-run --json` | Detect and plan; no writes. |
 
-`--provider` validates against `claude|codex|hermes|openclaw`. Unsupported values fail before any write. `--yes` is required for non-interactive writes when stdin is not a TTY.
+`--provider` validates against `claude|codex|hermes|openclaw`. Unsupported values fail before any write. `--yes` is required for non-interactive writes when stdin is not a TTY. `--json` never prompts; any `--json` invocation that would write files also requires `--yes`.
 
 ### Status model
 
@@ -721,11 +735,11 @@ The final summary groups providers by status and always includes the next comman
 
 ### Dependency decision
 
-Use existing `click` for prompts, colors, and tables in v0.1. Do not add `rich`, `textual`, `questionary`, or `prompt_toolkit` yet.
+Use existing `click` plus stdlib terminal input for prompts, colors, tables, and the keyboard selector in v0.1. Do not add `rich`, `textual`, `questionary`, or `prompt_toolkit` yet.
 
 | Option | Pros | Cons | Decision |
 |---|---|---|---|
-| `click` only | Already installed, tiny scope, works in plain terminals and CI. | Less polished than a TUI library. | Use now. |
+| `click` only | Already installed, tiny scope, supports arrow/space/enter via `click.getchar()`, works in plain terminals and CI. | Less polished than a TUI library and no fuzzy search. | Use now. |
 | `rich` | Better tables/progress output, mature. | New dependency for mostly cosmetic output. | Defer until install UX needs it. |
 | `textual` | Full TUI possible. | Too heavy for one setup menu. | Reject for v0.1. |
 | `questionary` | Nice prompts. | Extra dependency and less value than existing Click. | Reject for v0.1. |
@@ -745,7 +759,7 @@ If a host has no documented non-interactive install command, the provider action
 
 - Unit tests for provider detection/planning with fake filesystem + fake command runner.
 - Contract tests for `InitRequest`, `InitPlan`, `ProviderStatus`, and `InitResult` JSON.
-- CLI integration tests for interactive defaults, `--provider`, `--yes`, `--dry-run`, invalid provider, and blocked host.
+- CLI integration tests for keyboard-driven interactive defaults, arrow/space/enter provider selection, menu confirmation, `--provider`, `--yes`, `--dry-run`, invalid provider, and blocked host.
 - Idempotence test: running the same provider install twice returns `installed`/no-op on the second run.
 - Privacy test: installer never writes under learner profile/history/session/checkpoint paths.
 - Docs test/update: README quick start and each `docs/install/<host>.md` use `tutor init` as the primary path, with manual host docs as fallback.

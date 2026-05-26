@@ -234,15 +234,17 @@ The repository MUST ship five project-local skills under `.claude/skills/<name>/
 
 ### Requirement: CLI MUST provide an interactive provider installer
 
-The installed tutor CLI MUST provide `tutor init` as the primary first-run setup command. The command MUST detect supported providers (Claude, Codex, Hermes, OpenClaw), let the user choose one or more providers to install, apply provider-specific plugin/profile wiring, verify the result, and print actionable repair guidance for blocked providers. The installer MUST be idempotent and MUST not write learner-owned profile/history/session/checkpoint data or host secrets.
+The installed tutor CLI MUST provide `tutor init` as the primary first-run setup command. The command MUST detect supported providers (Claude, Codex, Hermes, OpenClaw), let the user choose one or more providers to install through a keyboard-driven terminal selector, apply provider-specific plugin/profile wiring, verify the result, and print actionable repair guidance for blocked providers. Interactive setup MUST NOT require typing provider ids, comma-separated lists, or `y`/`n` confirmation. The installer MUST be idempotent and MUST not write learner-owned profile/history/session/checkpoint data or host secrets.
 
 #### Scenario: User installs package then chooses provider
 
 - **GIVEN** the `lingo-loop` package is installed and the `tutor` console command is available
 - **WHEN** a learner runs `tutor init` in an interactive terminal
 - **THEN** the CLI lists Claude, Codex, Hermes, and OpenClaw with detected status
-- **AND** the learner can choose one or more providers to install
+- **AND** the learner can choose one or more providers to install with arrow keys, Space, and Enter
+- **AND** the learner does not need to type provider names, comma-separated provider lists, or `y`/`n`
 - **AND** the CLI shows an install plan before writing files
+- **AND** the apply/abort step uses a keyboard menu before any write
 - **AND** selected providers are installed or repaired through provider-specific installer modules
 - **AND** the final summary shows verification status and the next host-specific reload/start command
 
@@ -253,6 +255,7 @@ The installed tutor CLI MUST provide `tutor init` as the primary first-run setup
 - **AND** only the selected providers are planned and applied
 - **AND** the JSON result includes each provider id, status, actions, verification outcome, written paths, and repair hint when applicable
 - **AND** if stdin is not a TTY and `--yes` or `--provider` is missing, the command fails before any write
+- **AND** any `--json` invocation that would write files fails before any write unless `--yes` is supplied
 
 #### Scenario: Dry run performs no writes
 
