@@ -1,6 +1,6 @@
 # Install lingo-loop for Codex
 
-> Last verified: 2026-05-26 against Codex CLI version <!-- TODO: verify -->
+> Verification pending — not yet confirmed against a specific Codex CLI release. <!-- TODO: verify against current Codex CLI release, then set "Last verified: YYYY-MM-DD against Codex CLI vX.Y" -->
 
 ## Prerequisites
 - Python 3.12+
@@ -50,7 +50,7 @@ cd lingo-loop
 codex plugin install ./.codex-plugin
 ```
 
-<!-- TODO: verify exact `codex plugin install` invocation against current Codex CLI -->
+<!-- TODO: verify exact `codex plugin install` syntax against current Codex CLI -->
 
 ## Screenshot
 

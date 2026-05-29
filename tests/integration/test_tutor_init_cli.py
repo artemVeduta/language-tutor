@@ -1,12 +1,22 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
 
 from language_tutor.cli import main
+
+# (provider flag, managed file relative to $HOME) for all four supported hosts.
+# Mirrors each ProviderProfile's config_root_rel / managed_dir_rel / files[0].
+PROVIDER_MANAGED_FILES = [
+    ("claude", ".claude/plugins/lingo-loop/plugin.json"),
+    ("codex", ".codex/plugins/lingo-loop/plugin.json"),
+    ("hermes", ".hermes/profiles/lingo-loop/distribution.yaml"),
+    ("openclaw", ".openclaw/plugins/lingo-loop/package.json"),
+]
 
 
 @pytest.fixture()
@@ -142,6 +152,61 @@ def test_init_writes_managed_file_and_is_idempotent(
     assert r["verified"] is True
 
 
+@pytest.mark.parametrize("provider, managed_rel", PROVIDER_MANAGED_FILES)
+def test_init_writes_managed_file_and_is_idempotent_per_provider(
+    provider: str,
+    managed_rel: str,
+    fake_clis: dict[str, str],
+    fake_home: Path,
+    no_tty: None,
+) -> None:
+    """Each provider writes its managed file and a rerun repairs drift idempotently."""
+    del fake_clis, no_tty
+    runner = CliRunner()
+    first = runner.invoke(main, ["init", "--provider", provider, "--yes", "--json"])
+    assert first.exit_code == 0, first.output
+    managed = fake_home / managed_rel
+    assert managed.exists(), f"{provider}: expected managed file at {managed}"
+
+    second = runner.invoke(main, ["init", "--provider", provider, "--yes", "--json"])
+    assert second.exit_code == 0, second.output
+    payload = json.loads(second.output)
+    r = payload["results"][0]
+    assert r["host"] == provider
+    assert r["status"]["state"] == "installed"
+    assert r["actions"][0]["kind"] == "skip"
+    assert r["verified"] is True
+
+
+@pytest.mark.parametrize("provider, managed_rel", PROVIDER_MANAGED_FILES)
+def test_init_never_reads_or_writes_anthropic_api_key_per_provider(
+    provider: str,
+    managed_rel: str,
+    fake_clis: dict[str, str],
+    fake_home: Path,
+    no_tty: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """tutor init must not consume or persist ANTHROPIC_API_KEY (checklist C, secrets)."""
+    del fake_clis, managed_rel, no_tty
+    sentinel = "sk-ant-SENTINEL-do-not-persist"
+    monkeypatch.setenv("ANTHROPIC_API_KEY", sentinel)
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["init", "--provider", provider, "--yes", "--json"])
+    assert result.exit_code == 0, result.output
+
+    # Env left intact for the host CLI to consume at runtime.
+    assert os.environ["ANTHROPIC_API_KEY"] == sentinel
+    # Secret never leaks into any file the installer wrote under $HOME.
+    assert sentinel not in result.output
+    for path in fake_home.rglob("*"):
+        if path.is_file():
+            assert sentinel not in path.read_text(encoding="utf-8"), (
+                f"{provider}: ANTHROPIC_API_KEY leaked into {path}"
+            )
+
+
 def test_init_multi_provider_json(
     fake_clis: dict[str, str], fake_home: Path, no_tty: None
 ) -> None:
@@ -196,6 +261,9 @@ def test_init_interactive_default_lists_providers(
     assert "Install providers" in result.output
     assert "Arrow keys move" in result.output
     assert "Claude" in result.output
+    assert str(fake_home / ".claude") not in result.output
+    assert "Install Hermes first" not in result.output
+    assert "docs/install/hermes.md" not in result.output
     assert "Aborted." in result.output
     assert not (fake_home / ".claude" / "plugins" / "lingo-loop" / "plugin.json").exists()
 
@@ -210,3 +278,13 @@ def test_init_interactive_keyboard_menu_applies_selection(
     assert "Result:" in result.output
     assert (fake_home / ".claude" / "plugins" / "lingo-loop" / "plugin.json").exists()
     assert (fake_home / ".codex" / "plugins" / "lingo-loop" / "plugin.json").exists()
+
+
+def test_init_interactive_keyboard_menu_redraws_in_place(
+    fake_clis: dict[str, str], fake_home: Path, tty_stdin: None
+) -> None:
+    del fake_clis, fake_home, tty_stdin
+    runner = CliRunner()
+    result = runner.invoke(main, ["init"], input="\x1b[B\n\x1b[B\n", color=True)
+    assert result.exit_code == 0, result.output
+    assert "\x1b[2J\x1b[H" in result.output

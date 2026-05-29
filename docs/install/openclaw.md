@@ -1,6 +1,6 @@
 # Install lingo-loop for OpenClaw
 
-> Last verified: 2026-05-26 against OpenClaw version <!-- TODO: verify -->
+> Verification pending — not yet confirmed against a specific OpenClaw release. <!-- TODO: verify against current OpenClaw release, then set "Last verified: YYYY-MM-DD against OpenClaw vX.Y" -->
 
 ## Prerequisites
 - Python 3.12+
@@ -31,6 +31,8 @@ managed plugin registration at
 run `openclaw plugins install lingo-loop` so OpenClaw picks up the plugin.
 Rerun `tutor init` any time to repair drift. Automation form: `tutor init
 --provider openclaw --yes`. Use `--dry-run --json` to preview.
+
+<!-- TODO: verify exact `openclaw plugins install lingo-loop` syntax against current OpenClaw release, including whether the host CLI noun is `plugins` (this command, by-name) or `plugin` (the manual-fallback by-path form below) — reconcile to whichever the real CLI uses -->
 
 ## Manual fallback — install the OpenClaw plugin from a clone
 

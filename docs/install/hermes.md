@@ -1,6 +1,6 @@
 # Install lingo-loop for Hermes
 
-> Last verified: 2026-05-26 against Hermes version <!-- TODO: verify -->
+> Verification pending — not yet confirmed against a specific Hermes release. <!-- TODO: verify against current Hermes release, then set "Last verified: YYYY-MM-DD against Hermes vX.Y" -->
 
 ## Prerequisites
 - Python 3.12+

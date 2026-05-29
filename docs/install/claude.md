@@ -1,6 +1,6 @@
 # Install lingo-loop for Claude Code
 
-> Last verified: 2026-05-26 against Claude Code version <!-- TODO: verify -->
+> Verification pending — not yet confirmed against a specific Claude Code CLI release. <!-- TODO: verify against current Claude Code release, then set "Last verified: YYYY-MM-DD against Claude Code vX.Y" -->
 
 ## Prerequisites
 - Python 3.12+
@@ -54,7 +54,7 @@ The plugin manifest declares:
 - `version`: `0.1.0`
 - `license`: `MIT`
 
-<!-- TODO: verify exact `claude plugin install` invocation against current Claude Code CLI -->
+<!-- TODO: verify exact `claude plugin install` syntax against current Claude Code CLI -->
 
 ## Screenshot
 

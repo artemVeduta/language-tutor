@@ -1,0 +1,86 @@
+ Pre-Merge Checklist — PR #12 (OSS distribution baseline)
+
+  A. Repo hygiene (do first)
+
+  - [ ] Commit + push uncommitted src/language_tutor/cli.py and tests/integration/test_tutor_init_cli.py (git status shows them dirty — CI won't see them otherwise)
+  - [ ] CI green on PR: ruff check, pyright, pytest, doc-name guard (rtk/Spec N leak check)
+  - [ ] Coverage ≥ 80% (--cov-fail-under=80)
+  - [ ] ./scripts/build-check.sh and ./scripts/version-guard.sh v0.1.0 pass locally
+
+  B. Build / wheel distribution (local)
+
+  - [ ] uv build → produces sdist + wheel, no errors
+  - [ ] tests/release/test_wheel_contents.py passes — bundled _assets/ present (.claude-plugin, .codex-plugin, openclaw-plugin, hermes-profile)
+  - [ ] tests/release/test_distribution_name.py passes — dist name lingo-loop
+  - [ ] Install built wheel in clean venv → tutor init can read bundled assets via importlib.resources (not just repo-root path)
+
+  C. Per-provider install test (manual, 4 providers)
+
+  Run  ach from cl an machine/container. Source-install path (PyPI pending):
+  uv tool install git+https://github.com/artemVeduta/lingo-loop
+  tutor doctor --json    # expect status: ok
+
+  Claude Code (docs/install/claude.md)
+  - [ ] tutor init → keyboard menu, select Claude → writes ~/.claude/plugins/lingo-loop/plugin.json
+  - [ ] tutor init --provider claude --yes (automation form)
+  - [ ] tutor init --provider claude --dry-run --json (preview, no write)
+  - [ ] Rerun tutor init repairs drift, leaves profile/history/secrets untouched
+  - [ ] Verify host syntax claude plugin install ./.claude-plugin vs current Claude Code CLI (TODO marker at claude.md:57)
+  - [ ] tutor session-start --json | jq '.sections[].title' → 6 sections
+  - [ ] Uninstall: claude plugin uninstall language-tutor + uv tool uninstall lingo-loop
+
+  Codex (docs/install/codex.md)
+  - [ ] tutor init (Codex) → ~/.codex/plugins/lingo-loop/plugin.json; --yes and --dry-run --json
+  - [ ] Verify codex plugin install ./.codex-plugin vs current Codex CLI (TODO codex.md:53)
+  - [ ] Skills resolve from full clone (./skills/), not stripped copy
+  - [ ] tutor session-start --json | jq '.profile.target_language' → "uk"
+
+  Hermes (docs/install/hermes.md)
+  - [ ] tutor init (Hermes) → ~/.hermes/profiles/lingo-loop/distribution.yaml; --yes, --dry-run
+  - [ ] Verify hermes profile install <repo> --subdir hermes-profile syntax (TODO hermes.md:55)
+  - [ ] export ANTHROPIC_API_KEY=... then hermes run language-tutor boots, loads SOUL.md
+  - [ ] hermes profile list shows language-tutor 0.1.0
+  - [ ] Confirm tutor init never reads/writes ANTHROPIC_API_KEY
+
+  OpenClaw (docs/install/openclaw.md)
+  - [ ] Node 22+ present; OpenClaw ≥1.0.0
+  - [ ] tutor init (OpenClaw) → ~/.openclaw/plugins/lingo-loop/package.json, then openclaw plugins install lingo-loop
+  - [ ] Verify openclaw plugins install lingo-loop (Step 1, TODO openclaw.md:35) and openclaw plugin install $(pwd) (manual fallback, TODO openclaw.md:59); reconcile plugins/plugin noun
+  - [ ] Manual build path: npm install && npm run build → dist/index.js exists
+  - [ ] tutor doctor --json | jq '.status' → "ok"
+
+  D. GitHub repo setup (one-time infra — needed for release, not PR merge)
+
+  - [ ] Repo public at github.com/artemVeduta/lingo-loop, MIT LICENSE renders
+  - [ ] Branch protection on main: require CI green + PR review
+  - [ ] GH Environments created: pypi and testpypi (match workflow.yml)
+  - [ ] PyPI Trusted Publisher registered: project lingo-loop, owner artemVeduta, repo lingo-loop, workflow filename workflow.yml, environment pypi (renaming workflow.yml breaks this —
+  comment at top of file)
+  - [ ] TestPyPI Trusted Publisher registered: same, environment testpypi
+  - [ ] No PyPI API tokens in repo secrets (OIDC only — confirm)
+  - [ ] Dependabot enabled (.github/dependabot.yml)
+  - [ ] Issue templates + PR template render in GH UI
+  - [ ] FUNDING.yml — currently all commented out; uncomment if funding channel wanted (optional)
+  - [ ] Reserve dist name on PyPI + TestPyPI (lingo-loop not taken)
+
+  E. Release dry-run (after merge, before public)
+
+  - [ ] /pre-release-checks (read-only audit) passes
+  - [ ] Prerelease first: tag v0.1.0-rc.1 → routes to testpypi → verify on test.pypi.org, prerelease GH Release, attestations
+  - [ ] workflow_dispatch manual trigger works (input ref)
+  - [ ] Real v0.1.0 → pypi → verify per RELEASING.md:
+    - PyPI page pypi.org/project/lingo-loop/0.1.0/ shows sdist+wheel
+    - Sigstore/PEP 740 provenance on release page
+    - gh release view v0.1.0 notes correct
+    - Releases sidebar lists v0.1.0
+    - CHANGELOG.md on main has [0.1.0] + fresh empty [Unreleased]
+  - [ ] pip install lingo-loop (from real PyPI) → tutor doctor ok
+
+  F. Launch-blocking (NOT merge-blocking — track per docs/internal/launch-checklist.md)
+
+  - [ ] Resolve all <!-- TODO: verify --> host-CLI markers (9 across install docs)
+  - [ ] Set Last verified: YYYY-MM-DD per provider (headers currently say "Verification pending")
+  - [x] Verify review_intensity / feedback_verbosity enums (configuration.md:51-52) — confirmed against schemas.py (FeedbackVerbosity also has `standard`; doc fixed), markers removed
+  - [ ] Capture screenshots + asciinema casts (8 assets) into docs/assets/
+  - [ ] README demo.cast + demo.gif
+  - [ ] Mirror launch checklist to pinned GH issue "Launch-blocking assets"

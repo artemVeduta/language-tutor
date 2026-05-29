@@ -48,8 +48,8 @@ Schema (see `LearnerPreferences`):
 ```yaml
 schema_version: 1
 session_length: 10           # minutes, 1..60
-review_intensity: normal     # one of: light | normal | heavy  (TODO: verify enum values)
-feedback_verbosity: concise  # one of: concise | detailed       (TODO: verify enum values)
+review_intensity: normal     # one of: light | normal | heavy
+feedback_verbosity: concise  # one of: concise | standard | detailed
 transliteration_tolerance: false   # true: accept transliterated input
 ascii_fallback: false              # true: render without non-ASCII glyphs
 streak_grace_days: 1               # 0..14

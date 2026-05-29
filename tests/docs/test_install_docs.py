@@ -238,3 +238,48 @@ def test_language_tutor_only_in_contrast_with_lingo_loop(doc: Path) -> None:
     assert not offenders, "Found `language-tutor` without lingo-loop contrast:\n" + "\n".join(
         offenders
     )
+
+
+# --------------------------------------------------------------------------
+# 6.5 Every `TODO: verify` marker in a public doc must be tracked in the
+#     launch checklist (guards against shipping an untracked unverified claim)
+# --------------------------------------------------------------------------
+
+DOCS_DIR = REPO_ROOT / "docs"
+LAUNCH_CHECKLIST = DOCS_DIR / "internal" / "launch-checklist.md"
+MARKER = "TODO: verify"
+
+
+def _public_docs() -> list[Path]:
+    return [
+        p
+        for p in DOCS_DIR.rglob("*.md")
+        if "internal" not in p.relative_to(DOCS_DIR).parts
+    ]
+
+
+def test_todo_verify_markers_are_tracked_in_launch_checklist() -> None:
+    checklist = LAUNCH_CHECKLIST.read_text(encoding="utf-8")
+    untracked: list[str] = []
+    for doc in _public_docs():
+        if MARKER not in doc.read_text(encoding="utf-8"):
+            continue
+        rel = doc.relative_to(REPO_ROOT).as_posix()
+        if rel not in checklist:
+            untracked.append(rel)
+    assert not untracked, (
+        "Public docs carry `TODO: verify` markers not referenced in "
+        "launch-checklist.md (every unverified claim must be tracked):\n"
+        + "\n".join(untracked)
+    )
+
+
+def test_configuration_enums_carry_no_unverified_markers() -> None:
+    # review_intensity / feedback_verbosity are confirmed against the
+    # ReviewIntensity / FeedbackVerbosity StrEnums in schemas.py — a value
+    # verifiable from this repo must not wear a TODO: verify marker.
+    text = (DOCS_DIR / "configuration.md").read_text(encoding="utf-8")
+    assert MARKER not in text, (
+        "docs/configuration.md must not carry `TODO: verify` markers; the "
+        "enum values are verifiable from src/language_tutor/schemas.py"
+    )

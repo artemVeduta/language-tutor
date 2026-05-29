@@ -141,19 +141,36 @@ def _provider_status_hint(status: ProviderStatus) -> str:
     return status.docs_url
 
 
+def _clear_terminal_screen() -> None:
+    click.echo("\x1b[2J\x1b[H", nl=False)
+
+
+def _render_detected_providers(statuses: list[ProviderStatus]) -> None:
+    click.echo("Lingo Loop setup")
+    click.echo("\nDetected providers")
+    for status in statuses:
+        marker = "x" if status.state == ProviderState.INSTALLED else " "
+        click.echo(f"  [{marker}] {status.display_name:<14} {_provider_state_text(status):<12}")
+
+
 def _render_provider_menu(
-    statuses: list[ProviderStatus], selected: set[HostId], cursor: int
+    statuses: list[ProviderStatus],
+    selected: set[HostId],
+    cursor: int,
+    *,
+    replace_previous: bool = False,
 ) -> None:
+    if replace_previous:
+        _clear_terminal_screen()
+        _render_detected_providers(statuses)
     click.echo("\nInstall providers")
     click.echo("  Arrow keys move, Space toggles, Enter continues.")
     for idx, status in enumerate(statuses):
         selectable = _is_selectable_provider(status)
         pointer = ">" if idx == cursor and selectable else " "
         checkbox = "x" if status.host in selected else " "
-        disabled = " (blocked)" if not selectable else ""
-        hint = _provider_status_hint(status)
         click.echo(
-            f"  {pointer} [{checkbox}] {status.display_name:<14} {_provider_state_text(status):<12} {hint}{disabled}"
+            f"  {pointer} [{checkbox}] {status.display_name:<14} {_provider_state_text(status):<12}"
         )
 
 
@@ -175,17 +192,12 @@ def _choose_providers(statuses: list[ProviderStatus]) -> list[HostId]:
     if not selected:
         selected.add(statuses[cursor].host)
 
-    click.echo("Lingo Loop setup")
-    click.echo("\nDetected providers")
-    for status in statuses:
-        marker = "x" if status.state == ProviderState.INSTALLED else " "
-        click.echo(
-            f"  [{marker}] {status.display_name:<14} {_provider_state_text(status):<12} "
-            f"{_provider_status_hint(status)}"
-        )
+    _render_detected_providers(statuses)
 
+    replace_previous_render = False
     while True:
-        _render_provider_menu(statuses, selected, cursor)
+        _render_provider_menu(statuses, selected, cursor, replace_previous=replace_previous_render)
+        replace_previous_render = True
         key = _read_menu_key()
         if key == "up":
             cursor = _selectable_cursor(statuses, cursor, -1)

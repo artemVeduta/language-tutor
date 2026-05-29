@@ -29,7 +29,7 @@ Internal tracking only; safe to delete once everything is filled.
 
 ## Verification dates
 
-Each install doc carries a `Last verified: YYYY-MM-DD` line. Refresh on each release; a future CI check (planned in `publish-pypi`) will warn if any date is older than 90 days.
+Each install doc's header currently reads `Verification pending` (no date is asserted until a real host CLI release is confirmed). On first verification, replace it with a `Last verified: YYYY-MM-DD against <Host> vX.Y` line; refresh on each release. A future CI check (planned in `publish-pypi`) will warn if any date is older than 90 days.
 
 - [ ] `docs/install/claude.md` — verify against current Claude Code release, update header.
 - [ ] `docs/install/codex.md` — verify against current Codex CLI release, update header.
@@ -41,20 +41,22 @@ Each install doc carries a `Last verified: YYYY-MM-DD` line. Refresh on each rel
 Every public doc carries one or more `<!-- TODO: verify -->` markers that must be resolved before the v0.1 announcement. Each must be either confirmed (delete the marker) or fixed (update the surrounding text, then delete the marker). Track them here:
 
 ### Host-CLI install syntax (verify against each host's current release)
-- [ ] `docs/install/claude.md:3` — Claude Code version pin in `Last verified:` header.
-- [ ] `docs/install/claude.md:43` — exact `claude plugin install` invocation.
-- [ ] `docs/install/codex.md:3` — Codex CLI version pin in `Last verified:` header.
-- [ ] `docs/install/codex.md:40` — exact `codex plugin install` invocation.
-- [ ] `docs/install/hermes.md:3` — Hermes version pin in `Last verified:` header.
-- [ ] `docs/install/hermes.md:40` — exact `hermes profile install` syntax for git+subdir.
-- [ ] `docs/install/openclaw.md:3` — OpenClaw version pin in `Last verified:` header.
-- [ ] `docs/install/openclaw.md:42` — exact `openclaw plugin install` syntax.
+- [ ] `docs/install/claude.md:3` — Claude Code version pin in `Verification pending` header.
+- [ ] `docs/install/claude.md:57` — exact `claude plugin install` invocation.
+- [ ] `docs/install/codex.md:3` — Codex CLI version pin in `Verification pending` header.
+- [ ] `docs/install/codex.md:53` — exact `codex plugin install` invocation.
+- [ ] `docs/install/hermes.md:3` — Hermes version pin in `Verification pending` header.
+- [ ] `docs/install/hermes.md:55` — exact `hermes profile install` syntax for git+subdir.
+- [ ] `docs/install/openclaw.md:3` — OpenClaw version pin in `Verification pending` header.
+- [ ] `docs/install/openclaw.md:35` — exact `openclaw plugins install lingo-loop` syntax (Step 1, by-name); reconcile `plugins` vs `plugin` noun with line 59.
+- [ ] `docs/install/openclaw.md:59` — exact `openclaw plugin install` syntax (manual fallback, by-path).
 
-### Configuration enum values
-- [ ] `docs/configuration.md:51` — verify `review_intensity` accepted enum values.
-- [ ] `docs/configuration.md:52` — verify `feedback_verbosity` accepted enum values.
+Configuration enum values (`docs/configuration.md` `review_intensity`,
+`feedback_verbosity`) were confirmed against `ReviewIntensity` /
+`FeedbackVerbosity` in `src/language_tutor/schemas.py` and the markers removed —
+no longer tracked here.
 
-A CI guard (added in `.github/workflows/ci.yml`) already fails the build if `rtk` or `Spec N` references leak into public docs; once the items above are resolved, consider extending the guard to fail on any remaining `<!-- TODO: verify -->` marker as a release gate.
+A CI guard (added in `.github/workflows/ci.yml`) already fails the build if `rtk` or `Spec N` references leak into public docs; once the items above are resolved, extend the guard to fail on any remaining marker as a release gate. Match the substring `TODO: verify` (every marker uses that exact casing), not the `<!-- -->` wrapper, and exclude `docs/internal/` — e.g. `grep -RInE 'TODO: verify' README.md docs/ | grep -v docs/internal/`.
 
 ## Public-issue mirror
 
