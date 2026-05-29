@@ -2,7 +2,7 @@
 
   A. Repo hygiene (do first)
 
-  - [ ] Commit + push uncommitted src/language_tutor/cli.py and tests/integration/test_tutor_init_cli.py (git status shows them dirty — CI won't see them otherwise)
+- [x] Commit + push uncommitted src/language_tutor/cli.py and tests/integration/test_tutor_init_cli.py (git status shows them dirty — CI won't see them otherwise) — branch clean and matches upstream at eb7ecac
   - [ ] CI green on PR: ruff check, pyright, pytest, doc-name guard (rtk/Spec N leak check)
   - [ ] Coverage ≥ 80% (--cov-fail-under=80)
   - [ ] ./scripts/build-check.sh and ./scripts/version-guard.sh v0.1.0 pass locally

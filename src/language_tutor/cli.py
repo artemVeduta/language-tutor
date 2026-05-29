@@ -131,16 +131,6 @@ def _selectable_cursor(statuses: list[ProviderStatus], start: int, step: int) ->
     return start
 
 
-def _provider_status_hint(status: ProviderStatus) -> str:
-    if status.repair_hint:
-        return status.repair_hint
-    if status.config_root:
-        return status.config_root
-    if status.cli_path:
-        return status.cli_path
-    return status.docs_url
-
-
 def _clear_terminal_screen() -> None:
     click.echo("\x1b[2J\x1b[H", nl=False)
 
