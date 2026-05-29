@@ -14,9 +14,15 @@
   - [ ] tests/release/test_distribution_name.py passes — dist name lingo-loop
   - [ ] Install built wheel in clean venv → tutor init can read bundled assets via importlib.resources (not just repo-root path)
 
-  C. Per-provider install test (manual, 4 providers)
+  C. Per-provider install test
 
-  Run  ach from cl an machine/container. Source-install path (PyPI pending):
+  Automated provider smoke runs package install, isolated HOME/XDG paths, `tutor init`, `tutor doctor --json`, managed-file checks, and secret-leak checks. It does not replace live manual provider verification.
+
+  - [ ] Run all provider smoke checks: `scripts/provider-smoke.sh`
+  - [ ] Run focused provider smoke when debugging: `scripts/provider-smoke.sh --provider claude --keep-workdir`
+  - [ ] If a smoke run fails, inspect the preserved temp workdir printed by the script: `reports/<host>.json` for decisions, `logs/` for command output, and `home/` for isolated managed files. Passing runs delete the workdir unless `--keep-workdir` is set.
+
+  Live manual provider verification still requires a clean machine/container and host CLI checks. Source-install path (PyPI pending):
   uv tool install git+https://github.com/artemVeduta/lingo-loop
   tutor doctor --json    # expect status: ok
 
