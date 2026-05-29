@@ -14,13 +14,13 @@ B. Build / wheel distribution (local)
 - [x] tests/release/test_distribution_name.py passes — dist name lingo-loop — `uv run pytest tests/release/test_distribution_name.py --no-cov` passes
 - [x] Install built wheel in clean venv → tutor init can read bundled assets via importlib.resources (not just repo-root path) — installed wheel into temp venv; `tutor init --provider claude --yes --json` wrote `.claude/plugins/lingo-loop/plugin.json`
 
-  C. Per-provider install test
+C. Per-provider install test
 
   Automated provider smoke runs package install, isolated HOME/XDG paths, `tutor init`, `tutor doctor --json`, managed-file checks, and secret-leak checks. It does not replace live manual provider verification.
 
-  - [ ] Run all provider smoke checks: `scripts/provider-smoke.sh` — BLOCKED: script is absent from current branch; related smoke-harness spec docs were removed in 65505d6
-  - [ ] Run focused provider smoke when debugging: `scripts/provider-smoke.sh --provider claude --keep-workdir`
-  - [ ] If a smoke run fails, inspect the preserved temp workdir printed by the script: `reports/<host>.json` for decisions, `logs/` for command output, and `home/` for isolated managed files. Passing runs delete the workdir unless `--keep-workdir` is set.
+  - [x] Run all provider smoke checks: `scripts/provider-smoke.sh` — SKIPPED/ACCEPTED: script is absent from current branch; related smoke-harness spec docs were removed in 65505d6; user accepted skipping per-provider install test
+  - [x] Run focused provider smoke when debugging: `scripts/provider-smoke.sh --provider claude --keep-workdir` — SKIPPED/ACCEPTED with provider smoke section
+  - [x] If a smoke run fails, inspect the preserved temp workdir printed by the script: `reports/<host>.json` for decisions, `logs/` for command output, and `home/` for isolated managed files. Passing runs delete the workdir unless `--keep-workdir` is set. — SKIPPED/ACCEPTED with provider smoke section
 
   Live manual provider verification still requires a clean machine/container and host CLI checks. Source-install path (PyPI pending):
   uv tool install git+https://github.com/artemVeduta/lingo-loop
@@ -57,36 +57,36 @@ B. Build / wheel distribution (local)
 
   D. GitHub repo setup (one-time infra — needed for release, not PR merge)
 
-  - [ ] Repo public at github.com/artemVeduta/lingo-loop, MIT LICENSE renders
-  - [ ] Branch protection on main: require CI green + PR review
-  - [ ] GH Environments created: pypi and testpypi (match workflow.yml)
+  - [ ] Repo public at github.com/artemVeduta/lingo-loop, MIT LICENSE renders — repo is PUBLIC; LICENSE exists on PR branch; GitHub `licenseInfo` is null and `LICENSE?ref=main` 404 until PR files land on main
+  - [ ] Branch protection on main: require CI green + PR review — protection exists, but required checks list is empty and required approving review count is 0
+  - [ ] GH Environments created: pypi and testpypi (match workflow.yml) — GitHub API reports 0 environments
   - [ ] PyPI Trusted Publisher registered: project lingo-loop, owner artemVeduta, repo lingo-loop, workflow filename workflow.yml, environment pypi (renaming workflow.yml breaks this —
-  comment at top of file)
-  - [ ] TestPyPI Trusted Publisher registered: same, environment testpypi
-  - [ ] No PyPI API tokens in repo secrets (OIDC only — confirm)
-  - [ ] Dependabot enabled (.github/dependabot.yml)
-  - [ ] Issue templates + PR template render in GH UI
-  - [ ] FUNDING.yml — currently all commented out; uncomment if funding channel wanted (optional)
-  - [ ] Reserve dist name on PyPI + TestPyPI (lingo-loop not taken)
+  comment at top of file) — not verifiable from repo; requires PyPI project/publisher setup
+  - [ ] TestPyPI Trusted Publisher registered: same, environment testpypi — not verifiable from repo; requires TestPyPI project/publisher setup
+  - [x] No PyPI API tokens in repo secrets (OIDC only — confirm) — `gh secret list --repo artemVeduta/lingo-loop` returned no repo secrets
+  - [x] Dependabot enabled (.github/dependabot.yml) — config present on PR branch for pip and GitHub Actions weekly updates
+  - [ ] Issue templates + PR template render in GH UI — templates present on PR branch; main returns 404 until merge, so GH UI render cannot be confirmed yet
+  - [x] FUNDING.yml — currently all commented out; uncomment if funding channel wanted (optional) — file present and all funding channels remain commented
+  - [ ] Reserve dist name on PyPI + TestPyPI (lingo-loop not taken) — PyPI and TestPyPI JSON APIs both return 404 for `lingo-loop`; name appears available but not reserved
 
   E. Release dry-run (after merge, before public)
 
-  - [ ] /pre-release-checks (read-only audit) passes
-  - [ ] Prerelease first: tag v0.1.0-rc.1 → routes to testpypi → verify on test.pypi.org, prerelease GH Release, attestations
-  - [ ] workflow_dispatch manual trigger works (input ref)
+  - [ ] /pre-release-checks (read-only audit) passes — DEFERRED: release skill is a post-merge gate; local `build-check.sh`, `version-guard.sh`, CI, coverage, and wheel checks passed in PR
+  - [ ] Prerelease first: tag v0.1.0-rc.1 → routes to testpypi → verify on test.pypi.org, prerelease GH Release, attestations — DEFERRED until merge + TestPyPI Trusted Publisher/environment setup
+  - [ ] workflow_dispatch manual trigger works (input ref) — DEFERRED until release workflow is on main
   - [ ] Real v0.1.0 → pypi → verify per RELEASING.md:
     - PyPI page pypi.org/project/lingo-loop/0.1.0/ shows sdist+wheel
     - Sigstore/PEP 740 provenance on release page
     - gh release view v0.1.0 notes correct
     - Releases sidebar lists v0.1.0
     - CHANGELOG.md on main has [0.1.0] + fresh empty [Unreleased]
-  - [ ] pip install lingo-loop (from real PyPI) → tutor doctor ok
+  - [ ] pip install lingo-loop (from real PyPI) → tutor doctor ok — DEFERRED until real PyPI release
 
   F. Launch-blocking (NOT merge-blocking — track per docs/internal/launch-checklist.md)
 
-  - [ ] Resolve all <!-- TODO: verify --> host-CLI markers (9 across install docs)
-  - [ ] Set Last verified: YYYY-MM-DD per provider (headers currently say "Verification pending")
+  - [ ] Resolve all <!-- TODO: verify --> host-CLI markers (9 across install docs) — launch-blocking only; still tracked in `docs/internal/launch-checklist.md`
+  - [ ] Set Last verified: YYYY-MM-DD per provider (headers currently say "Verification pending") — launch-blocking only; still tracked in `docs/internal/launch-checklist.md`
   - [x] Verify review_intensity / feedback_verbosity enums (configuration.md:51-52) — confirmed against schemas.py (FeedbackVerbosity also has `standard`; doc fixed), markers removed
-  - [ ] Capture screenshots + asciinema casts (8 assets) into docs/assets/
-  - [ ] README demo.cast + demo.gif
-  - [ ] Mirror launch checklist to pinned GH issue "Launch-blocking assets"
+  - [ ] Capture screenshots + asciinema casts (8 assets) into docs/assets/ — launch-blocking only; still tracked in `docs/internal/launch-checklist.md`
+  - [ ] README demo.cast + demo.gif — launch-blocking only; still tracked in `docs/internal/launch-checklist.md`
+  - [ ] Mirror launch checklist to pinned GH issue "Launch-blocking assets" — launch-blocking only; still tracked in `docs/internal/launch-checklist.md`
